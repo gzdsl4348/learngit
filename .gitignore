@@ -1,0 +1,15 @@
+.build*
+.metadata*
+.settings*
+*.xe
+bin
+*.bin
+*.pdf
+*.bat
+*.rar
+*.xmt
+*.*~
+*~
+*.swn
+*.swo
+*.swp
