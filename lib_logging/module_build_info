@@ -1,5 +1,0 @@
-OPTIONAL_HEADERS += debug_conf.h
-
-MODULE_XCC_FLAGS = $(XCC_FLAGS) -Os
-
-VERSION = 2.1.0

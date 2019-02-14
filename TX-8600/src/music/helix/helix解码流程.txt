@@ -1,9 +1,0 @@
-for (gr = 0; gr < mp3DecInfo->nGrans; gr++)
-    for (ch = 0; ch < mp3DecInfo->nChans; ch++)
-        UnpackScaleFactors
-        DecodeHuffman
-    Dequantize//去量化系数，解码立体声，重新排序短块
-    for (ch = 0; ch < mp3DecInfo->nChans; ch++)
-        IMDCT//做别名减法，逆MDCT，叠加和频率倒置
-    Subband//对所有通道中的所有块进行子带变换
-    
