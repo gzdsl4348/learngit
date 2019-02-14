@@ -1,0 +1,55 @@
+VERSION = 6.0.0
+
+DEPENDENT_MODULES = lib_ethernet(>=3.2.0) lib_otpinfo(>=2.0.0)
+
+# Build flags
+MODULE_XCC_FLAGS = $(XCC_FLAGS) -DLWIP=1 -DUIP=2 -g -Os
+
+# Source directories
+# Note: only includes IPv4 of lwIP
+LWIP_SOURCE_DIRS = src src/xtcp_lwip/api src/xtcp_lwip/core/ src/xtcp_lwip/core/ipv4 src/xtcp_lwip/netif src/xtcp_lwip/xcore/src
+UIP_SOURCE_DIRS  = src src/xtcp_uip src/xtcp_uip/autoip src/xtcp_uip/dhcpc src/xtcp_uip/igmp
+
+# Include directories
+LWIP_INCLUDE_DIRS = src src/xtcp_lwip/include src/xtcp_lwip/xcore/include
+
+# Exclude files
+UIP_EXCLUDE_FILES  += uip-fw.c uip-neighbor.c xtcp_lwip.xc xtcp_lwip_includes.h
+LWIP_EXCLUDE_FILES += xtcp_uip.xc xtcp_uip_includes.h
+
+# Leftover from previous incarnation.
+XCC_FLAGS_xcoredev.xc = $(XCC_XC_FLAGS) -fsubword-select
+
+# Provide the conditional defines needed for optional includes
+OPTIONAL_HEADERS += xtcp_client_conf.h xtcp_conf.h
+
+ifndef XTCP_STACK
+
+# Have a different default depending on the target so that the documentation can
+# do resource estimation for each stack by setting a target
+ifeq ($(TARGET),XCORE-200-EXPLORER)
+XTCP_STACK = LWIP
+else
+XTCP_STACK = UIP
+endif
+
+endif
+
+ifeq ($(XTCP_STACK), UIP)
+SOURCE_DIRS   += $(UIP_SOURCE_DIRS)
+INCLUDE_DIRS  += $(UIP_SOURCE_DIRS) api
+EXCLUDE_FILES += $(UIP_EXCLUDE_FILES)
+# Defined in program
+MODULE_XCC_FLAGS += -DXTCP_STACK=UIP
+
+else ifeq ($(XTCP_STACK), LWIP)
+SOURCE_DIRS   += $(LWIP_SOURCE_DIRS)
+INCLUDE_DIRS  += $(LWIP_INCLUDE_DIRS) api
+EXCLUDE_FILES += $(LWIP_EXCLUDE_FILES)
+# Defined in program
+MODULE_XCC_FLAGS += -DXTCP_STACK=LWIP
+
+else
+$(error XTCP_STACK must be either UIP or LWIP (or undefined, which defaults to UIP))
+
+endif
