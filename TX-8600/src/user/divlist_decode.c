@@ -347,6 +347,12 @@ void div_heart_recive(){
     debug_printf("\n");
     #endif 
     //--------------------------
+    if(div_info_p->div_info.div_onlineok){
+        if(div_info_p->div_info.div_state != ONLINE)
+            mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
+        div_info_p->div_info.div_state = ONLINE;
+    }
+    //
     if(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B]){
         //debug_printf("sc\n");
         div_info_p->div_info.div_state = xtcp_rx_buf[HEART_STATE_B];    //获取设备状态
@@ -356,7 +362,8 @@ void div_heart_recive(){
     if(need_send){
         mes_send_listinfo(DIVLIS_INFO_REFRESH,!xtcp_rx_buf[HEART_NEEDACK_B]);
     }
-    if(xtcp_rx_buf[HEART_NEEDACK_B]){
+    // 应答回复
+    if((xtcp_rx_buf[HEART_NEEDACK_B])&&(div_info_p->div_info.div_state)){
         //debug_printf("stamp %d\n",g_sys_val.sys_timinc);
         user_sending_len = heart_ack_build(host_info.hostmode);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
@@ -410,9 +417,7 @@ uint8_t div_online_tolist(){
                                 xtcp_rx_buf[ONLINE_PASSWORD_B+9],xtcp_rx_buf[ONLINE_PASSWORD_B+10],xtcp_rx_buf[ONLINE_PASSWORD_B+11]);
     */
     if(sn_cmp(&xtcp_rx_buf[ONLINE_PASSWORD_B],host_info.sn)){
-        if(div_info_p->div_info.div_state != ONLINE)
-            mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
-        div_info_p->div_info.div_state = ONLINE;
+        div_info_p->div_info.div_onlineok = 1;
         return 1;
     }
     div_info_p->div_info.div_state = SN_ER;    
@@ -442,6 +447,7 @@ void div_heart_overtime_close(){
                 //连接超时,设备离线
                 divlist_fl_write(); //保存列表信息 设备状态随后改变
                 div_node_tmp->div_info.div_state = OFFLINE;
+                div_node_tmp->div_info.div_onlineok = OFFLINE;
                 //
                 mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
                 debug_printf("div_offline\n");
@@ -492,7 +498,7 @@ void research_lan_revice(){
     //
     user_divsrv_write(g_sys_val.search_div_tol,tmp_union.buff);
     g_sys_val.search_div_tol++;
-    debug_printf("have div\n");
+    debug_printf("have div %d \n",g_sys_val.search_div_tol);
 }
 
 //=====================================================================================================
@@ -505,6 +511,7 @@ void sysset_divfound_recive(){
     g_sys_val.divsreach_f=1;
     g_sys_val.divsreach_could_f = xtcp_rx_buf[POL_COULD_S_BASE];
     memcpy(g_sys_val.contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
+    // 发送搜索设备命令
     research_lan_div();
 }
 
@@ -517,6 +524,7 @@ void divfound_over_timeinc(){
                 return;
             g_sys_val.divsreach_f=0;
             //-----------------------------------
+            debug_printf("send divsreach list %d\n",g_sys_val.search_div_tol);
             conn_sending_s.id = g_sys_val.divsearch_conn.id;
             conn_sending_s.conn_sending_tim = 0;
             conn_sending_s.could_s = g_sys_val.divsreach_could_f;
@@ -533,7 +541,7 @@ void divfound_over_timeinc(){
 // 列表连发处理
 //---------------------------------------------
 void divsrc_sending_decode(){
-    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD);
+    user_sending_len = divsrc_list_build(AREA_GETREQUEST_CMD);
     user_xtcp_send(g_sys_val.divsearch_conn,conn_sending_s.could_s);
 }
 

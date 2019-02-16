@@ -27,6 +27,10 @@
 #endif
 #endif
 
+/** BROADCAST LPPORT
+ */
+ #define LISTEN_BROADCAST_LPPORT    4094
+
 /** Used by the LWIP and uIP callback functions to
  *  correctly pass packets to the DHCP functions
  */

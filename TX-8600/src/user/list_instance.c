@@ -66,6 +66,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {SYSSET_DIVFOUNT_CMD,sysset_divfound_recive},
                              {SYSSET_DIV_HOSTSET_CMD,divresearch_hostset_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
+                             {SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 
 // 多包列表发送函数
@@ -117,7 +118,7 @@ host_info_t host_info_tmp = {
                          0x00,    //regiser state
                          0x00,  //regiser day
                          {//172,16,13,119,//ip
-                          172,16,13,119,//ip
+                          172,16,13,112,//ip
                           255,255,255,0,//netmask
                           172,16,13,254}, //gateway 
                          {0x49,0x00,0x54,0x00,0x43,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,00,00,00,00,00,00,00,00,00,00}, //BRAND

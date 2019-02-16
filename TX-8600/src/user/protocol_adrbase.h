@@ -36,6 +36,9 @@
 #define ACCOUNT_CONFIG_CMD      0xB903
 #define ACCOUNT_REGISTER_CMD    0xB904
 #define ACCOUNT_SYSONLINE_CMD   0xB905
+// 搜索主机
+#define HOST_SEARCH_CMD         0xB906
+
 // 时间同步
 #define USER_TIMER_SYNC_CMD     0xBB00
 #define CLD_TIMER_SYNC_CMD      0xBB01
@@ -72,9 +75,6 @@
 #define MIC_AUX_REQUEST_CMD     0xB503
 #define MIC_AUX_CLOSE_CMD       0xB504
 
-// 搜索主机
-#define HOST_SEARCH_CMD         0xB906
-
 // 音乐库管理
 #define MUSIC_PATCH_CHK_CMD     0xB800
 #define MUSIC_LIB_CHK_CMD       0xB801
@@ -87,7 +87,7 @@
 
 #define MUSIC_BAT_CONTORL_CMD   0xB806
 #define MUSIC_BAT_STATE_CMD     0xB807
-
+//----------------------------------------------------
 // 列表更新消息
 #define LISTINFO_UPDATA_CMD     0xBF02
 #define DIVLIS_INFO_REFRESH        00
@@ -95,7 +95,6 @@
 #define MUSICLIS_INFO_REFRESH      02
 #define ACCOUNT_INFO_REFRESH       03
 #define TODAYTASK_INFO_REFRESH     04
-
 
 // 定时任务更新
 #define TIMETASK_UPDATA_CMD     0xB303
@@ -106,27 +105,35 @@
 // 方案信息更新
 #define SULO_UPDATA_CMD         0xB302
 
+//-----------------------------------------------------
 // 同步IP
 #define SYNC_HOSTIP_CMD         0xBF07
-
-// 配置临时IP BF09
-#define TMP_IPSET_CMD           0xBF09
-
+//系统部署 
+#define LAN_DIVRESEARCH_CMD      0xBF08
+//获取搜索列表
+#define SYSSET_DIVFOUNT_CMD      0xBF0C
+// 配置设备IP
+#define SYSSET_IPSET_CMD         0xBF0B
+// 配置目标设备的主机IP
+#define SYSSET_DIV_HOSTSET_CMD   0xBF0A
+// 配置设备临时IP 
+#define TMP_IPSET_CMD            0xBF09
+//------------------------------------------------------
 // 云协议
 // 云心跳
-#define CLD_HEART_CMD           0xBE00
+#define CLD_HEART_CMD            0xBE00
 // 注册查询
-#define CLD_REGISTER_CHK_CMD    0xBE01
+#define CLD_REGISTER_CHK_CMD     0xBE01
 // 注册状态更新
-#define CLD_REGISTER_RECIVE_CMD 0xBE02
+#define CLD_REGISTER_RECIVE_CMD  0xBE02
 // 申请时间同步
-#define CLD_TIMESYNC_CMD        0xBE03
+#define CLD_TIMESYNC_CMD         0xBE03
 // 重置管理员密码
-#define CLD_ADMINRESET_CMD      0xBE04
+#define CLD_ADMINRESET_CMD       0xBE04
 // 云登录申请
-#define CLD_CLOULDLOGIN_CMD     0xBE06
+#define CLD_CLOULDLOGIN_CMD      0xBE06
 // 云登录信息回复
-#define CLD_REGISTER_INFO_CMD   0xBE07
+#define CLD_REGISTER_INFO_CMD    0xBE07
 // 申请注册
 #define CLD_REGISTER_REQUEST_CMD 0xBE08
 
@@ -136,16 +143,10 @@
 //备份控制
 #define BACKUP_CONTORL_CMD      0xB90A
 //备份状态推送
-#define BACKUP_UPDATA_CMD      0xB90B
+#define BACKUP_UPDATA_CMD       0xB90B
 
-#define APP_REGISTER_CONTORL   0xB90D
+#define APP_REGISTER_CONTORL    0xB90D
 
-//系统部署
-#define LAN_DIVRESEARCH_CMD      0xBF08
-
-#define SYSSET_DIVFOUNT_CMD      0xBF09
-
-#define SYSSET_DIV_HOSTSET_CMD   0xBF0A
 
 //---------------------------------------------------------------------
 // 云包头

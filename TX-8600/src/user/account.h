@@ -65,6 +65,9 @@ void backup_mes_send_recive();
 // 临时IP配置   BF09
 void tmp_ipset_recive();
 
+// 配置主机IP
+void sysset_ipset_recive();
+
 // 机器码生成
 void maschine_code_init();
 

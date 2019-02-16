@@ -481,7 +481,7 @@ dhcpc_init(const void *mac_addr, int mac_len)
   rand();
 
   uip_ipaddr(addr, 255,255,255,255);
-  s.conn = uip_udp_new(&addr, HTONS(DHCPC_SERVER_PORT));
+  s.conn = uip_udp_new(&addr, HTONS(DHCPC_SERVER_PORT),0,0);
 
   if(s.conn != NULL) {
     uip_udp_bind(s.conn, HTONS(DHCPC_CLIENT_PORT));

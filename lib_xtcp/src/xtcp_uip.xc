@@ -470,7 +470,15 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
           debug_printf("ls %d\n",listen_port);
         }
       } else {
-        struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
+        struct uip_udp_conn * unsafe conn;
+        // 广播连接监听使用固定端口
+        if(ipaddr[0]==255 && ipaddr[1]==255 && ipaddr[2]==255 && ipaddr[3]==255 ){
+            conn = uip_udp_new(&uipaddr, HTONS(port_number),1,LISTEN_BROADCAST_LPPORT);
+        }
+        // 普通随机端口
+        else{
+            conn = uip_udp_new(&uipaddr, HTONS(port_number),0,0);
+        }
         if (conn != NULL) {
           //register_listener(udp_listeners, i, HTONS(conn->lport), NUM_UDP_LISTENERS);
           conn->xtcp_conn = create_xtcp_state(i,
@@ -487,7 +495,15 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       uip_ipaddr_t uipaddr;
       uip_ipaddr(uipaddr, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
       res = 0;
-      struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
+      struct uip_udp_conn * unsafe conn;
+      // 广播连接监听使用固定端口
+      if(ipaddr[0]==255 && ipaddr[1]==255 && ipaddr[2]==255 && ipaddr[3]==255 ){
+          conn = uip_udp_new(&uipaddr, HTONS(port_number),1,LISTEN_BROADCAST_LPPORT);
+      }
+      // 普通随机端口
+      else{
+          conn = uip_udp_new(&uipaddr, HTONS(port_number),0,0);
+      }
       if (conn != NULL) {
         //register_listener(udp_listeners, i, HTONS(conn->lport), NUM_UDP_LISTENERS);
         conn->xtcp_conn = create_xtcp_state(i,

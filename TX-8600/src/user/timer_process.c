@@ -37,7 +37,8 @@ void timer_process(){
                 get_f = 0; 
             }
             if(g_sys_val.time_info.hour>(24-1)){
-                
+                get_f=0;
+                ds1302_get_date();
                 g_sys_val.time_info.hour=0;
                 //
                 // 判断方案日期
@@ -90,6 +91,7 @@ void timee10hz_process(){
 // 1hz 检测线程
 //--------------------------------------------------------------------------
 void second_process(){
+    timer_process();            //系统时钟
     if(g_sys_val.eth_link_state){
         conn_overtime_close();
         div_heart_overtime_close();
@@ -99,7 +101,6 @@ void second_process(){
         could_heart_send_timer();
         #endif
     }
-    timer_process();            //系统时钟
     divfound_over_timeinc();
     mic_time1hz_close();
     timer_taskmusic_check();    //定时任务几时

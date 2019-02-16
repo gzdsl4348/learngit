@@ -499,7 +499,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 struct uip_udp_conn *
-uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
+uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport,u16_t feste_f,u16_t feste_lport)
 {
 	register struct uip_udp_conn *conn;
 
@@ -528,9 +528,15 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 	if(conn == 0) {
 		return 0;
 	}
-
-	conn->lport = HTONS(lastport);
-	conn->rport = rport;
+    // ¹Ì¶¨¼àÌı¶Ë¿Ú
+    if(feste_f){
+        conn->lport = HTONS(feste_lport);
+    }
+    // Ëæ»ú¼àÌı¶Ë¿Ú
+    else{
+    	conn->lport = HTONS(lastport);
+    }
+    conn->rport = rport;
 
 	if(ripaddr == NULL) {
 		memset(conn->ripaddr, 0, sizeof(uip_ipaddr_t));

@@ -10,9 +10,9 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x12)
+#define VERSION_L    (0x13)
 
-#define COULD_TCP_EN    1
+#define COULD_TCP_EN    0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -149,6 +149,7 @@ typedef struct div_info_t{
     uint16_t area[MAX_DIV_AREA];
     uint16_t area_contorl[MAX_DIV_AREA];
     uint8_t id;
+    uint8_t div_onlineok;
 }div_info_t;
 
 typedef struct div_node_t{
@@ -497,6 +498,7 @@ typedef struct account_sending_t{
     uint8_t  pack_inc;
     uint8_t  pack_tol;
     uint8_t  id[6];
+    uint8_t  could_cmd;
 }account_sending_t;
 
 typedef struct divsrc_sending_t{

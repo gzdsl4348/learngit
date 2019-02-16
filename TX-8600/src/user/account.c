@@ -98,7 +98,7 @@ void account_login_recive(){
 //===============================================================================
 // 账户列表查询
 //================================================================================
-void account_list_send(uint8_t id[],uint8_t could_f){
+void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
         //是否有列表正在发送
     if(conn_sending_s.id!=null)
         return;
@@ -108,6 +108,7 @@ void account_list_send(uint8_t id[],uint8_t could_f){
     conn_sending_s.ac_list.pack_tol=0;
     conn_sending_s.ac_list.pack_inc=0;
     conn_sending_s.ac_list.account_inc=0;
+    conn_sending_s.ac_list.could_cmd = could_cmd;
     memcpy(conn_sending_s.ac_list.id,id,6);
     //
     conn_sending_s.conn_state |= AC_LIST_SENDING;
@@ -133,7 +134,7 @@ void account_list_send(uint8_t id[],uint8_t could_f){
 
 
 void account_userlist_recive(){
-    account_list_send(&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    account_list_send(&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE],0);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -142,7 +143,14 @@ void account_userlist_recive(){
 //---------------------------------------------
 void ac_list_sending_decode(){
     user_sending_len = account_list_ack_build();
-    user_xtcp_send(conn,conn_sending_s.could_s);
+    //向云推送
+    if(conn_sending_s.ac_list.could_cmd){
+        user_could_send(1);        
+    }
+    //其他转发
+    else{
+        user_xtcp_send(conn,conn_sending_s.could_s);
+    }
 }
 
 
@@ -337,7 +345,7 @@ void cld_register_recive(){
 void account_list_updat(){
     if(g_sys_val.could_conn.id==0)
         return;
-    account_list_send(&xtcp_rx_buf[POL_ID_BASE],1);
+    account_list_send(&xtcp_rx_buf[POL_ID_BASE],1,1);
     user_could_send(1);  
 }
 
@@ -579,8 +587,14 @@ void tmp_ipset_recive(){
         user_xtcp_send(g_sys_val.broadcast_conn,0);
         //
         user_xtcp_ipconfig(tmp_union.ipconfig);
-        
     }
+}
+
+//===============================================================================
+// 主机IP配置   BF0B
+//===============================================================================
+void sysset_ipset_recive(){
+    
 }
 
 //================================================================================

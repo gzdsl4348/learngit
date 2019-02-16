@@ -327,7 +327,7 @@ uint16_t account_list_ack_build(){
     //-------------------------------------------------
     // 
     uint8_t total_user = 0;
-    for(; tmp_inc<MAX_ACCOUNT_NUM&&total_user<10; tmp_inc++){
+    for(; tmp_inc<MAX_ACCOUNT_NUM&&total_user<8; tmp_inc++){
         if(account_info[tmp_inc].id!=0xFF){
             //debug_printf("ac %d,%d\n",account_info[tmp_inc].id,tmp_inc);
             xtcp_tx_buf[dat_base+AC_LISTCK_TYPE_B] = account_info[tmp_inc].type;
@@ -1118,7 +1118,7 @@ uint16_t divsrc_list_build(){
     uint8_t i;
     uint16_t dat_base;
     conn_sending_s.divsrc_list.pack_tol = g_sys_val.search_div_tol/10;
-    if(g_sys_val.search_div_tol%10)
+    if((g_sys_val.search_div_tol%10)||(g_sys_val.search_div_tol==0))
         conn_sending_s.divsrc_list.pack_tol++;
     xtcp_tx_buf[DIVSRC_LIST_TOLPACK] = conn_sending_s.divsrc_list.pack_tol;
     xtcp_tx_buf[DIVSRC_LIST_PACKNUM] = conn_sending_s.divsrc_list.pack_inc;
