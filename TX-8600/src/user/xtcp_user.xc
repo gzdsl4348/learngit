@@ -588,7 +588,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	//---------------------------------
 	// build listening form eth PORT
 	i_xtcp.listen(ETH_COMMUN_PORT, XTCP_PROTOCOL_UDP);
-    i_xtcp.listen(ETH_COMMUN_PORT, LISTEN_BROADCAST_LPPORT);
+    i_xtcp.listen(LISTEN_BROADCAST_LPPORT, XTCP_PROTOCOL_UDP);
     unsafe { 
         pi_fs = &if_fs; 
         pi_image = &i_image;
@@ -619,12 +619,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.could_ip[1] = 98;
     g_sys_val.could_ip[2] = 189;
     g_sys_val.could_ip[3] = 224;
-    /*
+    #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
-    g_sys_val.could_ip[2] = 13;
-    g_sys_val.could_ip[3] = 224;
-    */
+    g_sys_val.could_ip[2] = 110;
+    g_sys_val.could_ip[3] = 183;
+    #endif
     //g_sys_val.colud_connect_f = 1;
 
     //g_sys_val.could_ip[2] = 13;
@@ -754,16 +754,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         // 建立长连接不关节点
                         if(conn_long_decoder())
                             break;
-                        //
-                        create_conn_node(&conn);    //新建一个conn节点
-                        debug_printf("out\n");
+                        // 广播端口不建立节点
+                        if(conn.local_port != LISTEN_BROADCAST_LPPORT){
+                            create_conn_node(&conn);    //新建一个conn节点
+                        }
 						break;
 		 			case XTCP_RECV_DATA:
                         // 判断是否云命令
                         //===================================================================================
                         #if 0
                         debug_printf("recive dat\n\n");
-                        for(uint8_t i=0;i<all_rx_buf[CLH_LEN_BASE]+6;i++){
+                        for(uint8_t i=0;i<all_rx_buf[POL_LEN_BASE];i++){
                             debug_printf("%x ",all_rx_buf[i]);
                         }
                         debug_printf("\n\n");

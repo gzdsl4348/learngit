@@ -28,6 +28,8 @@ void user_audio_send_dis(uint8_t ch);
 
 void user_xtcp_close(xtcp_connection_t conn);
 
+void user_udpconn_close(xtcp_connection_t conn);
+
 void user_xtcp_ipconfig(xtcp_ipconfig_t ipconfig);
 
 void user_fl_sector_read(unsigned sector_num);

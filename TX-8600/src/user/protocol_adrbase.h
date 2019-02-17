@@ -111,13 +111,13 @@
 //系统部署 
 #define LAN_DIVRESEARCH_CMD      0xBF08
 //获取搜索列表
-#define SYSSET_DIVFOUNT_CMD      0xBF0C
+#define SYSSET_DIVFOUNT_CMD      0xBF09
 // 配置设备IP
 #define SYSSET_IPSET_CMD         0xBF0B
 // 配置目标设备的主机IP
 #define SYSSET_DIV_HOSTSET_CMD   0xBF0A
 // 配置设备临时IP 
-#define TMP_IPSET_CMD            0xBF09
+#define TMP_IPSET_CMD            0xBF0C
 //------------------------------------------------------
 // 云协议
 // 云心跳

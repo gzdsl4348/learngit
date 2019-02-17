@@ -218,6 +218,14 @@ void user_xtcp_close(xtcp_connection_t conn){
 	}
 }
 
+void user_udpconn_close(xtcp_connection_t conn){
+    unsafe{
+        unsafe{
+            i_user_xtcp->close_udp(conn);
+        }
+    }
+}
+
 void user_xtcp_ipconfig(xtcp_ipconfig_t ipconfig)
 {
 	unsafe{

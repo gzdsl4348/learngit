@@ -327,7 +327,7 @@ uint16_t account_list_ack_build(){
     //-------------------------------------------------
     // 
     uint8_t total_user = 0;
-    for(; tmp_inc<MAX_ACCOUNT_NUM&&total_user<8; tmp_inc++){
+    for(; tmp_inc<MAX_ACCOUNT_NUM&&total_user<10; tmp_inc++){
         if(account_info[tmp_inc].id!=0xFF){
             //debug_printf("ac %d,%d\n",account_info[tmp_inc].id,tmp_inc);
             xtcp_tx_buf[dat_base+AC_LISTCK_TYPE_B] = account_info[tmp_inc].type;

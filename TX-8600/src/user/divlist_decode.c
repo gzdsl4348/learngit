@@ -474,6 +474,10 @@ void div_ip_mac_check_recive(){
 //=====================================================================================================
 void research_lan_div(){
     user_sending_len = onebyte_ack_build(0,LAN_DIVRESEARCH_CMD);
+    for(uint8_t i=0;i<user_sending_len;i++){
+        debug_printf("%x ",xtcp_tx_buf[i]);
+    }
+    debug_printf("\n");
     user_xtcp_send(g_sys_val.broadcast_conn,0);
 }
 
@@ -498,6 +502,11 @@ void research_lan_revice(){
     //
     user_divsrv_write(g_sys_val.search_div_tol,tmp_union.buff);
     g_sys_val.search_div_tol++;
+    // ¹Ø±Õ¹ã²¥¶Ë¿Ú
+    if(conn.local_port == LISTEN_BROADCAST_LPPORT){
+        debug_printf("close conn\n");
+        user_udpconn_close(conn);
+    }
     debug_printf("have div %d \n",g_sys_val.search_div_tol);
 }
 

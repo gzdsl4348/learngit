@@ -1243,17 +1243,6 @@ void rttask_config_recive(){
     uint16_t id;
     uint8_t state=1;
 
-    
-    for(uint8_t i=0;i<140;i++){
-        debug_printf("%2x ",xtcp_rx_buf[i]);
-        if(i!=0&&i%20==0)
-            debug_printf("\n");
-    }
-    debug_printf("\n");
-    
-
-
-    
     id = (xtcp_rx_buf[RTTASK_CFG_TASKID+1]<<8)|xtcp_rx_buf[RTTASK_CFG_TASKID];
     // 添加任务
     if(xtcp_rx_buf[RTTASK_CFG_CONTORL]==0){
@@ -1261,7 +1250,6 @@ void rttask_config_recive(){
             state=0;
         }
         else{
-            
             id = rttask_lsit.all_end_p->rttask_id;
             // 获得新建任务ID
             tmp_union.rttask_dtinfo.rttask_id = id;
@@ -1272,8 +1260,40 @@ void rttask_config_recive(){
     }
     // 删除任务
     else if(xtcp_rx_buf[RTTASK_CFG_CONTORL]==1){
-        // 任务运行中 删除
-        delete_rttask_run_node(id);
+        div_node_t *div_tmp_p;
+        conn_list_t *div_conn_p;
+        // 查找同一音源是否有旧任务并关闭
+        rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
+        while(runtmp_p!=null){
+            //比较任务id
+            if(runtmp_p->rttask_id == id){ 
+                // 任务运行中 删除
+                delete_rttask_run_node(id);
+                //------------------------------------------------------------------------------------------------------------
+                // 关闭设备
+                rt_task_read(&tmp_union.rttask_dtinfo,runtmp_p->rttask_id);
+                // 找到源设备
+                div_tmp_p = get_div_info_p(tmp_union.rttask_dtinfo.src_mas);
+                if(div_tmp_p == null){
+                    break;
+                }
+                //------------------------------------------------------------------------------------------------------------
+                // 找到源连接
+                div_conn_p = get_conn_for_ip(div_tmp_p->div_info.ip);
+                if(div_conn_p == null){
+                    break;
+                }
+                user_sending_len = rttask_connect_build(1,
+                                                        tmp_union.rttask_dtinfo.account_id,
+                                                        tmp_union.rttask_dtinfo.rttask_id,
+                                                        RTTASK_BUILD_CMD,00);
+                user_xtcp_send(div_conn_p->conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+                //有运行中任务 
+                debug_printf("del old rttask\n");
+                break;
+            }
+        runtmp_p = runtmp_p->run_next_p;
+        }
         // 删除整个任务节点
         if(delete_rttask_node(id)){
             tmp_union.rttask_dtinfo.rttask_id = 0xFFFF;
