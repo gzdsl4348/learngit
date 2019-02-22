@@ -51,8 +51,13 @@ void timer_process(){
                 g_sys_val.today_date = g_sys_val.date_info;
                 //
                 create_todaytask_list(g_sys_val.time_info);
+                // 注册日期判断
                 if(host_info.regiser_days!=0){
                     host_info.regiser_days--;
+                    // 机器到期
+                    if((host_info.regiser_days==0)&&(host_info.regiser_state==1)){
+                        host_info.regiser_state = 0;
+                    }
                     hostinfo_fl_write();
                 }
                 g_sys_val.today_date = g_sys_val.date_info;

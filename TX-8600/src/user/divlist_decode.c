@@ -246,7 +246,7 @@ void div_info_set_recive()
                 else{
                     new_conn = conn_tmp->conn;
                 }
-                user_sending_len = sync_hostip_build(node_tmp->div_info.mac);
+                user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
                 user_xtcp_send(new_conn,0);
                 node_tmp = node_tmp->next_p;
             }
@@ -255,7 +255,7 @@ void div_info_set_recive()
             // 广播主机IP
             debug_printf("set ip\n");
             uint8_t mac[6]={0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
-            user_sending_len = sync_hostip_build(mac);
+            user_sending_len = sync_hostip_build(mac,host_info.ipconfig.ipaddr);
             user_xtcp_send(g_sys_val.broadcast_conn,0);
             
         }
@@ -347,15 +347,20 @@ void div_heart_recive(){
     debug_printf("\n");
     #endif 
     //--------------------------
-    if(div_info_p->div_info.div_onlineok){
-        if(div_info_p->div_info.div_state != ONLINE)
-            mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
+    static uint8_t tmp=0;
+    if((div_info_p->div_info.div_onlineok)&&(div_info_p->div_info.div_state == 0)&&(xtcp_rx_buf[HEART_STATE_B]!=0)){
+        mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
+        debug_printf("divlist ud online\n");
         div_info_p->div_info.div_state = ONLINE;
     }
     //
-    if(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B]){
-        //debug_printf("sc\n");
+    if((div_info_p->div_info.div_state!=0)&&(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B])){
         div_info_p->div_info.div_state = xtcp_rx_buf[HEART_STATE_B];    //获取设备状态
+        if(div_info_p->div_info.div_state==0){
+            div_info_p->div_info.div_onlineok = 0;
+            tmp=1;
+            debug_printf("divchk offline\n");
+        }
         need_send = 1;
     }
     //debug_printf("heart info state %d\n",need_send);
@@ -474,16 +479,13 @@ void div_ip_mac_check_recive(){
 //=====================================================================================================
 void research_lan_div(){
     user_sending_len = onebyte_ack_build(0,LAN_DIVRESEARCH_CMD);
-    for(uint8_t i=0;i<user_sending_len;i++){
-        debug_printf("%x ",xtcp_tx_buf[i]);
-    }
-    debug_printf("\n");
     user_xtcp_send(g_sys_val.broadcast_conn,0);
 }
 
 void research_lan_revice(){
     if(g_sys_val.divsreach_f==0)
         return;
+    
     memcpy(&tmp_union.buff[DIVSRC_MAC_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_MAC_B],6);
     memcpy(&tmp_union.buff[DIVSRC_NAME_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_NAME_B],DIV_NAME_NUM);
     tmp_union.buff[DIVSRC_STATE_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_STATE_B];
@@ -520,6 +522,15 @@ void sysset_divfound_recive(){
     g_sys_val.divsreach_f=1;
     g_sys_val.divsreach_could_f = xtcp_rx_buf[POL_COULD_S_BASE];
     memcpy(g_sys_val.contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
+    /*
+    for(uint16_t i=0;i<all_rx_buf[CLH_LEN_BASE]+(all_rx_buf[CLH_LEN_BASE+1]<<16)+6;i++){
+        debug_printf("%2x ",all_rx_buf[i]);
+        if(i%20==0 && i!=0){
+            debug_printf("\n");
+        }
+    }
+    debug_printf("\n");
+    */
     // 发送搜索设备命令
     research_lan_div();
 }
@@ -527,7 +538,7 @@ void sysset_divfound_recive(){
 void divfound_over_timeinc(){
     if(g_sys_val.divsreach_f){
         g_sys_val.divsreach_tim_inc++;
-        if(g_sys_val.divsreach_tim_inc>1){
+        if(g_sys_val.divsreach_tim_inc>=3){
              //是否有列表正在发送
             if(conn_sending_s.id!=null)
                 return;
@@ -542,6 +553,7 @@ void divfound_over_timeinc(){
             conn_sending_s.divsrc_list.pack_inc = 0;
             conn_sending_s.conn_state |= DIVSRC_LIST_SENDING;
             user_sending_len = divsrc_list_build();
+            debug_printf("srclis len %d\n",user_sending_len);
             user_xtcp_send(g_sys_val.divsearch_conn,conn_sending_s.could_s);
         }
     }
@@ -558,11 +570,18 @@ void divsrc_sending_decode(){
 // 配置所选搜索设备 目标主机IP
 //=====================================================================================================
 void divresearch_hostset_recive(){
-    for(uint8_t i=0;i<g_sys_val.search_div_tol;i++){
-        user_divsrv_read(i,tmp_union.buff);
-        user_sending_len = sync_hostip_build(&tmp_union.buff[DIVSRC_MAC_B]);
+    uint16_t addr_base=SYSSET_HOSTIP_DIVMAC_B;
+    debug_printf("tol %d\n",xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]);
+    debug_printf("%d %d %d %d\n",xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+1],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+2],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+3]);
+    for(uint8_t i=0;i<xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B];i++){
+        debug_printf("div mac %x %x %x %x %x %x\n",xtcp_rx_buf[addr_base],xtcp_rx_buf[addr_base+1],xtcp_rx_buf[addr_base+2],
+                                                  xtcp_rx_buf[addr_base+3],xtcp_rx_buf[addr_base+4],xtcp_rx_buf[addr_base+5]);
+        user_sending_len = sync_hostip_build(&xtcp_rx_buf[addr_base],&xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);    
+        addr_base  += 6;
     }
+    user_sending_len = onebyte_ack_build(1,SYSSET_DIV_HOSTSET_CMD);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
 

@@ -533,6 +533,11 @@ void read_link_up_event(){
 
 //======================================================================================================
 void dhcp_dis(){
+    char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0A}; 
+    user_lan_uart0_tx(disdhcp,11);
+}
+
+void dhcp_en(){
     char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D}; 
     user_lan_uart0_tx(disdhcp,11);
 }
@@ -557,12 +562,22 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     i_uart_tx = &if_uart_tx;
 	//------------------------------------------------------------------------
 	// wifi模块进入串口AT指令模式
-    p_wifi_on <: 0x00; //
+	#if 0
+	p_wifi_on <: 0x03;
+    delay_milliseconds(10000);
+    //p_wifi_on <: 0x01; //
     delay_milliseconds(100);
-    p_wifi_on <: 0x02; //
+    //p_wifi_on <: 0x03; //
     g_sys_val.wifi_mode = 0x02;
     delay_milliseconds(100);
     dhcp_dis();
+    delay_milliseconds(10000);
+    dhcp_dis();
+    delay_milliseconds(10000);
+    dhcp_dis();
+    delay_milliseconds(10000);
+    dhcp_dis();
+    #endif
     //------------------------------------------------------------------------
     // init fun 
     while(if_fl_manage.is_flash_init_complete());
@@ -625,6 +640,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.could_ip[2] = 110;
     g_sys_val.could_ip[3] = 183;
     #endif
+    #if 0
+    g_sys_val.could_ip[0] = 172;
+    g_sys_val.could_ip[1] = 16;
+    g_sys_val.could_ip[2] = 13;
+    g_sys_val.could_ip[3] = 224;
+    #endif
+    
     //g_sys_val.colud_connect_f = 1;
 
     //g_sys_val.could_ip[2] = 13;
@@ -756,7 +778,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             break;
                         // 广播端口不建立节点
                         if(conn.local_port != LISTEN_BROADCAST_LPPORT){
-                            create_conn_node(&conn);    //新建一个conn节点
+                            //新建一个conn节点
+                            if(create_conn_node(&conn)==0){
+                                debug_printf("\nuser conn is full\n");
+                            };    
                         }
 						break;
 		 			case XTCP_RECV_DATA:
@@ -834,7 +859,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             #endif
                         }
                         //===================================================================================
-                        if(((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xD000&&(conn.remote_addr[3]!=214)){                        
+                        if(((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xD000&&
+                            ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB905&&
+                            ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB90C&&
+                            (conn.remote_addr[3]!=214)){                        
                             debug_printf("rec ip %d,%d,%d,%d %x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]);
                         }
                         conn_decoder();

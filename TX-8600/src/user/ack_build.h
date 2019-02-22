@@ -118,7 +118,7 @@ uint16_t backup_contorl_build(uint8_t state,uint8_t *data);
 // 备份消息推送 协议  B90B
 uint16_t backup_updata_build(uint8_t state,uint8_t bar);
 // 同步主机IP 协议  BF07
-uint16_t sync_hostip_build(uint8_t mac[]);
+uint16_t sync_hostip_build(uint8_t mac[],uint8_t *ipaddr);
 
 // 搜索设备列表 协议  BF09
 uint16_t divsrc_list_build();

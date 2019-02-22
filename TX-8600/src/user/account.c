@@ -114,7 +114,12 @@ void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
     conn_sending_s.conn_state |= AC_LIST_SENDING;
     //
     conn_sending_s.could_s = could_f;
-    could_list_init();
+    if(could_f){
+        conn_sending_s.id = g_sys_val.could_conn.id;
+    }
+    else{
+        conn_sending_s.id = conn.id;
+    }
     //
     //------------------------------------------------
     // 获取总包数
@@ -146,6 +151,7 @@ void ac_list_sending_decode(){
     //向云推送
     if(conn_sending_s.ac_list.could_cmd){
         user_could_send(1);        
+        debug_printf("send list\n");
     }
     //其他转发
     else{
@@ -285,7 +291,7 @@ void register_could_chk(){
 
 
 //===============================================================================
-// 系统注册信息更新
+// 系统注册信息更新 BE02
 //================================================================================
 void account_sys_register_recive(){
     uint8_t key_tmp;
@@ -303,14 +309,35 @@ void account_sys_register_recive(){
     //比较机器码
     if(charncmp(maschien_code,g_sys_val.maschine_code,10)){
         host_info.regiser_state = xtcp_rx_buf[POL_DAT_BASE+10]^key_tmp;
+        debug_printf("BE02 rec %d \n",host_info.regiser_state );
+        // 未注册
+        if(host_info.regiser_state==0){
+            host_info.regiser_state = 0;
+        }
+        // 无限期注册
+        else if(host_info.regiser_state==1){
+            host_info.regiser_state = 1;
+        }
+        // 有限期注册
+        else{
+            host_info.regiser_state = 2;
+        }
         host_info.regiser_days = (xtcp_rx_buf[POL_DAT_BASE+11]^key_tmp)|((xtcp_rx_buf[POL_DAT_BASE+12]^key_tmp)<<8);
-        
-        debug_printf("regsied updat state %d, day %d\n",host_info.regiser_state,host_info.regiser_days);
+        // 需更新注册信息
+        if(g_sys_val.register_need_send){
+            user_sending_len = onebyte_ack_build(g_sys_val.register_rec_s_tmp,APP_REGISTER_CONTORL);    
+            if(g_sys_val.regsiter_conn.id!=0)
+                user_xtcp_send(g_sys_val.regsiter_conn,0);
+            g_sys_val.regsiter_conn.id = 0;
+            g_sys_val.register_need_send = 0;
+            debug_printf("B90D resend \n",g_sys_val.register_rec_s_tmp);
+        }
+        debug_printf("regsied updat state %d, day %d\n\n",host_info.regiser_state,host_info.regiser_days);
     }
 }
 
 //===============================================================================
-// 云注册申请   BE08
+// 云注册申请    BE08
 //================================================================================
 void cld_register_request(){
     user_sending_len = cld_resiger_request_build();
@@ -319,25 +346,42 @@ void cld_register_request(){
 }
 
 //===============================================================================
-// 手机注册申请 B90D
-//================================================================================
-void app_register_request(){
-    g_sys_val.regsiter_conn = conn;
-    memcpy(g_sys_val.register_code,&xtcp_rx_buf[POL_DAT_BASE],10);
-    cld_register_request();
-}
-
-//===============================================================================
-// 云注册申请回复
+// 云注册申请回复 BE08
 //===============================================================================
 void cld_register_recive(){
+    //保存注册状态
+    g_sys_val.register_rec_s_tmp = xtcp_rx_buf[POL_DAT_BASE];
+    g_sys_val.register_need_send = 1;
+    debug_printf("reg BE08 rec %d\n",g_sys_val.register_rec_s_tmp);
+    //申请注册状态
+    register_could_chk();
+    
+    /*
     user_sending_len = onebyte_ack_build(xtcp_rx_buf[POL_DAT_BASE],APP_REGISTER_CONTORL);    
     if(g_sys_val.regsiter_conn.id!=0)
         user_xtcp_send(g_sys_val.regsiter_conn,0);
     g_sys_val.regsiter_conn.id = 0;
     debug_printf("register request %d\n",xtcp_rx_buf[POL_DAT_BASE]);
+    */
 }
 
+//================================================================================
+// 手机注册申请 B90D
+//================================================================================
+void app_register_request(){
+    g_sys_val.regsiter_conn = conn;
+    memcpy(g_sys_val.register_code,&xtcp_rx_buf[POL_DAT_BASE],10);
+    debug_printf("mach code ");
+    for(uint8_t i=0;i<10;i++){
+        debug_printf("%x ",g_sys_val.maschine_code[i]);
+    }
+    debug_printf("\n");
+    for(uint8_t i=0;i<10;i++){
+        debug_printf("%x ",g_sys_val.register_code[i]);
+    }
+    debug_printf("\n");
+    cld_register_request();
+}
 
 //===============================================================================
 // 账号列表推送
@@ -395,7 +439,7 @@ void cld_account_login_recive(){
 //================================================================================
 // 系统/账户在线查询
 //================================================================================
-void account_sysonline_recive(){
+uint8_t sysonline_recive(){
     uint8_t state=0;
     // 刷新用户长连接
     for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
@@ -413,10 +457,21 @@ void account_sysonline_recive(){
     user_xtcp_connect(conn.remote_addr);
     //
     have_long_connect:
-    user_sending_len = sysonline_chk_build(state);
+    return state;
+}
+
+// 系统/账户在线查询
+void account_sysonline_recive(){
+    user_sending_len = sysonline_chk_build(sysonline_recive());
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     //debug_printf("sysonline\n");
 }
+
+// 手机在线保持
+void app_sysonline_recive(){
+    sysonline_recive();
+}
+
 
 //================================================================================
 // 麦克风查询账户列表 与登陆
@@ -508,8 +563,8 @@ void mic_aux_request_recive(){
     uint8_t aux_type,state,ch_tmp,tol_type;
     //
     aux_type = xtcp_rx_buf[POL_DAT_BASE+1];
-     debug_printf("aux req %x\n",xtcp_rx_buf[POL_DAT_BASE]);
-    debug_printf("aux type %x\n" ,xtcp_rx_buf[POL_DAT_BASE+1]);
+    //debug_printf("aux req %x\n",xtcp_rx_buf[POL_DAT_BASE]);
+    //debug_printf("aux type %x\n" ,xtcp_rx_buf[POL_DAT_BASE+1]);
     // 关闭通道
     if(xtcp_rx_buf[POL_DAT_BASE]){
         tol_type = aux_type>>4;
@@ -594,6 +649,23 @@ void tmp_ipset_recive(){
 // 主机IP配置   BF0B
 //===============================================================================
 void sysset_ipset_recive(){
+    if(xtcp_rx_buf[SYSSET_IPSET_SENDSTATE]==1){
+        return;
+    }
+    if(charncmp(&xtcp_rx_buf[SYSSET_IPSET_DESMAC],host_info.mac,6)==0){
+        return;
+    }
+    if(xtcp_rx_buf[SYSSET_IPSET_CONFIG_F]==0){
+        return;
+    }
+    if(xtcp_rx_buf[SYSSET_IPSET_IP_MODE]){
+        return;
+    }
+    memcpy(host_info.ipconfig.ipaddr,&xtcp_rx_buf[SYSSET_IPSET_IP],4);    
+    memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[SYSSET_IPSET_GATE],4);    
+    memcpy(host_info.ipconfig.netmask,&xtcp_rx_buf[SYSSET_IPSET_MASK],4);    
+    user_xtcp_ipconfig(host_info.ipconfig);
+    
     
 }
 

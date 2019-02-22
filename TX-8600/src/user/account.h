@@ -19,6 +19,9 @@ void account_login_recive();
 // 账户列表查询
 void account_userlist_recive();
 
+// 手机在线保持
+void app_sysonline_recive();
+
 void ac_list_sending_decode();
 //-----------------------------------------
 // 权限列表处理

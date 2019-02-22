@@ -76,7 +76,7 @@ uint8_t conn_long_decoder(){
     if(charncmp(g_sys_val.connect_ip,conn.remote_addr,4)){
         g_sys_val.connect_build_f = 0;
         for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
-            debug_printf("new long connect %d\n",conn.id);
+            debug_printf("new long connect %d\n",conn_long_list.lconn[i].id);
             if(conn_long_list.lconn[i].id==0xFF){
                 conn_long_list.lconn[i].conn = conn;
                 conn_long_list.lconn[i].id = i;
@@ -106,7 +106,7 @@ void conn_overtime_close(){
         //-------------------------------------------------------
         //连接超时，删除节点，关闭连接
         if(conn_list_tmp->over_time>CONN_OVERTIME){
-            debug_printf("conn timeout %d\n",conn_list_tmp->conn.id);
+            debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
             user_xtcp_close(conn_list_tmp->conn);
             delete_conn_node(conn_list_tmp->conn.stack_conn);
         }    

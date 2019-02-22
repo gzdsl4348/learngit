@@ -95,7 +95,7 @@ void music_music_list_chk_recive(){
             //
             conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
             could_list_init();
-            debug_printf("conn id %d recid %d\n",g_sys_val.could_conn.id,conn.id);
+            //debug_printf("conn id %d recid %d\n",g_sys_val.could_conn.id,conn.id);
             //
             user_sending_len = music_namelist_chk_build(1);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
@@ -329,6 +329,7 @@ void music_bat_contorl_recive(){
     if((g_sys_val.file_bat_contorl_s)||((g_sys_val.file_bat_conn.id!=null)&&(conn.id!=g_sys_val.file_bat_conn.id))){
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],01,MUSIC_BAT_CONTORL_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
+        return;
     }
     if(xtcp_rx_buf[MUSIC_BAT_PACKINC]==0){
         g_sys_val.file_bat_conn = conn;

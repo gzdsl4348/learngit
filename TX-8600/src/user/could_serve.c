@@ -16,12 +16,22 @@ void could_heart_send_timer(){
         //debug_printf("could id %d\n",g_sys_val.could_conn.id);
         if(g_sys_val.could_conn.id!=0){
             static uint8_t tmp=0;
+            static uint8_t tmp1=0;
             tmp++;
+            tmp1++;
             if(tmp>=5){
                 user_sending_len = cld_heart_build();
                 user_could_send(1);  
                 tmp=0;
             }
+            #if 0
+            if(tmp1>=2){
+                debug_printf("send colud\n");
+                xtcp_rx_buf[POL_ID_BASE] = 1;
+                account_list_updat();
+                tmp1=0;
+            }
+            #endif
             g_sys_val.could_send_cnt++;
             if(g_sys_val.could_send_cnt>30){
                 g_sys_val.could_conn.id=0;

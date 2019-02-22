@@ -1085,10 +1085,10 @@ uint16_t sulo_upgrade_build(uint8_t id){
 //==========================================================================================
 // 同步主机IP 协议  BF07
 //==========================================================================================
-uint16_t sync_hostip_build(uint8_t mac[]){
+uint16_t sync_hostip_build(uint8_t mac[],uint8_t *ipaddr){
     xtcp_tx_buf[POL_DAT_BASE] = 0;
     memcpy(&xtcp_tx_buf[POL_DAT_BASE+1],mac,6);
-    memcpy(&xtcp_tx_buf[POL_DAT_BASE+7],&host_info.ipconfig.ipaddr[0],4);
+    memcpy(&xtcp_tx_buf[POL_DAT_BASE+7],ipaddr,4);
     return build_endpage_decode(POL_DAT_BASE+11,SYNC_HOSTIP_CMD,g_sys_val.con_id_tmp);
 }
 
@@ -1134,7 +1134,8 @@ uint16_t divsrc_list_build(){
         memcpy(&xtcp_tx_buf[dat_base+DIVSRC_TYPE_B],&tmp_union.buff[DIVSRC_TYPE_B],DIV_NAME_NUM);
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B] = tmp_union.buff[DIVSRC_VERSION_B];
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B+1] = tmp_union.buff[DIVSRC_VERSION_B+1];
-        memcpy(&xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],&tmp_union.buff[DIVSRC_HOSTIP_B],4);                
+        memcpy(&xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],&tmp_union.buff[DIVSRC_HOSTIP_B],4);     
+        debug_printf("src div %d %d %d %d\n",xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+1],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+2],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+3]);
         conn_sending_s.divsrc_list.div_inc++;
         dat_base += DIVSRC_DATEND_B;
     }

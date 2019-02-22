@@ -11,6 +11,7 @@
 // fun list decode 
 //  ÃüÁî´¦Àíº¯Êý
 rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
+                             {APP_CONNECTHAND_CMD,app_sysonline_recive},
                              {ONLINE_REQUEST_CMD,div_online_recive},
                              {DIVLIST_REQUEST_CMD,divlist_request_recive},
                              {DIV_EXTRA_INFO_CMD,div_extra_info_recive},

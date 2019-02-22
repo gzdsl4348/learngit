@@ -111,13 +111,13 @@
 //系统部署 
 #define LAN_DIVRESEARCH_CMD      0xBF08
 //获取搜索列表
-#define SYSSET_DIVFOUNT_CMD      0xBF09
+#define SYSSET_DIVFOUNT_CMD      0xBF0C
 // 配置设备IP
 #define SYSSET_IPSET_CMD         0xBF0B
 // 配置目标设备的主机IP
 #define SYSSET_DIV_HOSTSET_CMD   0xBF0A
 // 配置设备临时IP 
-#define TMP_IPSET_CMD            0xBF0C
+#define TMP_IPSET_CMD            0xBF09
 //------------------------------------------------------
 // 云协议
 // 云心跳
@@ -144,6 +144,8 @@
 #define BACKUP_CONTORL_CMD      0xB90A
 //备份状态推送
 #define BACKUP_UPDATA_CMD       0xB90B
+
+#define APP_CONNECTHAND_CMD     0xB90C
 
 #define APP_REGISTER_CONTORL    0xB90D
 
@@ -877,7 +879,7 @@
 #define USER_TIMSYNC_END_B                  (USER_TIMSYNC_WEEK_B+1)    //1
 
 //====================================================================================================
-// 系统部署
+// 系统部署 BF08
 //====================================================================================================
 #define DIVSRC_RECIVE_STATE                 (POL_DAT_BASE)
 #define DIVSRC_DAT_BASE                     (DIVSRC_RECIVE_STATE+1)
@@ -898,6 +900,16 @@
 #define DIVSRC_DATEND_B                     (DIVSRC_HOSTIP_B+4)
 
 //====================================================================================================
+// 系统部署配置目标主机 BF0A
+//====================================================================================================
+#define SYSSET_HOSTIP_PTOL_B                (POL_DAT_BASE)  //6
+#define SYSSET_HOSTIP_PNUM_B                (SYSSET_HOSTIP_PTOL_B+1)//1
+#define SYSSET_HOSTIP_HOSTIP_B              (SYSSET_HOSTIP_PNUM_B+1)//4
+#define SYSSET_HOSTIP_DIVTOL_B              (SYSSET_HOSTIP_HOSTIP_B+4)//1
+#define SYSSET_HOSTIP_DIVMAC_B              (SYSSET_HOSTIP_DIVTOL_B+1)//1
+
+
+//====================================================================================================
 // 搜索列表上传     BF09
 //====================================================================================================
 #define DIVSRC_LIST_TOLPACK                 (POL_DAT_BASE)
@@ -906,6 +918,17 @@
 
 #define DIVSRC_LIST_DAT_BASE                (DIVSRC_LIST_DIVTOL+1)
 
+//====================================================================================================
+// 搜索列表上传     BF0B
+//====================================================================================================
+#define SYSSET_IPSET_SENDSTATE              (POL_DAT_BASE)  //1
+#define SYSSET_IPSET_DESMAC                 (SYSSET_IPSET_SENDSTATE+1) //6
+#define SYSSET_IPSET_CONFIG_F               (SYSSET_IPSET_DESMAC+6)    //1
+#define SYSSET_IPSET_HOSTIP                 (SYSSET_IPSET_CONFIG_F+1)  //4
+#define SYSSET_IPSET_IP_MODE                (SYSSET_IPSET_HOSTIP+4)    //1
+#define SYSSET_IPSET_IP                     (SYSSET_IPSET_IP_MODE+1)   //4
+#define SYSSET_IPSET_MASK                   (SYSSET_IPSET_IP+4)   //4
+#define SYSSET_IPSET_GATE                   (SYSSET_IPSET_MASK+4)   //4
 
 
 #endif //__PROTOCOL_ADRBASE_H
