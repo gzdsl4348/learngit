@@ -12,7 +12,7 @@ extern "C" {
 #define VERSION_H    (0x01)
 #define VERSION_L    (0x13)
 
-#define COULD_TCP_EN    1
+#define COULD_TCP_EN    0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -350,6 +350,7 @@ typedef struct rttask_info_t{
     uint32_t      dura_time;
     uint32_t      over_time;
     uint16_t      user_id;
+    uint8_t       run_state;
     struct rttask_info_t *run_next_p; //运行中的任务
     struct rttask_info_t *all_next_p;  //所有任务
 }rttask_info_t;

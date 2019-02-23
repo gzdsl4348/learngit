@@ -469,7 +469,8 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 
 	if(conn == 0) {
 		// max tcp connections reached
-		return 0;
+        debug_printf("\n\nxtcp tcp conn full\n\n");
+        return 0;
 	}
 
 	conn->tcpstateflags = UIP_SYN_SENT;
@@ -526,6 +527,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport,u16_t feste_f,u16_t feste_lport)
 	}
 
 	if(conn == 0) {
+        debug_printf("\n\nxtcp udp conn full\n\n");
 		return 0;
 	}
     // ¹Ì¶¨¼àÌý¶Ë¿Ú

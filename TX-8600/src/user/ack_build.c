@@ -655,7 +655,7 @@ uint16_t rttask_list_chk_build(){
         xtcp_tx_buf[data_base+RTTASK_CK_STATE] = 0;
         while(tmp_p!=null){
             if(tmp_p->rttask_id == tmp_union.rttask_dtinfo.rttask_id){
-                xtcp_tx_buf[data_base+RTTASK_CK_STATE] = 1;
+                xtcp_tx_buf[data_base+RTTASK_CK_STATE] = rttask_lsit.run_end_p->run_state;
                 break;
             }
             tmp_p = tmp_p->run_next_p;

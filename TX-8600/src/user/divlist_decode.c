@@ -10,6 +10,8 @@
 #include "user_messend.h"
 #include "task_decode.h"
 
+void rttask_run_state_set(uint8_t state,uint8_t mac[]);
+
 //---------------------------------------------------------------------------
 // 分区列表发送
 //--------------------------------------------------------------------------
@@ -295,6 +297,7 @@ void div_info_set_recive()
             if(div_tmp_p->div_info.div_state==OFFLINE){
                 delete_div_node(div_tmp_p->div_info.mac);
                 divlist_fl_write(); //保存列表信息
+                mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
                 xtcp_rx_buf[DIVSET_SETBITMASK_B] = 0x40;
             }
         }
@@ -352,6 +355,8 @@ void div_heart_recive(){
         mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
         debug_printf("divlist ud online\n");
         div_info_p->div_info.div_state = ONLINE;
+        //设备上线 异常即时任务恢复
+        rttask_run_state_set(01,div_info_p->div_info.mac);
     }
     //
     if((div_info_p->div_info.div_state!=0)&&(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B])){
@@ -438,6 +443,26 @@ void div_online_recive()
     return;
 }
 
+
+//=====================================================================================================
+// 即时任务 查找 与置为异常或正常状态  1 正常 2异常
+//=====================================================================================================
+void rttask_run_state_set(uint8_t state,uint8_t mac[]){
+    //即时任务状态异常
+    rttask_info_t *tmp_p = rttask_lsit.run_head_p;
+    while(tmp_p!=null){
+        //比较MAC
+        rt_task_read(&tmp_union.rttask_dtinfo,tmp_p->rttask_id);
+        if(charncmp(tmp_union.rttask_dtinfo.src_mas,mac,6)){
+            //有运行中任务 任务置为异常状态
+            tmp_p->run_state = state;
+        }
+        tmp_p = tmp_p->run_next_p;
+    }
+}
+
+
+
 //=====================================================================================================
 // 设备掉线       心跳掉线超时检测
 //=====================================================================================================
@@ -450,11 +475,14 @@ void div_heart_overtime_close(){
             if((div_node_tmp->div_info.div_state != OFFLINE)&&(div_node_tmp->over_time>DIV_OVERTIME)){
                 //-------------------------------------------------------
                 //连接超时,设备离线
-                divlist_fl_write(); //保存列表信息 设备状态随后改变
                 div_node_tmp->div_info.div_state = OFFLINE;
                 div_node_tmp->div_info.div_onlineok = OFFLINE;
+                //----------------------------------------------------------------------------------
+                rttask_run_state_set(02,div_node_tmp->div_info.mac);
+                //---------------------------------------------------------------------------------------                    
                 //
                 mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
+                divlist_fl_write(); //保存列表信息 设备状态随后改变
                 debug_printf("div_offline\n");
                 //-------------------------------------------------------
             }
