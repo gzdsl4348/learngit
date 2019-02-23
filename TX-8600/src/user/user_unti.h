@@ -132,6 +132,9 @@ typedef struct g_sys_val_t{
     uint8_t wifi_mode;
     uint8_t key_reselse;
     uint8_t key_wait_inc;
+    // wifi 模式
+    uint8_t wifi_mode;
+    uint8_t wifi_time;
     // 重启标志
     uint8_t reboot_f;
     uint8_t reboot_inc;
