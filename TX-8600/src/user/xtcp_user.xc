@@ -25,7 +25,11 @@
 #include "string.h"
 #include "stdio.h"
 
-on tile[1]: out port p_wifi_on = XS1_PORT_4B; 
+void wifi_contorl_mode();
+
+on tile[1]: out port p_wifi_io = XS1_PORT_4B; 
+#define     D_IO_WIFI_POWER     01
+#define     D_IO_WIFI_CONTORL   02
 
 on tile[1]: in port p_wifi_chk = XS1_PORT_4A; 
 
@@ -533,13 +537,13 @@ void read_link_up_event(){
 
 //======================================================================================================
 void dhcp_dis(){
-    char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0A}; 
+    char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D,0x0A}; 
     user_lan_uart0_tx(disdhcp,11);
 }
 
 void dhcp_en(){
-    char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D}; 
-    user_lan_uart0_tx(disdhcp,11);
+    char endhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x30,0x0D,0x0A}; 
+    user_lan_uart0_tx(endhcp,11);
 }
 
 //=======================================================================================================
@@ -562,6 +566,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     i_uart_tx = &if_uart_tx;
 	//------------------------------------------------------------------------
 	// wifi模块进入串口AT指令模式
+	// wifi 关闭 
+	p_wifi_io <: 0x00;
 	#if 0
 	p_wifi_on <: 0x03;
     delay_milliseconds(10000);
@@ -899,46 +905,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		// other process
 		//----------------------------------------------------------------------------- 	
         case systime when timerafter(time_tmp+10000000):> time_tmp:	//10hz process
-            uint8_t tmp;
-            //--------------------------------------------------
-            // 10hz process
-            timee10hz_process();
-            static uint8_t reset_ethtim=0;
-            static uint8_t p_tmp=0;
-            if((g_sys_val.eth_link_state==0)||(p_tmp)){
-                reset_ethtim++;
-                if(reset_ethtim>35){
-                    p_eth_reset <: p_tmp; 
-                    if((p_tmp)&&(reset_ethtim>40)){
-                        reset_ethtim=0;
-                    }
-                    p_tmp ^=1;
-                    debug_printf("canl %d\n",p_tmp);
-                }
-            }
-            //--------------------------------------------------
+            //---------------------------------------------------------
             //1HZ Process
             static uint8_t time_count=0;
             time_count++;
-            g_sys_val.sys_timinc++;
-            if(g_sys_val.key_delay)
-                g_sys_val.key_delay--;
-            if(g_sys_val.key_reselse){
-                g_sys_val.key_wait_inc++;
-                if(g_sys_val.key_wait_inc>60){
-                    unsigned init_string;
-                    // 用户信息初始化
-                	init_string = 0;
-                    user_fl_sector_read(USER_DAT_SECTOR);
-                	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
-                    user_fl_sector_write(USER_DAT_SECTOR);
-                    //--------------------------------------------------------------
-                    delay_milliseconds(3000);
-                    while(!(if_fl_manage.is_flash_write_complete()));    
-                    device_reboot();
-                }
-            } 
-            //
             if(time_count>(10-1)){
                 time_count=0;
         	    second_process();
@@ -970,31 +940,147 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     }
                 }
             }
+            //--------------------------------------------------
+            // 10hz process
+            // 系统时间戳
+            g_sys_val.sys_timinc++;
+            // 系统10hz线程
+            timee10hz_process();
+            //--------------------------------------------------------
+            // 网络芯片 不正常 定时复位处理
+            static uint8_t reset_ethtim=0;
+            static uint8_t p_tmp=0;
+            if((g_sys_val.eth_link_state==0)||(p_tmp)){
+                reset_ethtim++;
+                if(reset_ethtim>35){
+                    p_eth_reset <: p_tmp; 
+                    if((p_tmp)&&(reset_ethtim>40)){
+                        reset_ethtim=0;
+                    }
+                    p_tmp ^=1;
+                }
+            }
+            //--------------------------------------------------------
+            // 按键处理
+            if(g_sys_val.key_delay)
+                g_sys_val.key_delay--;
+            // 复位按键长按
+            g_sys_val.key_wait_inc++;
+            //长按6秒
+            if(g_sys_val.key_wait_release==KEY_RESET_RELEASE && g_sys_val.key_wait_inc>60){
+                unsigned init_string;
+                // 用户信息初始化
+            	init_string = 0;
+                user_fl_sector_read(USER_DAT_SECTOR);
+            	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
+                user_fl_sector_write(USER_DAT_SECTOR);
+                //--------------------------------------------------------------
+                delay_milliseconds(3000);
+                while(!(if_fl_manage.is_flash_write_complete()));    
+                device_reboot();      
+            } 
+            // wifi按键长按
+            if(g_sys_val.key_wait_release==KEY_WIFI_RELEASE && g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE && g_sys_val.key_wait_inc>30){  //长按3秒
+                // DHCP使能
+                g_sys_val.wifi_mode==WIFI_DHCPEN_MODE;
+            }
             //---------------------------------------------------
+            // wifi 模式控制
+            wifi_contorl_mode();
             break;
         //------------------------------------------------------------------------------
         // KEY process
         //------------------------------------------------------------------------------
         case  p_wifi_chk when pinsneq(g_sys_val.key_state) :> g_sys_val.key_state:
-            // wifi key
-            if((g_sys_val.key_state&0x04)&&(g_sys_val.key_delay == 0)){
+            //---------------------------------------------------------------------------------
+            debug_printf("key have %d\n",g_sys_val.key_delay);
+            // wifi key 按下
+            if((g_sys_val.key_state&0x04)==0 && (g_sys_val.key_delay == 0)){
+                // 防抖
                 g_sys_val.key_delay = 3;
-                g_sys_val.wifi_mode ^= 1;
-                p_wifi_on <: g_sys_val.wifi_mode;
+                // 关闭wifi模块
+                if(g_sys_val.wifi_mode!=0){ 
+                    g_sys_val.wifi_mode = 0;
+                    g_sys_val.wifi_contorl_state = 0;
+                    g_sys_val.wifi_io_tmp=0;
+                    p_wifi_io <: 0;
+                    debug_printf("key wifi off\n");
+                }
+                else{
+                    // 开启wifi模块
+                    g_sys_val.key_wait_release = KEY_WIFI_RELEASE;
+                    g_sys_val.wifi_contorl_state = WIFI_WAIT_POWERON;
+                    g_sys_val.key_wait_inc = 0;
+                    g_sys_val.wifi_timer = 0;
+                    g_sys_val.wifi_mode = WIFI_DHCPDIS_MODE;
+                    g_sys_val.wifi_io_tmp = D_IO_WIFI_POWER|D_IO_WIFI_CONTORL;
+                    p_wifi_io <: g_sys_val.wifi_io_tmp;
+                    debug_printf("key wifi on\n");
+                }
             }
-            // reset key
+            //-----------------------------------------------------------------------------------
+            // reset key 按下
             if(((g_sys_val.key_state&0x01)==0)&&(g_sys_val.key_delay == 0)){
-                g_sys_val.key_delay = 3;
-                g_sys_val.key_reselse = 1;
+                // 防抖
+                g_sys_val.key_delay = 2;
+                //
+                g_sys_val.key_wait_release = KEY_RESET_RELEASE;
                 g_sys_val.key_wait_inc = 0;
             }
-            if((g_sys_val.key_state&0x01)){
-                g_sys_val.key_reselse = 0;
+            // key 松开
+            if((g_sys_val.key_state&0x01)&&(g_sys_val.key_state&0x04)){
+                g_sys_val.key_wait_release = 0;
+                //g_sys_val.key_delay = 0;
             }
+            //------------------------------------------------------------------------------------
             break;
 		}// end select
 	}
     }//unsafe
+}
+
+void wifi_contorl_mode(){
+    if(g_sys_val.wifi_contorl_state==0){
+        return;
+    }
+    g_sys_val.wifi_timer++;
+    switch(g_sys_val.wifi_contorl_state){
+        case WIFI_WAIT_POWERON:
+            if(g_sys_val.wifi_timer>150){ // 等10秒wifi开启
+                g_sys_val.wifi_timer=0;
+                // 进入AT模式
+                g_sys_val.wifi_contorl_state = WIFI_AT_ENTER;
+                g_sys_val.wifi_io_tmp ^= D_IO_WIFI_CONTORL;
+                p_wifi_io <: g_sys_val.wifi_io_tmp;
+                debug_printf("enter at\n");
+            }
+            break;
+        case WIFI_AT_ENTER:
+            if(g_sys_val.wifi_timer>5){ // 等0.5秒 进入AT模式 
+                g_sys_val.wifi_timer=0;
+                // 进入DCHP控制模式
+                g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
+                g_sys_val.wifi_io_tmp |= D_IO_WIFI_CONTORL;
+                p_wifi_io <: g_sys_val.wifi_io_tmp;
+                debug_printf("at ouit\n");
+            }
+            break;
+        case WIFI_AT_COM_DHCP:
+            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置DHCP 
+                g_sys_val.wifi_timer=0;
+                // 配置DHCP
+                 dhcp_dis();
+                 debug_printf("dhcp dis\n");
+                // 进入配置wifi模式
+                g_sys_val.wifi_contorl_state = WIFI_AT_COM_IP;
+            }
+            break;
+        case WIFI_AT_COM_IP:
+            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置IP
+                g_sys_val.wifi_contorl_state = 0;
+            }
+            break;
+    }
 }
                   
 void gateway_event(client xtcp_if i_xtcp){

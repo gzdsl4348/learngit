@@ -126,15 +126,32 @@ typedef struct g_sys_val_t{
     uint16_t dtinfo_chk_task_id;
     // 重发标志
     uint8_t resend_inc;
+     //---------------------------------
     // 按键标志
     uint8_t key_state;
     uint8_t key_delay;
-    uint8_t wifi_mode;
-    uint8_t key_reselse;
+    uint8_t wifi_io;
+    //
+    uint8_t key_wait_release;
+    #define KEY_RESET_RELEASE 01
+    #define KEY_WIFI_RELEASE  02
+    //
     uint8_t key_wait_inc;
+    //---------------------------------
     // wifi 模式
     uint8_t wifi_mode;
-    uint8_t wifi_time;
+    #define WIFI_DHCPDIS_MODE 01
+    #define WIFI_DHCPEN_MODE  02
+    //
+    uint8_t wifi_contorl_state;
+    #define WIFI_WAIT_POWERON   01
+    #define WIFI_AT_ENTER       02
+    #define WIFI_AT_COM_DHCP    03
+    #define WIFI_AT_COM_IP      04
+    //
+    uint8_t wifi_io_tmp;
+    uint8_t wifi_timer;
+    //---------------------------------
     // 重启标志
     uint8_t reboot_f;
     uint8_t reboot_inc;

@@ -373,6 +373,8 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
 
 #define FL_TX_CLK (100000000/115200)
 on tile[0]: out port p_uart0_tx = XS1_PORT_1G; 
+on tile[0]: out port  p_uart0_rx = XS1_PORT_1H; 
+
 
 void fl_manage_uart_tx(uint8_t data) {
     int t;
@@ -386,6 +388,8 @@ void fl_manage_uart_tx(uint8_t data) {
     p_uart0_tx @ t <: 1; //send stop bit
     t += FL_TX_CLK;
     p_uart0_tx @ t <: 1; //wait until end of stop bit
+    //p_uart0_tx <: 0;
+    //p_uart0_rx <: 0;
 }
 
 
