@@ -9,6 +9,10 @@
 
 on tile[0]: out port p_power_led = XS1_PORT_4C; 
 
+#define FL_TX_CLK (100000000/115200)
+on tile[0]: out port p_uart0_tx = XS1_PORT_1G; 
+on tile[0]: in port  p_uart0_rx = XS1_PORT_1H; 
+
 //==========================================================================================
 //Flash Config => 080 => 1M Byte    Boot Partition For 3072 Page
 //                                  Data Partition For 1024 Page
@@ -362,25 +366,32 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff, tmp_buff, 200);
             break;
-        case if_fl_manage.uart0_tx(uint8_t data[],uint8_t len):
-            for(uint8_t i=0;i<len;i++){
-                fl_manage_uart_tx(data[i]);
-            }
+        case if_fl_manage.uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
+            switch(mode){
+                case 0:
+                    for(uint8_t i=0;i<len;i++){
+                        fl_manage_uart_tx(data[i]);
+                    }
+                    break;
+                case 1:
+                    p_uart0_tx <: 1;
+                    break;
+                case 2:
+                    debug_printf("io low\n");
+                    p_uart0_tx <: 0;
+                    break;
+            } //switch
             break;
         }       
 	}
 }
-
-#define FL_TX_CLK (100000000/115200)
-on tile[0]: out port p_uart0_tx = XS1_PORT_1G; 
-on tile[0]: out port  p_uart0_rx = XS1_PORT_1H; 
 
 
 void fl_manage_uart_tx(uint8_t data) {
     int t;
     p_uart0_tx <: 0 @ t; //send start bit and timestamp (grab port timer value)
     t += FL_TX_CLK;
-#pragma loop unroll(8)
+    #pragma loop unroll(8)
     for(int i = 0; i < 8; i++) {
         p_uart0_tx @ t <: >> data; //timed output with post right shift
         t += FL_TX_CLK;

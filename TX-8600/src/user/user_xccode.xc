@@ -25,9 +25,9 @@ static uint8_t user_audio_txen=0;
 
 uint8_t f_name[MUSIC_FNAME_NUM];
 
-void user_lan_uart0_tx(uint8_t *data,uint8_t len){
+void user_lan_uart0_tx(uint8_t *data,uint8_t len,uint8_t mode){
     unsafe{
-    i_user_flash->uart0_tx(data,len);
+    i_user_flash->uart0_tx(data,len,mode);
     }
 }
 
@@ -159,11 +159,13 @@ void user_could_send(uint8_t pol_type){
     all_tx_buf[CLH_TRANTYPE_BASE] = pol_type;
     all_tx_buf[CLH_DIVTYPE_BASE] = 0;   //主机类型
     //
-    #if 0
+    #if 1
+    if(xtcp_tx_buf[POL_COM_BASE]==06){
     for(uint16_t i=0;i<user_sending_len;i++){
         debug_printf("%2x ",all_tx_buf[i]);
         if((i%20==0)&&(i!=0))
             debug_printf("\n");
+    }
     }
     debug_printf("\n");
     debug_printf("end\n");
@@ -182,7 +184,7 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
         #endif 
         if(colud_f){
              //云包头    
-            debug_printf("could cmd send %x%x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
+            debug_printf("could cmd send %2x%2x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
             user_could_send(0);
         }
         else{

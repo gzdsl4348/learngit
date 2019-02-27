@@ -83,6 +83,9 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
 // 即时任务信息创建包
 uint16_t rttask_creat_build(uint16_t ran_id,uint8_t state,uint16_t task_id);
 
+// 即时任务Ip改变列表更新
+uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttask_div_p);
+
 // 话筒 用户 查询回复
 uint16_t mic_userlist_ack_build(uint8_t state,account_all_info_t *account_all_info);
 

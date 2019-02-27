@@ -63,7 +63,7 @@ typedef interface fl_manage_if{
     void read_musictbl(uint8_t music_index, uint8_t buff[], int btr, int &br);
 
     //uart0
-    void uart0_tx(uint8_t data[],uint8_t len);
+    void uart0_tx(uint8_t data[],uint8_t len,uint8_t mode);
 
     void if_fl_music_tmpbuf_read(unsigned num,uint8_t buff[]);
 

@@ -10,7 +10,7 @@
 #include "user_messend.h"
 #include "task_decode.h"
 
-void rttask_run_state_set(uint8_t state,uint8_t mac[]);
+uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 
 //---------------------------------------------------------------------------
 // 分区列表发送
@@ -315,19 +315,23 @@ void div_heart_recive(){
     div_node_t *div_info_p;
     div_info_p = get_div_info_p(&xtcp_rx_buf[POL_DAT_BASE]); //查找列表设备
     uint8_t need_send=0;
+    uint8_t state = DIVLIS_INFO_REFRESH;
     //-----------------------------------------------------------------------
     if(div_info_p == null)
         return;
     div_info_p->over_time =0;
+    //设备IP是否改变
     if(charncmp(div_info_p->div_info.ip,conn.remote_addr,4)==0){
         //debug_printf("ipc\n");
         //debug_printf("%d,%d,%d,%d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
         //debug_printf("%d,%d,%d,%d\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3]);
+        // 设备IP改变 需刷新任务
+        rttask_playlist_updata_init(conn.remote_addr,div_info_p);
         memcpy(div_info_p->div_info.ip,conn.remote_addr,4);                         //获取设备IP
         need_send = 1;
     }
     if(div_info_p->div_info.vol != xtcp_rx_buf[HEART_VOL_B]){
-        //debug_printf("vc\n");
+        //debug_printf("vc  \n");
         div_info_p->div_info.vol = xtcp_rx_buf[HEART_VOL_B];              //获取设备默认音量
         need_send = 1;
     }
@@ -352,11 +356,13 @@ void div_heart_recive(){
     //--------------------------
     static uint8_t tmp=0;
     if((div_info_p->div_info.div_onlineok)&&(div_info_p->div_info.div_state == 0)&&(xtcp_rx_buf[HEART_STATE_B]!=0)){
-        mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
         debug_printf("divlist ud online\n");
         div_info_p->div_info.div_state = ONLINE;
         //设备上线 异常即时任务恢复
-        rttask_run_state_set(01,div_info_p->div_info.mac);
+        if(rttask_run_state_set(01,div_info_p->div_info.mac)){
+            state = RTTASKERROR_INFO_REFRESH;
+        }
+        need_send = 1;
     }
     //
     if((div_info_p->div_info.div_state!=0)&&(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B])){
@@ -370,7 +376,7 @@ void div_heart_recive(){
     }
     //debug_printf("heart info state %d\n",need_send);
     if(need_send){
-        mes_send_listinfo(DIVLIS_INFO_REFRESH,!xtcp_rx_buf[HEART_NEEDACK_B]);
+        mes_send_listinfo(state,!xtcp_rx_buf[HEART_NEEDACK_B]);
     }
     // 应答回复
     if((xtcp_rx_buf[HEART_NEEDACK_B])&&(div_info_p->div_info.div_state)){
@@ -407,6 +413,11 @@ uint8_t div_online_tolist(){
     div_info_p->over_time =0; //重置时间
     //-------------------------------------------------------------------------
     memcpy(div_info_p->div_info.mac,&xtcp_rx_buf[ONLINE_MAC_B],6);  //获取设备MAC
+    // 判断IP是否改变
+    if(charncmp(div_info_p->div_info.ip,conn.remote_addr,4)==0){
+        // 设备IP改变 需刷新任务
+        rttask_playlist_updata_init(conn.remote_addr,div_info_p);
+    }
     memcpy(div_info_p->div_info.ip,conn.remote_addr,4);             //获取设备IP
     div_info_p->div_info.vol = xtcp_rx_buf[ONLINE_VOL_B];  //获取设备默认音量
     
@@ -447,7 +458,7 @@ void div_online_recive()
 //=====================================================================================================
 // 即时任务 查找 与置为异常或正常状态  1 正常 2异常
 //=====================================================================================================
-void rttask_run_state_set(uint8_t state,uint8_t mac[]){
+uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
     //即时任务状态异常
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
     while(tmp_p!=null){
@@ -456,9 +467,11 @@ void rttask_run_state_set(uint8_t state,uint8_t mac[]){
         if(charncmp(tmp_union.rttask_dtinfo.src_mas,mac,6)){
             //有运行中任务 任务置为异常状态
             tmp_p->run_state = state;
+            return 1;
         }
         tmp_p = tmp_p->run_next_p;
     }
+    return 0;
 }
 
 
@@ -477,11 +490,14 @@ void div_heart_overtime_close(){
                 //连接超时,设备离线
                 div_node_tmp->div_info.div_state = OFFLINE;
                 div_node_tmp->div_info.div_onlineok = OFFLINE;
+                uint8_t state = DIVLIS_INFO_REFRESH;
                 //----------------------------------------------------------------------------------
-                rttask_run_state_set(02,div_node_tmp->div_info.mac);
+                if(rttask_run_state_set(02,div_node_tmp->div_info.mac)){
+                    state = RTTASKERROR_INFO_REFRESH;
+                }
+                mes_send_listinfo(state,0);
                 //---------------------------------------------------------------------------------------                    
                 //
-                mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
                 divlist_fl_write(); //保存列表信息 设备状态随后改变
                 debug_printf("div_offline\n");
                 //-------------------------------------------------------
@@ -534,7 +550,7 @@ void research_lan_revice(){
     g_sys_val.search_div_tol++;
     // 关闭广播端口
     if(conn.local_port == LISTEN_BROADCAST_LPPORT){
-        debug_printf("close conn\n");
+        debug_printf("close conn %x\n",conn.id);
         user_udpconn_close(conn);
     }
     debug_printf("have div %d \n",g_sys_val.search_div_tol);
@@ -566,7 +582,7 @@ void sysset_divfound_recive(){
 void divfound_over_timeinc(){
     if(g_sys_val.divsreach_f){
         g_sys_val.divsreach_tim_inc++;
-        if(g_sys_val.divsreach_tim_inc>=3){
+        if(g_sys_val.divsreach_tim_inc>=30){ //3秒
              //是否有列表正在发送
             if(conn_sending_s.id!=null)
                 return;

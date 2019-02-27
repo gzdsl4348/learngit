@@ -91,6 +91,12 @@ void rt_task_list_read();
 // 即时任务列表连续传送
 void rttask_list_sending_decode();
 
+// 即时任务  ip列表更新            BF0C
+void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p);
+
+void rttask_playlist_updata();
+
+
 //读flash 阻塞时 10hz 协议处理线程
 void task_pol_decode_process();
 

@@ -208,6 +208,13 @@ typedef struct g_sys_val_t{
     uint8_t sn_key[DIV_NAME_NUM];
     //
     uint8_t con_id_tmp[6];
+    // 即时任务列表更新
+    rttask_info_t *rttask_updat_p;
+    rttask_info_t *rttask_updat_f;
+    div_node_t *rttask_div_p;
+    uint8_t rttask_up_ip[4];
+
+    
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

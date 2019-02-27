@@ -1554,6 +1554,44 @@ void task_rttask_rebuild(){
 }
 
 //====================================================================================================
+// 即时任务  更新            BF0D
+//====================================================================================================
+void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p){
+    g_sys_val.rttask_updat_p = rttask_lsit.run_head_p;
+    g_sys_val.rttask_updat_f = 1;
+    g_sys_val.rttask_div_p = div_info_p;
+    memcpy(g_sys_val.rttask_up_ip,ip,4);
+    debug_printf("div ip change %d %d %d %d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
+}
+
+void rttask_playlist_updata(){
+    uint8_t needsend;
+    if(g_sys_val.rttask_updat_f==0)
+        return;
+    while(g_sys_val.rttask_updat_p!=null){
+        user_sending_len = rttask_listupdat_build(&needsend,g_sys_val.rttask_updat_p->rttask_id,g_sys_val.rttask_div_p);
+        if(needsend){
+            //---------------------------------------------------------------------------------------------------------------
+            // 找播放源设备连接节点
+            div_node_t *div_tmp_p;
+            conn_list_t *div_conn_p;
+            div_tmp_p = get_div_info_p(tmp_union.rttask_dtinfo.src_mas);
+            div_conn_p = get_conn_for_ip(div_tmp_p->div_info.ip);
+            //
+            if(div_conn_p != null)
+                user_xtcp_send(div_conn_p->conn,0);
+            debug_printf("send rttask list updat\n");
+            g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
+            return;
+        }
+        g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
+    }
+    g_sys_val.rttask_updat_f = 0;
+    debug_printf("rttask list updat end\n");
+}
+
+
+//====================================================================================================
 void timer_rttask_run_process(){
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
     div_node_t *div_tmp_p;
@@ -1562,7 +1600,9 @@ void timer_rttask_run_process(){
     while(tmp_p!=null){
         //debug_printf("tim %d\n",tmp_p->dura_time);
         if(tmp_p->dura_time!=0xFFFFFFFF){
-            tmp_p->over_time++;
+            // 任务异常 计时暂停
+            if(tmp_p->run_state!=2)
+                tmp_p->over_time++;
             //debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
             if(tmp_p->over_time>=tmp_p->dura_time){ 
                 rt_task_read(&tmp_union.rttask_dtinfo,tmp_p->rttask_id);

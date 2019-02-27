@@ -6,7 +6,7 @@
 
 void stop_all_timetask();
 
-void user_lan_uart0_tx(uint8_t *data,uint8_t len);
+void user_lan_uart0_tx(uint8_t *data,uint8_t len,uint8_t mode);
 
 void user_uart_tx(uint8_t *data,uint8_t len);
 

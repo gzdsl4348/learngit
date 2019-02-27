@@ -281,9 +281,10 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_NAME_B],host_info.name,DIV_TYPE_NUM);
     //
-    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = host_info.version[0];
-    debug_printf("ver %x : %x\n",host_info.version[0],host_info.version[1]);
-    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = host_info.version[1];
+    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = VERSION_H;
+   
+    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = 14;
+    debug_printf("ver %x %x  \n",xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B],xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1]);
     //
     xtcp_tx_buf[AC_LOGIN_DHCP_EN_B] = host_info.dhcp_en;
     //
@@ -760,6 +761,53 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
     //
     return build_endpage_decode(data_base,cmd,&xtcp_rx_buf[POL_ID_BASE]);
 }
+
+//==========================================================================================
+// 即时任务列表刷新 BF0C
+//==========================================================================================
+uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttask_div_p){
+    uint16_t data_base;
+    div_node_t *div_tmp_p=null;
+    // 读取任务信息
+    rt_task_read(&tmp_union.rttask_dtinfo,id);
+    // 设备总量
+    xtcp_tx_buf[RTTASK_LISTUP_DIVTOL] = tmp_union.rttask_dtinfo.div_tol;
+    //
+    data_base = RTTASK_LISTUP_LIST_BASE;
+    *needsend = 0;
+    for(uint8_t i=0; i<tmp_union.rttask_dtinfo.div_tol; i++){
+        //取得设备指针
+        div_tmp_p = get_div_info_p(tmp_union.rttask_dtinfo.des_info[i].mac);
+        if(div_tmp_p==null){
+            xtcp_tx_buf[RTTASK_LISTUP_DIVTOL]--;
+            continue;
+        }
+        
+        //获得设备IP
+        memcpy(&xtcp_tx_buf[data_base+RTTASK_LISTUP_IP],div_tmp_p->div_info.ip,4);
+        //分区控制位
+        xtcp_tx_buf[data_base+RTTASK_LISTUP_AREACONTORL] = tmp_union.rttask_dtinfo.des_info[i].zone_control;
+        xtcp_tx_buf[data_base+RTTASK_LISTUP_AREACONTORL+1] = tmp_union.rttask_dtinfo.des_info[i].zone_control>>8;
+        //设备MAC
+        memcpy(&xtcp_tx_buf[data_base+RTTASK_LISTUP_MAC],tmp_union.rttask_dtinfo.des_info[i].mac,6);
+        //
+        //判断是否需要更新
+        #if 0
+        debug_printf("%x,%x,%x,%x,%x,%x\n%x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.des_info[i].mac[0],tmp_union.rttask_dtinfo.des_info[i].mac[1],
+                                                              tmp_union.rttask_dtinfo.des_info[i].mac[2],tmp_union.rttask_dtinfo.des_info[i].mac[3],
+                                                              tmp_union.rttask_dtinfo.des_info[i].mac[4],tmp_union.rttask_dtinfo.des_info[i].mac[5],
+                                                              rttask_div_p->div_info.mac[0],rttask_div_p->div_info.mac[1],rttask_div_p->div_info.mac[2],
+                                                              rttask_div_p->div_info.mac[3],rttask_div_p->div_info.mac[4],rttask_div_p->div_info.mac[5]);
+        #endif
+        if(charncmp(tmp_union.rttask_dtinfo.des_info[i].mac,rttask_div_p->div_info.mac,6)){
+            *needsend = 1;
+        }        
+        data_base += RTTASK_LISTUP_LEN;
+    }
+    //
+    return build_endpage_decode(data_base,0xBF0D,host_info.mac);
+}
+
 
 //==========================================================================================
 // 即时任务信息创建包

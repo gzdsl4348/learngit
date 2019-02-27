@@ -95,6 +95,7 @@
 #define MUSICLIS_INFO_REFRESH      02
 #define ACCOUNT_INFO_REFRESH       03
 #define TODAYTASK_INFO_REFRESH     04
+#define RTTASKERROR_INFO_REFRESH   05
 
 // 定时任务更新
 #define TIMETASK_UPDATA_CMD     0xB303
@@ -497,6 +498,17 @@
 #define RTTASK_BUILD_LEN            (RTTASK_BUILD_AREACONTORL+2)    //
 //  ACK
 #define RTTASK_BUILDC_STATE     (POL_DAT_BASE) //申请成功失败标志
+
+//====================================================================================================
+// 即时任务列表更新协议 BF0C
+//====================================================================================================
+#define RTTASK_LISTUP_DIVTOL        (POL_DAT_BASE)
+#define RTTASK_LISTUP_LIST_BASE     (RTTASK_LISTUP_DIVTOL+1)
+
+#define RTTASK_LISTUP_IP            (0)                             //4 播放设备IP
+#define RTTASK_LISTUP_MAC           (RTTASK_LISTUP_IP+4)             //6 播放设备MAC
+#define RTTASK_LISTUP_AREACONTORL   (RTTASK_LISTUP_MAC+6)            //2 播放设备分区控制位
+#define RTTASK_LISTUP_LEN            (RTTASK_LISTUP_AREACONTORL+2)    //
 
 //====================================================================================================
 // ONLINE PACKPAGE 

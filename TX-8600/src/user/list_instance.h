@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x13)
+#define VERSION_L    (0x14)
 
 #define COULD_TCP_EN    0
 
@@ -25,6 +25,8 @@ extern "C" {
 // This PORT For Eth Data Communication Port
 #define ETH_COMMUN_PORT	8805
 #define TCP_COULD_PROT  7003
+#define  PC_CONFIG_TOOL_PORT  5121
+
 // 最大UDP连接数
 #define MAX_UDP_CONNET	80
 

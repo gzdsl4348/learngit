@@ -90,6 +90,8 @@ void timee10hz_process(){
     bat_filecontorl_resend_tim(); //音乐回复重发
     rttask_build_overtime10hz(); //即时任务建立状态超时
     backup_sendmes_10hz();
+    divfound_over_timeinc();
+    rttask_playlist_updata();
 }
 
 //--------------------------------------------------------------------------
@@ -106,7 +108,6 @@ void second_process(){
         could_heart_send_timer();
         #endif
     }
-    divfound_over_timeinc();
     mic_time1hz_close();
     timer_taskmusic_check();    //定时任务几时
     task_check_and_play();      //定时任务定时播放
