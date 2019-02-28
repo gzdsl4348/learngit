@@ -200,8 +200,9 @@
 #define SOLU_CK_NAME        (SOLU_CK_STATE+1)   //32 方案名称
 #define SOLU_CK_BEGDATE     (SOLU_CK_NAME+DIV_NAME_NUM)  //3 方案开始日期
 #define SOLU_CK_ENDDATE     (SOLU_CK_BEGDATE+3)  //3 方案结束日期
+#define SOLU_CK_PRIO        (SOLU_CK_ENDDATE+3)
 
-#define SOLU_CK_LEN_END     (SOLU_CK_ENDDATE+3)
+#define SOLU_CK_LEN_END     (SOLU_CK_PRIO+1)
 
 //====================================================================================================
 // 方案更新包
@@ -222,8 +223,9 @@
 #define SOLU_CFG_SOLU_NAME      (SOLU_CFG_SOLU_STATE+1) //22 配置方案名称
 #define SOLU_CFG_SOLU_BEGDATE   (SOLU_CFG_SOLU_NAME+DIV_NAME_NUM) //3 配置方案开始日期   
 #define SOLU_CFG_SOLU_ENDDATE   (SOLU_CFG_SOLU_BEGDATE+3) //3 配置方案开始日期   
+#define SOLU_CFG_SOLU_PRIO      (SOLU_CFG_SOLU_ENDDATE+3) //1
 
-#define SOLU_CFG_SOLU_LEN_END   (SOLU_CFG_SOLU_ENDDATE+3)
+#define SOLU_CFG_SOLU_LEN_END   (SOLU_CFG_SOLU_PRIO+1)
 // ACK  
 #define SOLU_CFGACK_ID          (POL_DAT_BASE)  //1
 #define SOLU_CFGACK_CONFIG      (SOLU_CFGACK_ID+1) //1

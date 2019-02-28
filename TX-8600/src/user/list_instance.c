@@ -67,7 +67,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {SYSSET_DIVFOUNT_CMD,sysset_divfound_recive},
                              {SYSSET_DIV_HOSTSET_CMD,divresearch_hostset_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
-                             {SYSSET_IPSET_CMD,sysset_ipset_recive}
+                             //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 
 // 多包列表发送函数
