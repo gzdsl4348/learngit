@@ -374,7 +374,6 @@ uip_arp_out(struct uip_udp_conn *conn)
   /* First check if destination is a local broadcast. */
   if(uip_ipaddr_cmp(IPBUF->destipaddr, broadcast_ipaddr)) {
     memset(IPBUF->ethhdr.dest.addr, 0xFF, 6);
-    
   } else  if(uip_ipaddr_is_multicast(IPBUF->destipaddr)) {
     IPBUF->ethhdr.dest.addr[0] = 0x01;
     IPBUF->ethhdr.dest.addr[1] = 0x00;

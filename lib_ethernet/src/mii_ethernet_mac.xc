@@ -313,6 +313,7 @@ static void mii_ethernet_aux(client mii_if i_mii,
 
 #if 1
             // 音频包是目的端口为8802的UDP包
+            // 音频层在index[0] 协议层在index[1]
             if(((char *)data)[23]==0x11&&((char *)data)[36]==0x22&&((char *)data)[37]==0x62){
               filter_result &= 0x01;    //只有音频层接受音频包
             } else {

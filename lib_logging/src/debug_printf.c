@@ -49,7 +49,7 @@ static int itoa(unsigned n, char *buf, unsigned base, int fill)
 #define MAX_INT_STRING_SIZE 10
 
 #ifndef DEBUG_PRINTF_BUFSIZE
-#define DEBUG_PRINTF_BUFSIZE 130
+#define DEBUG_PRINTF_BUFSIZE 1000
 #endif
 
 

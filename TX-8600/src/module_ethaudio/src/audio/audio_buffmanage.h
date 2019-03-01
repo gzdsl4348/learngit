@@ -15,8 +15,7 @@ typedef struct mp3_buf_t{
 }mp3_buf_t;
 
 
-void audio_buffmanage_process(   client music_decoder_output_if if_mdo,
-                                 client ethernet_cfg_if i_eth_cfg, int is_hp,
+void audio_buffmanage_process(   client ethernet_cfg_if i_eth_cfg, int is_hp,
 								 server ethaud_cfg_if i_ethaud_cfg[n_ethaud_cfg],
 								 static const unsigned n_ethaud_cfg);
 

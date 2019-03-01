@@ -42,16 +42,14 @@ void aud_udpdata_init(uint8_t txbuff[],uint8_t mac_address[])
 //Audio Package Build
 //===========================================================================
 uint16_t audio_page_build(uint8_t txbuff[],
-                              audio_tx_frame_t *unsafe t_audio_frame,
                               uint8_t ipaddress[],
                               uint8_t &audio_format,
-                              uint8_t ch_enable_f,
-                              uint8_t &audio_pagesize,
                               uint8_t audio_type[],
                               uint8_t &volume,
                               unsigned timestamp,
                               uint16_t &iptmp,
-                              uint16_t &udptmp)
+                              uint16_t &udptmp,
+                              uint32_t mp3_frame_size)
 {
     //==========================================================================
     //--------------------------- RAM Define--------------------------
@@ -95,58 +93,23 @@ uint16_t audio_page_build(uint8_t txbuff[],
     txbuff[AUDIO_FORMAT_ADR] = audio_format;
 	// Get Audio Data Base Adr
 	len = AUDIO_CHDATA_BASE_ADR;
+    
 	//
-	for(i=0;i<NUM_MEDIA_INPUTS;i++){
-		if(ch_enable_f&1){
-			txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type[i] ;           //音频类型
-			txbuff[len+AUDIO_CHID_ADR] = i;				//音频通道ID
-			txbuff[len+AUDIO_CHPRIO_ADR] = 100;				//音频优先级
-			txbuff[len+AUDIO_CHVOL_ADR] = volume;		    //音频音量
-			txbuff[len+AUDIO_SILENT_ADR] = 0;				//默音等级
-            // 采样数据长度
-			txbuff[len+AUDIO_DATALEN_ADR] = audio_pagesize>>8;	//H
-			txbuff[len+AUDIO_DATALEN_ADR+1] = audio_pagesize;	//L
-            len += AUDIO_DATABASE_ADR;
-            //-------------------------------------------------------
-            // ADPCM数据多3个字节
-			if((txbuff[AUDIO_FORMAT_ADR]&0x0f)==AUDIOWIDTH_ADPCM){
-				txbuff[len] = t_audio_frame->adpcm_sample[i]>>8;
-				len++;
-				txbuff[len] = t_audio_frame->adpcm_sample[i];
-				len++;
-				txbuff[len] = t_audio_frame->adpcm_index[i];
-				len++;
-			}	
-		    //-----------------Get Chx Audio Data -------------------------------
-            switch(bitwidth){
-            	case AUDIOWIDTH_8BIT:
-					break;
-				case AUDIOWIDTH_16BIT:
-					for(uint16_t count=0; count<audio_pagesize; count++){
-						txbuff[len] = t_audio_frame->samples[i][count];
-						txbuff[len+1] = t_audio_frame->samples[i][count]>>8; 
-						len +=2;
-					}
-					break;
-				case AUDIOWIDTH_24BIT:					
-					break;
-				case AUDIOWIDTH_32BIT:
-					break;
-				case AUDIOWIDTH_ADPCM:	
-					for(uint16_t count=0; count<audio_pagesize; count+=2){
-						txbuff[len] = ((uint8_t)t_audio_frame->samples[i][count]<<4);
-                    	txbuff[len] |= (uint8_t)t_audio_frame->samples[i][count+1];;
-						len ++;
-					}
-					break;
-            }
-			//-------------------------------------------------------------------
-			total_num++;
-		}    // if ch_enable_f&1
-		ch_num++;
-		ch_enable_f=ch_enable_f>>1;		
-			
-	}// for i<ETH_AUDIO_TX_NUM
+	txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type[i] ; //音频类型
+	txbuff[len+AUDIO_CHID_ADR] = i;				    //音频通道ID
+	txbuff[len+AUDIO_CHPRIO_ADR] = 100;				//音频优先级
+	txbuff[len+AUDIO_CHVOL_ADR] = volume;		    //音频音量
+	txbuff[len+AUDIO_SILENT_ADR] = 0;				//默音等级
+    // 采样数据长度
+	txbuff[len+AUDIO_DATALEN_ADR] = mp3_frame_size>>8;	//H
+	txbuff[len+AUDIO_DATALEN_ADR+1] = mp3_frame_size;	//L
+    len += AUDIO_DATABASE_ADR;
+    
+    len += mp3_frame_size;
+	//-------------------------------------------------------------------
+	total_num++;
+    ch_num++;
+
 	txbuff[AUDIO_CHTOTAL_ADR]=total_num;
     //=======================================================================
     //----------------------Get Package Lenth------------------------

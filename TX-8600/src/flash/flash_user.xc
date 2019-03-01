@@ -391,7 +391,7 @@ void fl_manage_uart_tx(uint8_t data) {
     int t;
     p_uart0_tx <: 0 @ t; //send start bit and timestamp (grab port timer value)
     t += FL_TX_CLK;
-    #pragma loop unroll(8)
+#pragma loop unroll(8)
     for(int i = 0; i < 8; i++) {
         p_uart0_tx @ t <: >> data; //timed output with post right shift
         t += FL_TX_CLK;
@@ -399,8 +399,6 @@ void fl_manage_uart_tx(uint8_t data) {
     p_uart0_tx @ t <: 1; //send stop bit
     t += FL_TX_CLK;
     p_uart0_tx @ t <: 1; //wait until end of stop bit
-    //p_uart0_tx <: 0;
-    //p_uart0_rx <: 0;
 }
 
 

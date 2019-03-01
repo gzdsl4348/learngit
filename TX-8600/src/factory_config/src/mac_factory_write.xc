@@ -108,7 +108,6 @@ void mac_fatctory_xtcp_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, uns
                 i_xtcp.send(conn, rx_buffer, response_len);
                 break;
             case maccom_signalwrite:      
-                debug_printf("rec writ mac\n");
                 mac_writeflash(&rx_buffer[6]);
                 memcpy(t_mac_facinfo.mac,rx_buffer+6,6);
                 response_len = macsignal_rewrite_bulid(rx_buffer,maccom_signalwrite_ok);

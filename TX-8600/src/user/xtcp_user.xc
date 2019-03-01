@@ -385,23 +385,30 @@ int tftp_app_process_send_data_block(unsigned char tx_buf[], int block_num, int 
 }
 void tftp_app_transfer_complete(void)
 {
+    unsafe {
     g_sys_val.tftp_busy_f = 0;
-    if(tftp_type == TFTP_TYPE_FILE){
+    if(tftp_type==TFTP_TYPE_FILE)
+    {
         mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
     }
-    if(tftp_type==TFTP_TYPE_IMAGE)
+    else if(tftp_type==TFTP_TYPE_IMAGE)
     {
-        unsafe {pi_image->stop_image_upgrade(0);}
+        pi_image->stop_image_upgrade(0);
         g_sys_val.reboot_f=1;
     }
+    else if(tftp_type==TFTP_TYPE_WRITE_BACKUP)
+    {
+        //i_user_flash->start_write_backup2flash();
+    }
     debug_printf("tftp_app_transfer_complete %d\n", tftp_type);
+    }
 }
 
 void tftp_app_transfer_error(void)
 {
     debug_printf("tftp_app_transfer_error [tftp_block_wait %d] [last_block_num %d]\n",tftp_block_wait,last_block_num);
     unsafe {
-        if(tftp_type == TFTP_TYPE_FILE)
+        if(tftp_type==TFTP_TYPE_FILE)
             pi_fs->file_upload_forced_stop();
         if(tftp_type==TFTP_TYPE_IMAGE)
             pi_image->stop_image_upgrade(0);
@@ -725,7 +732,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     // 建立广播连接
     memset(ipconfig.ipaddr,255,4);
     i_xtcp.connect_udp(ETH_COMMUN_PORT,ipconfig.ipaddr,g_sys_val.broadcast_conn);
-
+    i_xtcp.bind_local_udp(g_sys_val.broadcast_conn,LISTEN_BROADCAST_LPPORT);
+    i_xtcp.listen(LISTEN_BROADCAST_LPPORT,XTCP_PROTOCOL_UDP);
+    
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
 

@@ -14,7 +14,7 @@ extern kfifo_t upload_fifo;
 
 #define FILE_SERVER_TRAINING  (50000)//0.5ms
 
-#define FILE_TRAINING_TICK  (200000)//2ms
+#define FILE_TRAINING_TICK  (100000)//2ms
 
 
 uint8_t file_busy_decode(){
@@ -24,7 +24,6 @@ uint8_t file_busy_decode(){
 
 #define FILE_BUSY_DECODE  file_busy_decode()
 
-extern void mp3_lock_init();
 
 [[combinable]]
 void file_server(server file_server_if if_fs, chanend c_faction)
@@ -41,8 +40,6 @@ void file_server(server file_server_if if_fs, chanend c_faction)
         
     music_decoder_status_t decoder_status[MUSIC_CHANNEL_NUM];
     memset(&decoder_status, 0, sizeof(decoder_status));
-
-    mp3_lock_init();
 
     tmr :> timeout;
     timeout += FILE_SERVER_TRAINING;
@@ -373,7 +370,7 @@ void fl_read_ugbk_tbl(unsigned dword[], int offset)
 void fl_erase_flielist(int secoter_index)
 {
 }
-
+extern void debug_dir_list(char tag[] ,const uint8_t buff[]);
 void fl_read_flielist(int secoter_index, uint8_t buff[], int br)
 {
     unsafe {
@@ -381,6 +378,7 @@ void fl_read_flielist(int secoter_index, uint8_t buff[], int br)
         sdram_complete(*pc_sdram, sdram_state);
     };
 }
+
 void fl_write_flielist(int secoter_index, const uint8_t buff[], int bw)
 {
     unsafe {
@@ -420,9 +418,9 @@ void file_process(streaming chanend c_sdram, chanend c_faction)
 
                 sdcard_hot_swap_check();
                 
-                music_file_handle();
+                music_file_handle(c_sdram, sdram_state);
 
-                upload_handle(2);
+                upload_handle(1);
                 
                 tmr :> timeout;
                 timeout += FILE_TRAINING_TICK;

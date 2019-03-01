@@ -26,7 +26,7 @@ uint16_t chksum_8bit(uint16_t sum, uint8_t *byte_data, uint16_t lengthInBytes) {
         s += byte_data[i];
     }
     s = ((s & 0xffff) + (s >> 16)) ;
-    if(s>0xffff)
+    while(s>0xffff)
         s = ((s & 0xffff) + (s >> 16));
     //printf("%x\n",s);
 	return ~s;

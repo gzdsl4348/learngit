@@ -12,16 +12,14 @@
 void aud_udpdata_init(uint8_t txbuff[],uint8_t mac_address[]);
 
 uint16_t audio_page_build(uint8_t txbuff[],
-                            audio_tx_frame_t *unsafe t_audio_frame,
                             uint8_t ipaddress[],
                             uint8_t &audio_format,
-                            uint8_t ch_enable_f,
-                            uint8_t &audio_pagesize,
                             uint8_t audio_type[],
                             uint8_t &volume,
                             unsigned timestamp,
                             uint16_t &iptmp,
-                            uint16_t &udptmp);
+                            uint16_t &udptmp,
+                            uint32_t mp3_frame_size);
 
 void audpage_sum_build(uint8_t txbuff[],uint8_t des_ip[],uint8_t des_mac[],uint8_t area_contorl);
 

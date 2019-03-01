@@ -34,7 +34,6 @@
       </Links>
     </Package>
   </Packages>
-
   <Nodes>
     <Node Id="2" Type="device:" RoutingId="0x8000">
       <Service Id="0" Proto="xscope_host_data(chanend c);">
@@ -48,7 +47,6 @@
       <LinkEndpoint NodeId="2" Chanend="1"/>
     </Link>
   </Links>
-
   <ExternalDevices>
     <Device NodeId="0" Tile="0" Class="SQIFlash" Name="bootFlash" Type="01">
       <Attribute Name="PORT_SQI_CS" Value="PORT_SQI_CS"/>
@@ -56,9 +54,7 @@
       <Attribute Name="PORT_SQI_SIO"  Value="PORT_SQI_SIO"/>
     </Device>
   </ExternalDevices>
-
   <JTAGChain>
     <JTAGDevice NodeId="0"/>
   </JTAGChain>
-
 </Network>

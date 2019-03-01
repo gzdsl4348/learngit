@@ -26,11 +26,11 @@
 
 #define SDRAM_DATA_BACKUP_START     (3*1024*1024/4)  //3MB, 共3MB
 
-#define SDRAM_FILE_LIST_START       (6*1024*1024/4)  //6MB, 共1MB
+#define SDRAM_FILE_LIST_START       (6*1024*1024/4)  //6MB, 共512KB
 
 #define SDRAM_FILE_LIST_SECTOR_SIZE (10*1024/4)     //10K一个sector
 
-#define SDRAM_MP3DECODER_START      (7*1024*1024/4) //7MB, 共512KB
+#define SDRAM_MP3DECODER_START      (((6*1024+512)*1024)/4) //6.5MB, 共1MB
 
 
 // 批处理文件临时buff

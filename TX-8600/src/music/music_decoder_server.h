@@ -1,7 +1,7 @@
 #ifndef _MISIC_DECODER_SERVER_H_
 #define _MISIC_DECODER_SERVER_H_
 
-
+#include <stdint.h>
 /*
 音频解码后
 pcm传输接口
@@ -12,9 +12,7 @@ pcm传输接口
 */
 typedef interface music_decoder_output_if
 {
-    
-    unsigned get_pcmbuff_active(unsigned char          ch, unsigned int &samplerate, unsigned char pcmbuff[n], unsigned n, unsigned &length);
-    
+    void get_mp3_frame(uint8_t ch, uint8_t mp3_frame[], uint32_t &length, uint32_t &frame_num, uint32_t &samplerate);   
 }music_decoder_output_if;
 
 [[combinable]]

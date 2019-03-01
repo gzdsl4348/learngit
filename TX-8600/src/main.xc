@@ -45,7 +45,7 @@
 #include <stdlib.h>
 #include "sdram.h"
 
-extern void music_decoder_handle(STREAMING_CHANEND(c_sdram), int start_index, int stop_index);
+extern void music_decoder(STREAMING_CHANEND(c_sdram));
 
 on tile[0]:out buffered port:32   sdram_dq_ah                 = XS1_PORT_16B;
 on tile[0]:out buffered port:32   sdram_cas                   = XS1_PORT_1K;
@@ -61,7 +61,6 @@ enum SDRAM_CLIENT_T {
     SDRAM_MP3_DECODER,
 	SDRAM_CLENT_TOTAL	
 };
-
 
 //-------------------------------------------------------------------------------------
 // wifi text
@@ -148,13 +147,9 @@ int main()
                                  sdram_cb,
                                  2, 128, 16, 8, 12, 2, 64, 4096, 4); //Uses IS42S16400D 64Mb part supplied on SDRAM slice
    
-
-        on tile[0]:{
-            [[combine]] par{
-                    user_flash_manage(if_fl_manage,c_sdram[SDRAM_USER]);
-                    music_decoder_server(if_mdo);
-                }
-        }
+        on tile[0]:user_flash_manage(if_fl_manage,c_sdram[SDRAM_USER]);
+        
+        on tile[0]:music_decoder_server(if_mdo);
         
         on tile[0]:file_server(if_fs, c_faction);
         
@@ -166,30 +161,24 @@ int main()
         on tile[0]:
         {
             set_core_high_priority_on();
-            music_decoder_handle(c_sdram[SDRAM_MP3_DECODER], 0, 3);
-        };
-
-
-        //on tile[0]:application(c_sdram[0]);        
+            music_decoder(c_sdram[SDRAM_MP3_DECODER]);
+        };      
         
         //--------------------------------------------------------------------------------------------------
         // user process
         //--------------------------------------------------------------------------------------------------
-        on tile[1]: {
-        xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage,if_fs,i_uart_tx[UART_USER],i_uart_rx[UART_USER],i_image);
-        }
+        on tile[1]: xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage,if_fs,i_uart_tx[UART_USER],i_uart_rx[UART_USER],i_image);
+        
         on tile[1]: eth_audio(i_eth_cfg[ETH_AUDIO_CFG],
-			                  null,
-			                  null,
-			                   c_rx_hp,
-			                   c_tx_hp,
-			                   if_ethaud_cfg,1,
-                               if_mdo);
+                              //i_eth_rx_lp[ETH_AUDIO_DATA], i_eth_tx_lp[ETH_AUDIO_DATA],
+                              null,null,
+                              c_rx_hp, c_tx_hp,
+                              if_ethaud_cfg, 1,
+                              if_mdo);
         //--------------------------------------------------------------------------------------------------
         // system process
         //--------------------------------------------------------------------------------------------------
-		on tile[1]: {
-            /*
+#if 0
         	mii_ethernet_mac(i_eth_cfg, ETH_CFGCLENT_TOTAL,
                                i_eth_rx_lp, ETH_CLENT_TOTAL,
                                i_eth_tx_lp, ETH_CLENT_TOTAL,
@@ -199,20 +188,25 @@ int main()
                                p_eth_dummy,
                                eth_rxclk, eth_txclk,
                                RX_BUFSIZE_WORDS);
-            */
+                  }            
+#else
+        on tile[1]:
+        {
             mii_ethernet_rt_mac(i_eth_cfg,ETH_CFGCLENT_TOTAL,
-                                i_eth_rx_lp,ETH_CLENT_TOTAL,
-                                i_eth_tx_lp,ETH_CLENT_TOTAL,
-                                c_rx_hp,
-                                c_tx_hp,
-                                p_rxclk,p_rxer,p_rxd,p_rxdv,
-                                p_txclk,p_txen,p_txd,
-                                eth_rxclk,
-                                eth_txclk,
-                                RX_BUFSIZE_WORDS,
-                                TX_BUFSIZE_WORDS,
-                                ETHERNET_DISABLE_SHAPER);
+                             i_eth_rx_lp, ETH_CLENT_TOTAL,
+                             i_eth_tx_lp, ETH_CLENT_TOTAL,
+                             c_rx_hp, c_tx_hp,
+                             p_rxclk, p_rxer, p_rxd, p_rxdv,
+                             p_txclk, p_txen, p_txd,
+                             eth_rxclk, eth_txclk,
+                             RX_BUFSIZE_WORDS,
+                             TX_BUFSIZE_WORDS,
+                             ETHERNET_DISABLE_SHAPER);        
         }
+#endif
+
+		//SMI Contorl Process
+		//on tile[1]: /*[[distribute]]*/smi(i_smi, p_smi_mdio, p_smi_mdc);
         //
         
 		on tile[0]: xtcp_uip(i_xtcp_user,XTCP_CLENT_TOTAL,null,

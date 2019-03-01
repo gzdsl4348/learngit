@@ -469,8 +469,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 
 	if(conn == 0) {
 		// max tcp connections reached
-        debug_printf("\n\nxtcp tcp conn full\n\n");
-        return 0;
+		return 0;
 	}
 
 	conn->tcpstateflags = UIP_SYN_SENT;
@@ -500,7 +499,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 /*---------------------------------------------------------------------------*/
 #if UIP_UDP
 struct uip_udp_conn *
-uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport,u16_t feste_f,u16_t feste_lport)
+uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 {
 	register struct uip_udp_conn *conn;
 
@@ -527,18 +526,11 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport,u16_t feste_f,u16_t feste_lport)
 	}
 
 	if(conn == 0) {
-        debug_printf("\n\nxtcp udp conn full\n\n");
 		return 0;
 	}
-    // ¹Ì¶¨¼àÌı¶Ë¿Ú
-    if(feste_f){
-        conn->lport = HTONS(feste_lport);
-    }
-    // Ëæ»ú¼àÌı¶Ë¿Ú
-    else{
-    	conn->lport = HTONS(lastport);
-    }
-    conn->rport = rport;
+
+	conn->lport = HTONS(lastport);
+	conn->rport = rport;
 
 	if(ripaddr == NULL) {
 		memset(conn->ripaddr, 0, sizeof(uip_ipaddr_t));

@@ -10,7 +10,7 @@ extern "C" {
 //--------Audio ETH PORT ----------
 #define	ETH_AUDIO_PORT		8802
 
-#define NUM_MEDIA_INPUTS    4
+#define NUM_MEDIA_INPUTS    48
 
 //--------Audio Eth MAX TX Chanend---------
 #define MAX_SENDCHAN_NUM    64
@@ -116,6 +116,8 @@ enum AUDIO_CASTMODE_E{
 #define AUDIOWIDTH_24BIT    2
 #define AUDIOWIDTH_32BIT    3
 #define AUDIOWIDTH_ADPCM    4
+#define AUDIOWIDTH_MP3      5
+
 //Sample Rate
 #define SAMPLE_RATE_8K       0
 #define SAMPLE_RATE_16K      1

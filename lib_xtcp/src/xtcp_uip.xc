@@ -109,7 +109,6 @@ unregister_listener(listener_info_t listeners[],
                     int port_number,
                     int n_ports)
 {
-                         
   for (unsigned i=0; i<n_ports; i++) {
     if (listeners[i].active &&
       listeners[i].port_number == port_number) {
@@ -466,19 +465,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
                                         HTONS(conn->lport),
                                         port_number,
                                         conn);
-          listen_port =  HTONS(conn->lport);
-          debug_printf("ls %d\n",listen_port);
+          listen_port = conn->lport;
         }
       } else {
-        struct uip_udp_conn * unsafe conn;
-        // 广播连接监听使用固定端口
-        if(ipaddr[0]==255 && ipaddr[1]==255 && ipaddr[2]==255 && ipaddr[3]==255 ){
-            conn = uip_udp_new(&uipaddr, HTONS(port_number),1,LISTEN_BROADCAST_LPPORT);
-        }
-        // 普通随机端口
-        else{
-            conn = uip_udp_new(&uipaddr, HTONS(port_number),0,0);
-        }
+        struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
         if (conn != NULL) {
           //register_listener(udp_listeners, i, HTONS(conn->lport), NUM_UDP_LISTENERS);
           conn->xtcp_conn = create_xtcp_state(i,
@@ -495,15 +485,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       uip_ipaddr_t uipaddr;
       uip_ipaddr(uipaddr, ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
       res = 0;
-      struct uip_udp_conn * unsafe conn;
-      // 广播连接监听使用固定端口
-      if(ipaddr[0]==255 && ipaddr[1]==255 && ipaddr[2]==255 && ipaddr[3]==255 ){
-          conn = uip_udp_new(&uipaddr, HTONS(port_number),1,LISTEN_BROADCAST_LPPORT);
-      }
-      // 普通随机端口
-      else{
-          conn = uip_udp_new(&uipaddr, HTONS(port_number),0,0);
-      }
+      struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
       if (conn != NULL) {
         //register_listener(udp_listeners, i, HTONS(conn->lport), NUM_UDP_LISTENERS);
         conn->xtcp_conn = create_xtcp_state(i,
@@ -520,7 +502,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       break;        
     case i_xtcp[unsigned i].send(const xtcp_connection_t &conn, char data[], unsigned len):
       if (len <= 0) break;
-
+      if(len >= XTCP_CLIENT_BUF_SIZE) {debug_printf("\n\nxtcp send buff overflow\n");break;}
       set_uip_state(conn);
 
       // Make sure we're writing to the correct place
@@ -734,7 +716,7 @@ xtcpd_appcall(void)
   // New connection
   if (uip_connected()) {
     int client_num;
-    
+
     if (uip_udpconnection()) {
       client_num = get_listener_linknum(udp_listeners,
                                         NUM_UDP_LISTENERS,

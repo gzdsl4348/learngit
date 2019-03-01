@@ -174,14 +174,7 @@ void fopr_handle()
         {
             if(p_for_upload->state == FOU_STATE_START)
             {
-                if(wait_mp3_dyna_buff_free()) 
-                {
-                    error = 0xffff;
-                }
-                else
-                {
-                    error = file_upload_start(p_for_upload->fname);
-                }
+                error = file_upload_start(p_for_upload->fname);
 
                 debug_printf("file_upload_start %s %d\n", p_for_upload->fname, error);
                 if(error == 0)

@@ -1,7 +1,7 @@
 #ifndef _MUSIC_DECODER_TYPES_H_
 #define _MUSIC_DECODER_TYPES_H_
 
-#define MUSIC_CHANNEL_NUM   4
+#define MUSIC_CHANNEL_NUM   48
 
 typedef enum
 {

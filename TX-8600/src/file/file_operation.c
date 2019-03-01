@@ -134,7 +134,7 @@ uint8_t mf_copy(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *pexit,uint
         res = f_copy(psrc, pdst, pcurpct, pexit, totsize, cpdsize, 0);
         while(res == FR_EXIST && rename_cnt<100)
         {
-            wstrcpy((TCHAR*)dst_name, pdst);
+            wstrcpy((TCHAR*)dst_name, (TCHAR*)pdst);
             if(fname_rename((TCHAR*)dst_name, rename_cnt)) 
             {
                 res = FR_EXIST;

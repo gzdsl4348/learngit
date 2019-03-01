@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "xtcp.h"
 #include "protocol_adrbase.h"
-
+#include "eth_audio_config.h"
 #if defined(__cplusplus) || defined(__XC__)
 extern "C" {
 #endif
@@ -23,10 +23,10 @@ extern "C" {
 #define RX_BUFFER_SIZE 1472
 
 // This PORT For Eth Data Communication Port
-#define ETH_COMMUN_PORT	8805
-#define TCP_COULD_PROT  7003
+#define ETH_COMMUN_PORT	        8805
+#define TCP_COULD_PROT          7003
 #define  PC_CONFIG_TOOL_PORT  5121
-
+#define LISTEN_BROADCAST_LPPORT 4094
 // 最大UDP连接数
 #define MAX_UDP_CONNET	80
 
@@ -65,7 +65,7 @@ extern "C" {
 #define MAX_TASK_DATE_NUM   10  //最大指定10天   
 
 // 最大MP3解码数
-#define MAX_MUSIC_CH        4
+#define MAX_MUSIC_CH        NUM_MEDIA_INPUTS
 
 #define HOST_UNREGISTER     0
 #define HOST_REGISTER_DAYS          1

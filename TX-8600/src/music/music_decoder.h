@@ -1,5 +1,7 @@
 #ifndef _MUSIC_DECODER_H_
 #define _MUSIC_DECODER_H_
+#include <stdint.h>
+#include <sdram.h>
 #include "sys.h"
 #include "ff.h"	
 #include "music_decoder_types.h"
@@ -12,54 +14,41 @@ extern "C" {
 #define FRBUFF_USER_FILE    0
 #define FRBUFF_USER_DECODER 1
 
-#define MUSIC_FRBUFF_SZ     4*1024
-#define MUSIC_DEBUFF_SZ     5*1024	//MP3解码时,文件buf大小
-#define MUSIC_PCM_BUFF_SZ   2304
+#define MUSIC_FILE_BUFF_SZ      (8*1024)
 
 #define MP3DEC_CHANNAL_NUM  MUSIC_CHANNEL_NUM
 
-#define MP3_DECODER_ERROR_MAX_CNT   100
+#define MP3_DECODER_ERROR_MAX_CNT   50
 
 typedef struct
 {
-    // mp3文件解码 
-    FIL file;
     int decoder_status;
     int decoder_error_cnt;
-    int frpos;
-    int frbuffleft;                  //frbuff还剩余的有效数据
-    u8 frbuff[MUSIC_FRBUFF_SZ];   //5*1024 byte
     
+    // mp3文件解码 
+    FIL file;    
+    uint8_t file_over_flag;
+    uint8_t file_close_flag;
     
-    int depos;                      //MP3解码读偏移
-    int debuffleft;                 //debuff还剩余的有效数据
-    u8 debuff[MUSIC_DEBUFF_SZ];   //5*1024 byte
+    // mp3原始数据sdram double buff
+    uint32_t file_buff_size[2];     // 0 - 为空
+    uint32_t file_buff_offset[2];   // 
+    uint8_t file_buff_for_used;     // 0 - 先被消费 1 - 先被消费
 
-    u32 curnamepos;                 //当前文件偏移
+    // mp3 frame data
+    uint8_t mp3_frame[/*1024*2*/1200];
+    uint8_t mp3_frame_full;
+    uint32_t mp3_frame_size;
+    uint32_t mp3_frame_num;
 
-    // pcm数据 
-    u8 pcmbuff1[MUSIC_PCM_BUFF_SZ]; //单通道数据， 2304 byte
-    
-    u8 pcmbuff2[MUSIC_PCM_BUFF_SZ];
-    u8 pcmbuff1_isfill;  
-    u8 pcmbuff2_isfill;
+    // mp3文件信息
+    uint32_t totsec ;                    //整首歌时长,单位:秒
+    uint32_t bitrate;                    //比特率(位速)
+    uint32_t samplerate;                 //采样率 
+    uint16_t bps;                        //位数,比如16bit,24bit,32bit
+    uint32_t datastart;                  //数据帧开始的位置(在文件里面的偏移)
 
-    //05-07旧版本,pcmbuff_switch的解析
-    //0 - buff1 is front buff2 is back
-    //1 - buff1 is back  buff2 is front
-
-    //0 - buff2 no frist get 
-    //1 - buff2 is frist get
-    u8 pcmbuff_switch;
-    
-
-
-    // mp3文件信息 - 这部分需要在前期准备mp3文件列表时，写到flash保存
-    u32 totsec ;                    //整首歌时长,单位:秒
-    u32 bitrate;                    //比特率(位速)
-    u32 samplerate;                 //采样率 
-    u16 bps;                        //位数,比如16bit,24bit,32bit
-    u32 datastart;                  //数据帧开始的位置(在文件里面的偏移)
+    uint32_t curnamepos;                 //当前文件偏移
 }music_decoderdev_t;
 
 
@@ -76,7 +65,7 @@ typedef struct
 
 void music_decoder_mgr_init();
 
-void music_file_handle();
+void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state, p_sdram_state));
 
 int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_offset);
 int music_decode_stop(unsigned char ch, unsigned char change_status);
