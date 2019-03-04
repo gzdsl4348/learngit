@@ -311,16 +311,16 @@ void account_sys_register_recive(){
         host_info.regiser_state = xtcp_rx_buf[POL_DAT_BASE+10]^key_tmp;
         debug_printf("BE02 rec %d \n",host_info.regiser_state );
         // 未注册
-        if(host_info.regiser_state==0){
+        if((host_info.regiser_state==0)&&(host_info.regiser_days == 0)){
             host_info.regiser_state = 0;
         }
         // 无限期注册
         else if(host_info.regiser_state==1){
-            host_info.regiser_state = 1;
+            host_info.regiser_state = 2;
         }
         // 有限期注册
         else{
-            host_info.regiser_state = 2;
+            host_info.regiser_state = 1;
         }
         host_info.regiser_days = (xtcp_rx_buf[POL_DAT_BASE+11]^key_tmp)|((xtcp_rx_buf[POL_DAT_BASE+12]^key_tmp)<<8);
         // 需更新注册信息

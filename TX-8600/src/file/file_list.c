@@ -86,14 +86,14 @@ void printfstr(TCHAR *str)
 //遍历文件
 //used ram:1536 + 2148(mp3_get_info) = 3684
 //path:路径
-//mark:0,查找文件夹;1,查找目标文件;
+//mark:0,查找文件夹;1,查找目标文件;2,新增目标文件,在旧的基础上添加新的目标文件
 //buff:存储列表的buff
 //buff_size:buff的大小
 //num:返回文件数目
 //返回值:执行结果
 char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, int *num, uint8_t *buff_full)
 {
-
+    int i = 0;
     FRESULT res;
     unsigned char type;
     unsigned int offset = 0;
@@ -123,10 +123,15 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
         myfree(fno);
         return 0xff;        
     }
-
-    *num = 0;
-    memset(buff, 0, buff_size);
-
+    if(mark == 0 || mark == 1)
+    {
+        *num = 0;
+        memset(buff, 0, buff_size);
+    }
+    else if(mark == 2)
+    {
+        offset = sizeof(music_info_t)*(*num);
+    }
     res = f_opendir(dir,(const TCHAR*)path); //打开一个目录
     if (res == FR_OK)
     {
@@ -198,9 +203,59 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         break;
                     }
                 }
-                else continue;  //不需要的类型
+                else 
+                {
+                    continue;  //不需要的类型
+                }
             }
-            else continue;      //继续找下一个
+            else if((fno->fattrib&(AM_ARC))&&mark==2) //是一个归档文件且mark=2
+            {
+                if(wstrlen(fn) > (MUSIC_NAME_SIZE/2)) continue;//限制文件名长度
+
+                type=mf_typetell(fn);    //获得类型
+
+                if(type == 1)//mp3文件
+                {
+                    if(offset+sizeof(music_info_t) < buff_size)
+                    {
+                        //排除相同文件名称
+                        for(i=0; i<(*num); i++)
+                        {
+                            if(wstrcmp(fn, ((music_info_t*)&buff[0])[i].name) == 0) break;
+                        }
+                        if(i != (*num)) continue;
+                        
+                        TCHAR g[] = {'/',0};
+                        pt_mi = (music_info_t*)&buff[offset];
+                        //pt_mi->type = type;
+
+                        wstrcpy(music_path, (const TCHAR*)path);
+                        wstrcat(music_path, g);
+                        wstrcat(music_path, (const TCHAR*)fn);
+                        pt_mi->totsec = get_mp3_totsec((TCHAR*)music_path);
+
+                        if(pt_mi->totsec == 0) continue;
+
+                        wstrcpy(pt_mi->name, fn);
+                        offset += sizeof(music_info_t);
+                        (*num)++;
+                    }
+                    else
+                    {
+                        if(buff_full) *buff_full = 1;
+                        debug_printf(" buff_size over\n");
+                        break;
+                    }
+                }
+                else 
+                {
+                    continue;  //不需要的类型
+                }
+            }            
+            else 
+            {
+                continue;      //继续找下一个
+            }
 
         }
     }
@@ -375,7 +430,6 @@ void sd_scan_music_file(uint8_t *specify_path)
 {
     int i, j, res;
     int dir_num = 0;
-    int music_num = 0;
     
     uint8_t del_dir_num = 0;
     uint8_t add_dir_num = 0;
@@ -416,6 +470,7 @@ void sd_scan_music_file(uint8_t *specify_path)
     debug_printf("p_fld_num 0x%x 0x%x\n\n", dir_tbl_sdram->num, dir_num);
 
     dir_num = (F_DIR_MAX_NUM>dir_num) ? dir_num : F_DIR_MAX_NUM;
+    dir_tbl->num = dir_num;
     dir_tbl_sdram->num = (F_DIR_MAX_NUM>dir_tbl_sdram->num) ? dir_tbl_sdram->num : 0;
     
     clean_dir_info_name(dir_tbl_sdram);
@@ -615,7 +670,7 @@ static void find_path(TCHAR *dst, const TCHAR *src, int level)
 * 一层路径: 用于新建音乐文件夹(空文件夹)、删除音乐文件夹、重命名音乐文件夹
 *               需要检测原有音乐文件列表, 及需要生成SD卡音乐文件列表
 */
-void update_music_filelist(uint8_t path[])
+void update_music_filelist(uint8_t path[], uint8_t is_del)
 {
     int i = 0;
     
@@ -648,17 +703,22 @@ void update_music_filelist(uint8_t path[])
     }
     else if(i == 1)     // 一层路径
     {
-        myfree(dir_tbl_sdram);
-        myfree(music_tbl);
-        dir_tbl_sdram = NULL;
-        music_tbl = NULL;
-        sd_scan_music_file(dir_name);
-        goto FUN_END;
+        goto filelist_layer_1;
     }
     else                // 二层路径
     {
+        goto filelist_layer_2;
     }
-    //二层路径处理逻辑
+    
+filelist_layer_1:   //一层路径处理逻辑        
+    myfree(dir_tbl_sdram);
+    myfree(music_tbl);
+    dir_tbl_sdram = NULL;
+    music_tbl = NULL;
+    sd_scan_music_file(dir_name);
+    goto FUN_END;    
+    
+filelist_layer_2:   //二层路径处理逻辑  
     
     //读取sdram音乐文件夹列表
     fl_read_flielist(0, (uint8_t*)dir_tbl_sdram, F_DIR_TBL_BYTE_SIZE);
@@ -699,7 +759,7 @@ void update_music_filelist(uint8_t path[])
         if(music_totsec) 
         {
             i = music_tbl->num;
-            if(i < F_MUSIC_MAX_NUM)
+            if(music_tbl->num < F_MUSIC_MAX_NUM)
             {
                 music_tbl->m[i].totsec = music_totsec;
                 memset(music_tbl->m[i].name, 0, sizeof(music_tbl->m[i].name));
@@ -708,6 +768,10 @@ void update_music_filelist(uint8_t path[])
                     dir_tbl_sdram->m[dir_index].music_num_full = 0;
                 dir_tbl_sdram->m[dir_index].music_num = music_tbl->num;
                 DBG_PRINTF("  add new music_totsec dir_music_num:%d\n", dir_tbl_sdram->m[dir_index].music_num);
+            }
+            else
+            {
+                dir_tbl_sdram->m[dir_index].music_num_full = 1;
             }
         }
     }
@@ -727,6 +791,18 @@ void update_music_filelist(uint8_t path[])
                 memmove(&music_tbl->m[music_index], &music_tbl->m[music_index+1], sizeof(music_info_t)*i);
             music_tbl->num--;
             dir_tbl_sdram->m[dir_index].music_num = music_tbl->num;
+            
+            //当操作的音乐文件夹已满文件数时, 删除音乐文件需要重新轮训列表
+            if(dir_tbl_sdram->m[dir_index].music_num_full && is_del)
+            {
+                mf_scan_files((TCHAR *)dir_name, 2, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), (int*)&music_tbl->num, &dir_tbl_sdram->m[dir_index].music_num_full);
+                if(music_tbl->num > F_MUSIC_MAX_NUM)
+                {
+                    music_tbl->num = F_MUSIC_MAX_NUM;
+                    dir_tbl_sdram->m[dir_index].music_num_full = 1;
+                }
+                dir_tbl_sdram->m[dir_index].music_num = music_tbl->num;          
+            }
             DBG_PRINTF("  del old music_totsec dir_music_num:%d\n", dir_tbl_sdram->m[dir_index].music_num);
         }
     }

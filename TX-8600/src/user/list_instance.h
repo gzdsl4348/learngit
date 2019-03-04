@@ -12,7 +12,7 @@ extern "C" {
 #define VERSION_H    (0x01)
 #define VERSION_L    (0x14)
 
-#define COULD_TCP_EN    0
+#define COULD_TCP_EN    1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

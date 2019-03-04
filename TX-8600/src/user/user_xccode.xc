@@ -19,7 +19,7 @@ extern client interface uart_tx_buffered_if *unsafe i_uart_tx;
 
 extern audio_txlist_t t_audio_txlist;
 
-static uint8_t user_audio_txen=0;
+static uint8_t user_audio_txen[MAX_MUSIC_CH]={0};
 
 #define MUSIC_FNAME_NUM (MUSIC_NAME_NUM+PATCH_NAME_NUM)
 
@@ -52,7 +52,9 @@ void stop_all_timetask(){
         timetask_now.ch_state[i]=0xFF;
     }
     i_fs_user->music_stop_all();
-    user_audio_txen = 0;
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        user_audio_txen[i] = 0;
+    }
     i_ethaud_cfg->set_audio_txen(user_audio_txen,g_sys_val.tx_timestamp);
     }
 }
@@ -119,7 +121,7 @@ void user_audio_desip_set(uint8_t ch){
 }
 
 void user_audio_senden(uint8_t ch){
-    user_audio_txen |= (1<<ch);
+    user_audio_txen[ch] = 1;
     unsafe{
         g_sys_val.tx_timestamp[ch] = g_sys_val.sys_timinc;
         i_ethaud_cfg->set_audio_txen(user_audio_txen,g_sys_val.tx_timestamp);
@@ -133,7 +135,7 @@ void user_audio_senden(uint8_t ch){
 }
 
 void user_audio_send_dis(uint8_t ch){
-    user_audio_txen ^= (1<<ch);
+    user_audio_txen[ch] = 0;
     unsafe{
         i_ethaud_cfg->set_audio_txen(user_audio_txen,g_sys_val.tx_timestamp);
     }

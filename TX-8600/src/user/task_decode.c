@@ -846,7 +846,9 @@ void task_dtinfo_config_recive(){
             }
             //-------------------------------------------------------------
             // 判断时间 自动禁止
+            #define SOLU_MAX_CH     16
             timetask_t *task_p;
+            uint8_t over_time_inc=0;
             unsigned next_tasktime,beg_time,end_time;
             uint8_t tasksolu_id;
             //
@@ -864,9 +866,16 @@ void task_dtinfo_config_recive(){
                                 (tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute*60)+
                                  tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
                 // 时间不正确
-                if((next_tasktime > beg_time)&&(next_tasktime<end_time)&&(task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)&&(tasksolu_id!=0xFF)){
-                    g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
-                    break;
+                //debug_printf("nt %d bt %d | ntt %d et %d | tid %d,ctid %d | sid %d tsid %d\n",next_tasktime,beg_time,next_tasktime,end_time,task_p->id,g_sys_val.task_con_id,tasksolu_id,task_p->solu_id);
+                if((next_tasktime >= beg_time)&&(next_tasktime<=end_time)&&(task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)){
+                    over_time_inc++;
+                    debug_printf("task time inc\n");
+                    if(over_time_inc>SOLU_MAX_CH){
+                        g_sys_val.task_con_state |= 16;
+                        g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
+                        debug_printf("task time error\n");
+                        break;
+                    }
                 }
                 task_p = task_p->all_next_p;
             }

@@ -13,7 +13,7 @@
 
 extern uint8_t disk_status(uint8_t ch_num);
 extern void sd_scan_music_file(uint8_t *specify_path);
-extern void update_music_filelist(uint8_t path[]);
+extern void update_music_filelist(uint8_t path[], uint8_t is_del);
 static int file_upload_start(uint8_t *fname);
 
 static FATFS fatfs;
@@ -129,19 +129,19 @@ void fopr_handle()
         case FOE_FMKDIR:
         {
             error = mf_mkdir(p_fopr_file->fsrc);
-            update_music_filelist(p_fopr_file->fsrc);
+            update_music_filelist(p_fopr_file->fsrc, 0);
             break;
         }
         case FOE_FDELETE:
         {
             error = mf_unlink(p_fopr_file->fsrc);
-            update_music_filelist(p_fopr_file->fsrc);
+            update_music_filelist(p_fopr_file->fsrc, 1);
             break;
         }
         case FOE_FRENAME:
         {
             error = mf_rename(p_fopr_file->fsrc, p_fopr_file->fdes);
-            update_music_filelist(p_fopr_file->fdes);
+            update_music_filelist(p_fopr_file->fdes, 0);
             break;
         }
         case FOE_FCOPY:
@@ -151,7 +151,7 @@ void fopr_handle()
             {
                 mf_unlink(p_fopr_file->fdes);
             }
-            update_music_filelist(p_fopr_file->fdes);
+            update_music_filelist(p_fopr_file->fdes, 0);
             break;
         }        
         case FOE_FMOVE:
@@ -160,13 +160,13 @@ void fopr_handle()
             if(error != 0)// 操作失败, 删除目标文件
             {
                 mf_unlink(p_fopr_file->fdes);
-                update_music_filelist(p_fopr_file->fdes);
+                update_music_filelist(p_fopr_file->fdes, 1);
             }
             else        // 操作成功, 删除源文件
             {
                 error = mf_unlink(p_fopr_file->fsrc);
-                update_music_filelist(p_fopr_file->fdes);
-                update_music_filelist(p_fopr_file->fsrc);
+                update_music_filelist(p_fopr_file->fdes, 0);
+                update_music_filelist(p_fopr_file->fsrc, 1);
             }
             break;
         }  
@@ -308,7 +308,7 @@ void upload_handle(int interval_ms)
                 
                 mf_unlink(gp_for_upload->fname);
                 
-                update_music_filelist(gp_for_upload->fname);
+                update_music_filelist(gp_for_upload->fname, 1);
                 
                 gp_for_upload->state = FOU_STATE_END;
                 
@@ -349,7 +349,7 @@ void upload_handle(int interval_ms)
                 gp_for_upload->reply_data = FOU_REPLY_FAILED;
             }
             
-            update_music_filelist(gp_for_upload->fname);
+            update_music_filelist(gp_for_upload->fname, 0);
             
             gp_for_upload->reply_type = FOU_REPLY_END;
         }
@@ -364,7 +364,7 @@ void upload_handle(int interval_ms)
         
         mf_unlink(gp_for_upload->fname);
         
-        update_music_filelist(gp_for_upload->fname);
+        update_music_filelist(gp_for_upload->fname, 1);
         
         //通知上层应用,已处理
         gp_for_upload->state = FOU_STATE_END;
