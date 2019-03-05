@@ -327,7 +327,7 @@ void account_sys_register_recive(){
         if(g_sys_val.register_need_send){
             user_sending_len = cld_appregsied_request_build();   
             if(g_sys_val.regsiter_conn.id!=0)
-                user_xtcp_send(g_sys_val.regsiter_conn,0);
+                user_xtcp_send(g_sys_val.regsiter_conn,g_sys_val.register_could_f);
             g_sys_val.regsiter_conn.id = 0;
             g_sys_val.register_need_send = 0;
             debug_printf("B90D resend \n",g_sys_val.register_rec_s_tmp);
@@ -370,6 +370,7 @@ void cld_register_recive(){
 //================================================================================
 void app_register_request(){
     g_sys_val.regsiter_conn = conn;
+    g_sys_val.register_could_f = xtcp_rx_buf[POL_COULD_S_BASE];
     memcpy(g_sys_val.register_code,&xtcp_rx_buf[POL_DAT_BASE],10);
     memcpy(g_sys_val.register_could_id,&xtcp_rx_buf[POL_ID_BASE],6);
     debug_printf("mach code ");
