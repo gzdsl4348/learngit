@@ -855,8 +855,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         #endif
                         //------------------------------------------------------------------------------
                         // 建立长连接不关节点
-                        if(conn_long_decoder())
-                            break;
+                        //if(conn_long_decoder())
+                        //    break;
                         // 广播端口不建立节点
                         if(conn.local_port != LISTEN_BROADCAST_LPPORT){
                             //新建一个conn节点

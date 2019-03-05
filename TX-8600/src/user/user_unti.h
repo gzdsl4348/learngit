@@ -121,7 +121,7 @@ typedef struct g_sys_val_t{
     uint8_t messend_inc;
     uint16_t messend_len;
     uint8_t messend_over_time;
-    uint8_t tx_buff[1472];
+    //uint8_t tx_buff[1472];
     //-------------------------------------------------
     uint16_t dtinfo_chk_task_id;
     // 重发标志

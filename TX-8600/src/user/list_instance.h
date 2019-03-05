@@ -73,6 +73,8 @@ extern "C" {
 
 #define MAX_SDCARD_MUSIC_NUM        100
 
+#define MES_STACK_NUM       2   //消息更新 堆栈数
+
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
 
@@ -553,6 +555,7 @@ extern conn_list_t conn_list[MAX_UDP_CONNET];
 // udp 长连接列表
 //======================================================================
 
+#if 0
 typedef struct lconn_unit_t{
     xtcp_connection_t conn;
     uint8_t id;
@@ -564,6 +567,22 @@ typedef struct conn_long_list_t{
 }conn_long_list_t;
 
 extern conn_long_list_t conn_long_list;
+#endif
+
+typedef struct messend_conn_t{
+    xtcp_connection_t conn;
+    uint8_t id;
+    unsigned tim_inc;
+}messend_conn_t;
+
+typedef struct mes_send_list_t{
+    messend_conn_t messend_conn[MAX_LONG_CONNET];
+    uint8_t tx_buff[MES_STACK_NUM][1472];
+    uint8_t send_inc;
+    uint8_t wtr
+}mes_send_list_t;
+
+extern mes_send_list_t mes_send_list;
 
 //======================================================================
 void init_funlist_len();

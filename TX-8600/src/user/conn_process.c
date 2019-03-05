@@ -70,6 +70,7 @@ uint8_t user_longconnect_build(uint8_t *ipaddr){
     return 1;
 }
 // UDP 长连接节点建立
+#if 0
 uint8_t conn_long_decoder(){
     if(g_sys_val.connect_build_f==0)
         return 0;
@@ -87,7 +88,7 @@ uint8_t conn_long_decoder(){
     }
     return 0;
 }
-
+#endif
 //------------------------------------------------------------------------
 
 //==============================================================================

@@ -98,7 +98,8 @@ void init_funlist_len(){
 // xtcp conn list 
 conn_list_t conn_list[MAX_UDP_CONNET];
 //connect_list_t connect_list;
-conn_long_list_t conn_long_list;
+//conn_long_list_t conn_long_list;
+mes_send_list_t mes_send_list;
 //-----------------------------------------
 // div list
 div_list_t div_list;
