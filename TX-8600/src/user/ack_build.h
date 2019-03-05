@@ -138,6 +138,7 @@ uint16_t cld_resiger_request_build();
 // 时间同步申请 BE03
 uint16_t cld_timesysnc_request_build();
 
+uint16_t cld_appregsied_request_build();
 
 #if defined(__cplusplus) || defined(__XC__)
 }

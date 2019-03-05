@@ -196,6 +196,7 @@ typedef struct g_sys_val_t{
     xtcp_connection_t regsiter_conn;
     uint8_t register_rec_s_tmp;
     uint8_t register_need_send;
+    uint8_t register_could_id[6];
     // 系统部署
     // 搜索设备数
     unsigned search_div_tol;

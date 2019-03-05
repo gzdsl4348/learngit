@@ -325,7 +325,7 @@ void account_sys_register_recive(){
         host_info.regiser_days = (xtcp_rx_buf[POL_DAT_BASE+11]^key_tmp)|((xtcp_rx_buf[POL_DAT_BASE+12]^key_tmp)<<8);
         // 需更新注册信息
         if(g_sys_val.register_need_send){
-            user_sending_len = onebyte_ack_build(g_sys_val.register_rec_s_tmp,APP_REGISTER_CONTORL);    
+            user_sending_len = cld_appregsied_request_build();   
             if(g_sys_val.regsiter_conn.id!=0)
                 user_xtcp_send(g_sys_val.regsiter_conn,0);
             g_sys_val.regsiter_conn.id = 0;
@@ -371,6 +371,7 @@ void cld_register_recive(){
 void app_register_request(){
     g_sys_val.regsiter_conn = conn;
     memcpy(g_sys_val.register_code,&xtcp_rx_buf[POL_DAT_BASE],10);
+    memcpy(g_sys_val.register_could_id,&xtcp_rx_buf[POL_ID_BASE],6);
     debug_printf("mach code ");
     for(uint8_t i=0;i<10;i++){
         debug_printf("%x ",g_sys_val.maschine_code[i]);

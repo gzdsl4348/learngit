@@ -1246,4 +1246,15 @@ uint16_t cld_timesysnc_request_build(){
     return build_endpage_decode(POL_DAT_BASE+20,CLD_TIMESYNC_CMD,g_sys_val.con_id_tmp);
 }
 
+//===============================================================================
+// ÊÖ»úÉêÇë B90D
+//================================================================================
+uint16_t cld_appregsied_request_build(){
+    xtcp_tx_buf[POL_DAT_BASE] = g_sys_val.register_rec_s_tmp;
+    xtcp_tx_buf[POL_DAT_BASE+1] = host_info.regiser_state;
+    xtcp_tx_buf[POL_DAT_BASE+2] = host_info.regiser_days;
+    xtcp_tx_buf[POL_DAT_BASE+3] = host_info.regiser_days>>8; 
+    return build_endpage_decode(POL_DAT_BASE+4,APP_REGISTER_CONTORL,g_sys_val.register_could_id);
+}
+
 

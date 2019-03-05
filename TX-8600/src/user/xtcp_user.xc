@@ -963,7 +963,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         mes_send_decode();
 					  	break;
 					case XTCP_TIMED_OUT:    //tcp only
-    					user_xtcp_connect_tcp(g_sys_val.could_ip);
+    					//user_xtcp_connect_tcp(g_sys_val.could_ip);
+    					user_xtcp_close(g_sys_val.could_conn);
     					debug_printf("\n\ntime out:%x\n\n",conn.id);
                         break;
 					case XTCP_ABORTED:
@@ -973,6 +974,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         debug_printf("\n\naborted:%x\n\n",conn.id);
                         break;
 					case XTCP_CLOSED:
+                        if((conn.protocol==XTCP_PROTOCOL_TCP)&&(g_sys_val.could_conn.id==conn.id)){
+                            g_sys_val.could_conn.id = 0;
+                        }
 						debug_printf("Closed connection:%x\n",conn.id);
 					  	break;
 				}
