@@ -157,9 +157,11 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                         if(g_t_val->audio_devlist[j].channel_num==0 && audio_devlist_free_index==-1) {
                             audio_devlist_free_index = j;
                         }
-                        // 查找相同IP的设备
-                        if(memcmp(g_t_val->audio_devlist[j].ip, t_audio_txlist->t_des_info[i].ip, 4)==0) {
-                            // 复制MAC
+                        // 查找相同设备MAC地址的设备
+                        if(memcmp(g_t_val->audio_devlist[j].dev_mac, t_audio_txlist->t_des_info[i].mac, 6)==0) {
+                            // 复制IP地址
+                            memcpy(g_t_val->audio_devlist[j].ip, t_audio_txlist->t_des_info[i].ip, 4);
+                            // 复制发送MAC地址
                             if(!(ipaddr_maskcmp(g_t_val->ipaddr,g_t_val->audio_devlist[j].ip,g_t_val->ipmask)))
                                 memcpy(g_t_val->audio_devlist[j].mac, g_t_val->ipgate_macaddr, 6);
                             else
@@ -175,13 +177,16 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                             break;
                         }
                     }
-                    // 没有找到相同IP的设备, 并且有空闲设备, 进行复制
+                    // 没有找到相同设备MAC地址的设备, 并且有空闲设备, 进行复制
                     if(j==MAX_SENDCHAN_NUM && audio_devlist_free_index!=-1) {
                         j = audio_devlist_free_index;
-                        // 复制IP
+                        // 复制设备MAC地址
+                        memcpy(g_t_val->audio_devlist[j].dev_mac, t_audio_txlist->t_des_info[i].mac, 6);
+                        
+                        // 复制IP地址
                         memcpy(g_t_val->audio_devlist[j].ip, t_audio_txlist->t_des_info[i].ip, 4);
                         
-                        // 复制MAC
+                        // 复制发送MAC地址
                         if(!(ipaddr_maskcmp(g_t_val->ipaddr,g_t_val->audio_devlist[j].ip,g_t_val->ipmask)))
                             memcpy(g_t_val->audio_devlist[j].mac, g_t_val->ipgate_macaddr, 6);
                         else

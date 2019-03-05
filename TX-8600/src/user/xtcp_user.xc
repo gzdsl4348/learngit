@@ -528,7 +528,6 @@ void sys_info_init(){
     //建立今日任务
     //
     conn_list_init();   //链表初始化
-    connlong_list_init(); //长连接初始化
     sys_gobalval_init(); //全局变量初始化
     }//unsafe
 }
@@ -958,7 +957,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             g_sys_val.could_send_cnt = 0;
                             debug_printf("could send_end\n");
                         }
-                        //debug_printf("send id %d\n",conn.id );
+                        //列表发送
 						xtcp_sending_decoder();
                         mes_send_decode();
 					  	break;

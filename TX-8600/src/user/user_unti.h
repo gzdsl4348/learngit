@@ -113,14 +113,14 @@ typedef struct g_sys_val_t{
     xtcp_connection_t file_conn_tmp;
     //-----------------------------------------------
     // 信息更新部分
-    uint8_t connect_ip[4];
-    uint8_t connect_build_f;
-    uint8_t connect_send_f;
+    //uint8_t connect_ip[4];
+    //uint8_t connect_build_f;
+    //uint8_t connect_send_f;
     // 
-    uint8_t messend_state;
-    uint8_t messend_inc;
-    uint16_t messend_len;
-    uint8_t messend_over_time;
+    //uint8_t messend_state;
+    //uint8_t messend_inc;
+    //uint16_t messend_len;
+    //uint8_t messend_over_time;
     //uint8_t tx_buff[1472];
     //-------------------------------------------------
     uint16_t dtinfo_chk_task_id;

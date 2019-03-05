@@ -12,13 +12,6 @@ void xtcp_sending_decoder();
 //--------------------------------------
 // 连接超时处理
 void conn_overtime_close();
-// 长连接建立
-uint8_t conn_long_decoder();
-
-void connlong_list_init();
-
-uint8_t user_longconnect_build(uint8_t *ipaddr);
-
 
 #endif  //__CONN_PROCESS_H
 

@@ -588,9 +588,7 @@ solution_config_end:
     user_sending_len = solution_config_build(id,state,xtcp_rx_buf[SOLU_CFGACK_CONFIG]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     if(state){
-        g_sys_val.messend_len = sulo_upgrade_build(id);
-        memcpy(g_sys_val.tx_buff,xtcp_tx_buf,g_sys_val.messend_len);
-        mes_send_begin();
+        mes_send_suloinfo(id);
     }
     create_todaytask_list(g_sys_val.time_info);
 }
@@ -894,10 +892,7 @@ void task_dtinfo_config_recive(){
             //---------------------------------------------------------------------------------
             // 信息更新
             if(g_sys_val.task_con_state == 0){
-                //debug_printf("\n\nupdata task\n\n");
-                g_sys_val.messend_len = taskinfo_upgrade_build(&g_sys_val.tmp_union.task_allinfo_tmp,g_sys_val.task_config_s,g_sys_val.task_con_id);
-                memcpy(g_sys_val.tx_buff,xtcp_tx_buf,g_sys_val.messend_len);
-                mes_send_begin();
+                mes_send_taskinfo();
             }
             //--------------------------------------------------------------------------------
             debug_printf("task dtinfo config over\n");
@@ -1055,9 +1050,7 @@ void task_en_recive(){
     // 任务信息更新
     if(state=1){
         debug_printf("\n\ntask updata\n\n");
-        g_sys_val.messend_len = taskinfo_upgrade_build(&tmp_union.task_allinfo_tmp,2,id);
-        memcpy(g_sys_val.tx_buff,xtcp_tx_buf,g_sys_val.messend_len);
-        mes_send_begin();
+        mes_send_taskinfo();
     }
     //--------------------------------------------------------------------------------
 }
@@ -1119,9 +1112,9 @@ void today_week_config_recive(){
     user_sending_len = onebyte_ack_build(1,TASK_CONFIG_WEEK_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     create_todaytask_list(g_sys_val.time_info);
-
+    //
     mes_send_listinfo(TODAYTASK_INFO_REFRESH,0);
-    
+    //
     debug_printf("today week config\n");
 }
 
@@ -1353,9 +1346,7 @@ void rttask_config_recive(){
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     // 推送消息
     if(state){
-        g_sys_val.messend_len = rttaskinfo_upgrade_build(id);
-        memcpy(g_sys_val.tx_buff,xtcp_tx_buf,g_sys_val.messend_len);
-        mes_send_begin();
+        mes_send_rttaskinfo(id);
     }
 }
 //====================================================================================================
@@ -1563,7 +1554,7 @@ void task_rttask_rebuild(){
 }
 
 //====================================================================================================
-// 即时任务  更新            BF0D
+// 即时任务  播放列表更新            BF0D
 //====================================================================================================
 void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p){
     g_sys_val.rttask_updat_p = rttask_lsit.run_head_p;

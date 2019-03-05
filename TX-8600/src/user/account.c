@@ -82,9 +82,8 @@ void account_login_recive(){
         // 保存登录信息
         tmp_union.account_all_info.account_info = account_info[i];
         account_fl_write(&tmp_union.account_all_info,i);
-        // 建立长连接
-        if(user_longconnect_build(conn.remote_addr))
-            user_xtcp_connect(conn.remote_addr);
+        // 添加进消息队列
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
         //
         //debug_printf("login\n");
         return; //success
@@ -443,22 +442,7 @@ void cld_account_login_recive(){
 //================================================================================
 uint8_t sysonline_recive(){
     uint8_t state=0;
-    // 刷新用户长连接
-    for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
-        if(conn_long_list.lconn[i].id!=0xFF){
-            if(charncmp(conn_long_list.lconn[i].conn.remote_addr,conn.remote_addr,4)){
-                conn_long_list.lconn[i].tim_inc=0;
-                goto have_long_connect;
-            }
-        }    
-    }
-    // 建立长连接
-    state = 1;
-    memcpy(g_sys_val.connect_ip,conn.remote_addr,4);
-    g_sys_val.connect_build_f = 1;
-    user_xtcp_connect(conn.remote_addr);
-    //
-    have_long_connect:
+    state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
     return state;
 }
 
@@ -466,7 +450,6 @@ uint8_t sysonline_recive(){
 void account_sysonline_recive(){
     user_sending_len = sysonline_chk_build(sysonline_recive());
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-    //debug_printf("sysonline\n");
 }
 
 // 手机在线保持
@@ -502,9 +485,8 @@ void mic_userlist_chk_recive(){
         //
         user_sending_len = mic_userlist_ack_build(state,&tmp_union.account_all_info);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-        // 建立长连接
-        if(user_longconnect_build(conn.remote_addr))
-            user_xtcp_connect(conn.remote_addr);
+        // 加入消息队列
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
     }
 }
 

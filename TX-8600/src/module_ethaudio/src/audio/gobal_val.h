@@ -22,8 +22,9 @@ typedef struct
 
 typedef struct
 {
-    uint8_t mac[6];
-    uint8_t ip[4];
+    uint8_t dev_mac[6]; //设备唯一MAC地址
+    uint8_t mac[6];     //音频发送MAC地址
+    uint8_t ip[4];      //音频发送IP地址
     uint8_t channel_num;// 如果为0, 可以清空mac、ip数据
     media_info_t media_list[NUM_MEDIA_INPUTS];
 }eth_audio_dev_t;

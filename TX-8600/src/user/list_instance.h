@@ -32,7 +32,7 @@ extern "C" {
 
 #define MAX_CONNET_LIST	(MAX_UDP_CONNET/4) //支持同时20部机建立任务
 
-#define MAX_LONG_CONNET (MAX_UDP_CONNET/4) //同时支持20个控制机
+#define MAX_ACCOUNT_CONNET (MAX_ACCOUNT_NUM) //同时支持20个控制机
 
 //最大设备
 #define MAX_DIV_LIST    80
@@ -73,7 +73,7 @@ extern "C" {
 
 #define MAX_SDCARD_MUSIC_NUM        100
 
-#define MES_STACK_NUM       2   //消息更新 堆栈数
+#define MES_STACK_NUM       3   //消息更新 堆栈数
 
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
@@ -571,15 +571,19 @@ extern conn_long_list_t conn_long_list;
 
 typedef struct messend_conn_t{
     xtcp_connection_t conn;
-    uint8_t id;
-    unsigned tim_inc;
+    uint8_t state;
+    uint8_t could_id[6];
+    uint8_t could_f;
 }messend_conn_t;
 
 typedef struct mes_send_list_t{
-    messend_conn_t messend_conn[MAX_LONG_CONNET];
+    messend_conn_t messend_conn[MAX_ACCOUNT_CONNET];
     uint8_t tx_buff[MES_STACK_NUM][1472];
     uint8_t send_inc;
-    uint8_t wtr
+    uint16_t len[MES_STACK_NUM];
+    uint8_t tim_inc;
+    uint8_t wrptr;
+    uint8_t rpttr;
 }mes_send_list_t;
 
 extern mes_send_list_t mes_send_list;

@@ -52,6 +52,7 @@ void xtcp_sending_decoder(){
 
 //============================================================================
 // UDP 长连接初始化
+#if 0
 void connlong_list_init(){
     for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
         conn_long_list.lconn[i].id = 0xFF;
@@ -70,7 +71,6 @@ uint8_t user_longconnect_build(uint8_t *ipaddr){
     return 1;
 }
 // UDP 长连接节点建立
-#if 0
 uint8_t conn_long_decoder(){
     if(g_sys_val.connect_build_f==0)
         return 0;
@@ -113,17 +113,6 @@ void conn_overtime_close(){
         }    
         //-------------------------------------------------------
         conn_list_tmp = conn_next_p;
-    }
-    // 关闭长连接
-    for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
-        if(conn_long_list.lconn[i].id!=0xFF){
-            conn_long_list.lconn[i].tim_inc++;
-            if(conn_long_list.lconn[i].tim_inc>CONN_LONGCON_TIME){
-                conn_long_list.lconn[i].id = 0xFF;
-                debug_printf("close long\n");
-                user_xtcp_close(conn_long_list.lconn[i].conn);
-            }
-        }
     }
     // 列表发送超时
     if(conn_sending_s.id!=null){
