@@ -361,6 +361,8 @@ typedef interface xtcp_if {
   void xtcp_ipconfig(xtcp_ipconfig_t &ipconfig_new);
 
   void xtcp_arpget(xtcp_ipaddr_t ipaddr,xtcp_mac_t &t_xtcp_mac);
+
+  void xtcp_conn_cmp(uint8_t tol_num);
 } xtcp_if;
 
 typedef struct pbuf * unsafe pbuf_p;

@@ -642,7 +642,19 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 		ip_addr[1] = (ipaddr[3]<<8)|ipaddr[2];
 		t_xtcp_mac = uip_arptab_get(ip_addr);
 		break;
-		
+
+    case i_xtcp[unsigned i].xtcp_conn_cmp(uint8_t tol_num):
+        uint8_t uip_tol=0;
+    	for(uint8_t i = 0; i < UIP_UDP_CONNS; i++) {
+    		if(uip_udp_conns[i].lport != 0) {
+    			uip_tol++;
+    		}
+    	}
+        if(uip_tol!=tol_num){
+            debug_printf("uip_tol %d\n",uip_tol);
+        }
+        break;
+        
     case tmr when timerafter(timeout) :> timeout:
       timeout += 10000000;
       /* Check for the link state */

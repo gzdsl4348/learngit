@@ -215,8 +215,9 @@ typedef struct g_sys_val_t{
     rttask_info_t *rttask_updat_f;
     div_node_t *rttask_div_p;
     uint8_t rttask_up_ip[4];
-
-    
+    // 广播端口接收处理
+    xtcp_connection_t brocast_rec_conn;
+    uint8_t brocast_rec_timinc;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

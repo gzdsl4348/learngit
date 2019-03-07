@@ -601,6 +601,23 @@ void wifi_ipset(uint8_t ip[],uint8_t mode){
     user_lan_uart0_tx(ip_tmp,ip_adrbase,0);
 }
 
+void disp_text_conn(client xtcp_if i_xtcp){
+    #if 1
+    uint8_t div_conn_num=0;
+    //
+    unsafe{
+    conn_list_t *unsafe conn_p = conn_list_head;
+    while(conn_p != null){
+        div_conn_num++;
+        conn_p = conn_p->next_p;
+    }
+    }
+    debug_printf("div %d \n",div_conn_num);
+    uint8_t tol_num = div_conn_num;
+    i_xtcp.xtcp_conn_cmp(tol_num);
+    #endif
+}
+
 //=======================================================================================================
 /*
 //--------------------------------------------------------------------------------
@@ -830,11 +847,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						g_sys_val.eth_link_state = 1;
                         //audio_moudle_set();
                         user_disp_ip(ipconfig);
+                        disp_text_conn(i_xtcp);
                         //i_xtcp.connect(ETH_COMMUN_PORT,a,XTCP_PROTOCOL_UDP);
 						break;
 		  			case XTCP_IFDOWN:
 						g_sys_val.eth_link_state = 0;
 						debug_printf("Link down\n");
+                        disp_text_conn(i_xtcp);
 						break;
 		  			case XTCP_NEW_CONNECTION:
 						debug_printf("New connection:%x\n",conn.id);
@@ -864,6 +883,15 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 debug_printf("\nuser conn is full\n");
                             };    
                         }
+                        else{
+                            if(g_sys_val.brocast_rec_conn.id!=0){
+                                i_xtcp.close(conn);
+                            }
+                            else{
+                                g_sys_val.brocast_rec_conn = conn;
+                            }
+                        }
+                        disp_text_conn(i_xtcp);
 						break;
 		 			case XTCP_RECV_DATA:
                         // ≈–∂œ «∑Ò‘∆√¸¡Ó
@@ -991,6 +1019,22 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             if(time_count>(10-1)){
                 time_count=0;
         	    second_process();
+                if(g_sys_val.brocast_rec_conn.id!=0){
+                    g_sys_val.brocast_rec_timinc++;
+                    if(g_sys_val.brocast_rec_timinc>2){
+                        g_sys_val.brocast_rec_timinc=0;
+                        i_xtcp.close(g_sys_val.brocast_rec_conn);
+                        g_sys_val.brocast_rec_conn.id = 0;
+                    }
+                }
+                // ≤‚ ‘
+                static uint8_t text_tim=0;
+                text_tim++;
+                if(text_tim > 2){
+                    text_tim=0;
+                    disp_text_conn(i_xtcp);
+                }
+                
                 //------------------------------------
                 // œµÕ≥÷ÿ∆Ù
                 if(g_sys_val.reboot_f){
