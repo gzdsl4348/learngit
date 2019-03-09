@@ -120,6 +120,12 @@ void user_audio_desip_set(uint8_t ch){
     }
 }
 
+void user_updatip_set(uint8_t mac[],uint8_t ip[]){
+    unsafe{
+        i_ethaud_cfg->update_audio_desip_info(mac,ip);
+    }
+}
+
 void user_audio_senden(uint8_t ch){
     user_audio_txen[ch] = 1;
     unsafe{
@@ -190,7 +196,9 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
             user_could_send(0);
         }
         else{
-            i_user_xtcp->send(conn,&all_tx_buf[CLH_HEADEND_BASE],user_sending_len);
+            //debug_printf("send dat\n");
+            if(conn.id != g_sys_val.could_conn.id)
+                i_user_xtcp->send(conn,&all_tx_buf[CLH_HEADEND_BASE],user_sending_len);
         }
 	}
 }
@@ -204,9 +212,9 @@ void user_xtcp_unlisten(unsigned port_number){
 void user_xtcp_connect_tcp(xtcp_ipaddr_t ipaddr){
     unsafe{
     static int colud_prot=0;
-    if(colud_prot!=0)
-        user_xtcp_unlisten(colud_prot);
+    user_xtcp_unlisten(colud_prot);
     colud_prot = i_user_xtcp->connect(TCP_COULD_PROT, ipaddr, XTCP_PROTOCOL_TCP);
+    debug_printf("lis %x\n",colud_prot);
     }
 }
 
@@ -218,6 +226,7 @@ void user_xtcp_connect(uint8_t ipaddr[]){
 
 void user_xtcp_close(xtcp_connection_t conn){
 	unsafe{
+        debug_printf("close\n");
 		i_user_xtcp->close(conn);
 	}
 }

@@ -16,7 +16,7 @@ uint16_t build_endpage_decode(uint16_t len,uint16_t cmd,uint8_t id[]);
 uint16_t online_request_ack_build(uint8_t online_state,uint8_t mode);
 
 // Ó¦´ğ·¢ËÍ
-uint16_t onebyte_ack_build(uint8_t mode,uint16_t cmd);
+uint16_t onebyte_ack_build(uint8_t mode,uint16_t cmd,uint8_t id[]);
 
 uint16_t twobyte_ack_build(uint8_t state1,uint8_t state2,uint16_t cmd);
 

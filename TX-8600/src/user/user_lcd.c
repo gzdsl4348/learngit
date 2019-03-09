@@ -398,7 +398,7 @@ void ip_disp_decode(uint8_t data,uint8_t *base_adr){
     //
     disp_buff[*base_adr] = (data/10)%10+0x30;
     //disp_buff[*base_adr] = 0x00; 
-    if((zero_f)||(g_sys_val.tmp_union.buff[*base_adr+1]!=0x30))
+    if((zero_f)||(disp_buff[*base_adr]!=0x30))
         *base_adr+=1;    
     disp_buff[*base_adr] = data%10+0x30;
     //disp_buff[*base_adr] = 0x00; 
@@ -572,16 +572,22 @@ void user_disp_data(){
 }
 
 void user_disp_version(){
-    
+    uint8_t len=0;
     disp_buff[DAT_DISP_BASE] = 0x56;
-    disp_buff[DAT_DISP_BASE+1] = 0x30+(VERSION_H>>4);
-    disp_buff[DAT_DISP_BASE+2] = 0x30+(VERSION_H&0x0f);
-    
-    disp_buff[DAT_DISP_BASE+3] = 0x2E;
-    disp_buff[DAT_DISP_BASE+4] = 0x30+(VERSION_L>>4);
-    disp_buff[DAT_DISP_BASE+5] = 0x30+(VERSION_L&0x0f);
+    len++;
+    disp_buff[DAT_DISP_BASE+len] = 0x30+(VERSION_H>>4);
+    if((VERSION_H>>4)!=0)
+        len++;
+    disp_buff[DAT_DISP_BASE+len] = 0x30+(VERSION_H&0x0f);
+    len++;
+    disp_buff[DAT_DISP_BASE+len] = 0x2E;
+    len++;
+    disp_buff[DAT_DISP_BASE+len] = 0x30+(VERSION_L>>4);
+    len++;
+    disp_buff[DAT_DISP_BASE+len] = 0x30+(VERSION_L&0x0f);
+    len++;
     //
-    disp_len = DAT_DISP_BASE+6;
+    disp_len = DAT_DISP_BASE+len;
     send_buff(DISP_VER_ID);
 }
 

@@ -436,6 +436,7 @@ void user_fldat_init(){
     i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
 	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
     //init_string = 0;
+    
 	if(0x5AA57349==init_string){
 		return;
 	}
@@ -898,7 +899,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         //===================================================================================
                         #if 0
                         debug_printf("recive dat\n\n");
-                        for(uint8_t i=0;i<all_rx_buf[POL_LEN_BASE];i++){
+                        for(uint8_t i=0;i<all_rx_buf[POL_LEN_BASE]+2;i++){
                             debug_printf("%x ",all_rx_buf[i]);
                         }
                         debug_printf("\n\n");
@@ -978,7 +979,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_RESEND_DATA:	
                         //user_xtcp_send(conn);
-						debug_printf("resend_data:\n");
+						debug_printf("resend_data:%x\n",conn.id);
 						break;
 					case XTCP_SENT_DATA:
                         if(conn.id == g_sys_val.could_conn.id){
@@ -991,7 +992,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					  	break;
 					case XTCP_TIMED_OUT:    //tcp only
     					//user_xtcp_connect_tcp(g_sys_val.could_ip);
-    					user_xtcp_close(g_sys_val.could_conn);
+    					//user_xtcp_close(g_sys_val.could_conn);
+                        g_sys_val.could_conn.id = 0;
+                        g_sys_val.colud_connect_f = 0;
     					debug_printf("\n\ntime out:%x\n\n",conn.id);
                         break;
 					case XTCP_ABORTED:
@@ -1003,6 +1006,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					case XTCP_CLOSED:
                         if((conn.protocol==XTCP_PROTOCOL_TCP)&&(g_sys_val.could_conn.id==conn.id)){
                             g_sys_val.could_conn.id = 0;
+                            g_sys_val.colud_connect_f=0;
+                            //user_xtcp_unlisten(g_sys_val.colud_port);
                         }
 						debug_printf("Closed connection:%x\n",conn.id);
 					  	break;

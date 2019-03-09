@@ -161,11 +161,12 @@ void music_patchname_config_recive(){
     if(state){
         g_sys_val.file_conn_tmp = conn;
         g_sys_val.file_ack_cmd = MUSIC_PATCHNAME_CON_CMD;
-        user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD);
+        g_sys_val.file_contorl_couldf = xtcp_rx_buf[POL_COULD_S_BASE];
+        user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     else{
-        user_sending_len = onebyte_ack_build(state,MUSIC_PATCHNAME_CON_CMD);
+        user_sending_len = onebyte_ack_build(state,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
 }
@@ -175,12 +176,12 @@ void music_patchname_config_recive(){
 //====================================================================================================
 void music_busy_chk_recive(){
     debug_printf("music chk\n");   
-    user_sending_len = onebyte_ack_build(0,MUSIC_BUSY_CHK_CMD);
+    user_sending_len = onebyte_ack_build(0,MUSIC_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
 //====================================================================================================
-// 音乐库 文件操作                    MUSIC_FILE_CONTORL_CMD   0xB804
+// 音乐库 文件操作                  
 //====================================================================================================
 #define FILE_CONTORL_COPY 0
 #define FILE_CONTORL_MOVE 1
@@ -207,6 +208,9 @@ void file_patch_get(uint8_t *patch,uint8_t *file,uint16_t *file_patch){
     file_patch[i] = 0x00;
 }
 
+
+// 取消   MUSIC_FILE_CONTORL_CMD   0xB804  
+#if 1
 void music_file_config_recive(){
     uint8_t state = 0;
     uint32_t *patch_tol;
@@ -285,16 +289,19 @@ void music_file_config_recive(){
     debug_printf("\n\nfile contorl ack:%d\n",state);
     if(state==1){
         g_sys_val.file_conn_tmp = conn;
+        g_sys_val.file_contorl_couldf = xtcp_rx_buf[POL_COULD_S_BASE];
         g_sys_val.file_ack_cmd = MUSIC_FILE_CONTORL_CMD;
-        user_sending_len = onebyte_ack_build(02,MUSIC_FILE_CONTORL_CMD);
+        memcpy(g_sys_val.file_contorl_id,xtcp_rx_buf[POL_ID_BASE],6);
+        user_sending_len = onebyte_ack_build(02,MUSIC_FILE_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     else{
-        user_sending_len = onebyte_ack_build(state,MUSIC_FILE_CONTORL_CMD);
+        user_sending_len = onebyte_ack_build(state,MUSIC_FILE_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     
     }
 }
+#endif
 
 //====================================================================================================
 // 音乐库 进度查询                    MUSIC_PROCESS_BAR_CMD    0xB805
@@ -340,6 +347,7 @@ void music_bat_contorl_recive(){
         memcpy(g_sys_val.file_bat_id,&xtcp_rx_buf[POL_ID_BASE],6);
         memcpy(g_sys_val.file_bat_srcpatch,&xtcp_rx_buf[MUSIC_BAT_SRC_PATCH],PATCH_NAME_NUM);
         memcpy(g_sys_val.file_bat_despatch,&xtcp_rx_buf[MUSIC_BAT_DES_PATCH],PATCH_NAME_NUM);
+        g_sys_val.file_bat_could_f = xtcp_rx_buf[POL_COULD_S_BASE];
     }
     //---------------------------------------------------------------------------------------
     // 保存文件名称
@@ -417,13 +425,13 @@ void file_contorl_ack_decode(uint8_t error_code){
         debug_printf("folar error %d\n",error_code);
         if(error_code!=0)
         {
-            user_sending_len = onebyte_ack_build(0,g_sys_val.file_ack_cmd);
-            user_xtcp_send(g_sys_val.file_conn_tmp,xtcp_rx_buf[POL_COULD_S_BASE]);    
+            user_sending_len = onebyte_ack_build(0,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
+            user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);    
         }
         else{
             mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
-            user_sending_len = onebyte_ack_build(1,g_sys_val.file_ack_cmd);
-            user_xtcp_send(g_sys_val.file_conn_tmp,xtcp_rx_buf[POL_COULD_S_BASE]);
+            user_sending_len = onebyte_ack_build(1,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
+            user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);
         }
         g_sys_val.file_ack_cmd = 0;
     }
@@ -473,7 +481,7 @@ void file_bat_contorl_event(uint8_t error_code){
             g_sys_val.file_bat_resend_tmp[1] = file_state;
             g_sys_val.file_bat_resend_tmp[2] = contorl;
             user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,music_tmp,bat_state,file_state,contorl);
-            user_xtcp_send(g_sys_val.file_bat_conn,xtcp_rx_buf[POL_COULD_S_BASE]);   
+            user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
             //g_sys_val.file_bat_conn.id = null;
         }
         if(bat_state==FILE_BAT_CONTORL_SUCCEED)
@@ -576,7 +584,7 @@ void bat_filecontorl_resend_tim(){
         if(user_file_progress(&file_process)==0){
             user_sending_len = file_progress_build(0,file_process,g_sys_val.file_bat_id,
                                g_sys_val.file_bat_nametmp,g_sys_val.file_bat_srcpatch);
-            user_xtcp_send(g_sys_val.file_bat_conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+            user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);
             debug_printf("send %d\n",file_process);
         }
     }
@@ -591,7 +599,7 @@ void bat_filecontorl_resend_tim(){
             user_file_bat_read(g_sys_val.file_bat_musicinc-1,tmp_union.buff);
             user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,tmp_union.buff,
                                                   g_sys_val.file_bat_resend_tmp[0],g_sys_val.file_bat_resend_tmp[1],g_sys_val.file_bat_resend_tmp[2]);
-            user_xtcp_send(g_sys_val.file_bat_conn,xtcp_rx_buf[POL_COULD_S_BASE]);   
+            user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
             // 停止重发
             g_sys_val.file_bat_resend_inc++;
             if(g_sys_val.file_bat_resend_inc>2){

@@ -77,14 +77,14 @@ uint16_t online_request_ack_build(uint8_t online_state,uint8_t mode){
 //========================================================================================
 // one byte ack 
 //========================================================================================
-uint16_t onebyte_ack_build(uint8_t mode,uint16_t cmd){
+uint16_t onebyte_ack_build(uint8_t mode,uint16_t cmd,uint8_t id[]){
     uint16_t dat_len=POL_DAT_BASE;
     //-----------------------------------------------------
     //dat begin
     xtcp_tx_buf[POL_DAT_BASE] = mode;
     dat_len ++;
     //-----------------------------------------------------
-    return build_endpage_decode(dat_len,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(dat_len,cmd,id);
 }
 
 //========================================================================================
@@ -426,16 +426,15 @@ uint16_t solution_list_ack_build(uint16_t cmd){
     //
     uint16_t data_base = SOLU_CK_DAT_BASE;
     xtcp_tx_buf[SOLU_CK_TOLNUM] = 0;
-    for(uint8_t i=0; i<(MAX_TASK_SOULTION); i++){
+    for(uint8_t i=1; i<(MAX_TASK_SOULTION); i++){
         if(solution_list.solu_info[i].state==0xFF)
             continue;
         xtcp_tx_buf[data_base+SOLU_CK_ID] = solution_list.solu_info[i].id;
-        
         xtcp_tx_buf[data_base+SOLU_CK_STATE] = solution_list.solu_info[i].en;
         memcpy(&xtcp_tx_buf[data_base+SOLU_CK_NAME],solution_list.solu_info[i].name,DIV_NAME_NUM);
         memcpy(&xtcp_tx_buf[data_base+SOLU_CK_BEGDATE],&solution_list.solu_info[i].begin_date,3);
         memcpy(&xtcp_tx_buf[data_base+SOLU_CK_ENDDATE],&solution_list.solu_info[i].end_date,3);
-        
+        xtcp_tx_buf[data_base+SOLU_CK_PRIO] = solution_list.solu_info[i].prio; 
         //debug_printf("id %d %d\n", xtcp_tx_buf[data_base+SOLU_CK_ID],xtcp_tx_buf[data_base+SOLU_CK_STATE] );
         //
         xtcp_tx_buf[SOLU_CK_TOLNUM]++; 
@@ -1126,6 +1125,7 @@ uint16_t sulo_upgrade_build(uint8_t id){
     memcpy(&xtcp_tx_buf[SOLU_CFG_SOLU_NAME],solution_list.solu_info[id].name,DIV_NAME_NUM);
     memcpy(&xtcp_tx_buf[SOLU_CFG_SOLU_BEGDATE],&solution_list.solu_info[id].begin_date,3);
     memcpy(&xtcp_tx_buf[SOLU_CFG_SOLU_ENDDATE],&solution_list.solu_info[id].end_date,3);
+    xtcp_tx_buf[SOLU_CFG_SOLU_PRIO] = solution_list.solu_info[id].prio;
     
     return build_endpage_decode(SOLU_CFG_SOLU_LEN_END,SULO_UPDATA_CMD,g_sys_val.con_id_tmp);
 }

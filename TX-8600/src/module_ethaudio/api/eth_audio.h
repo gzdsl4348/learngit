@@ -92,6 +92,8 @@ typedef interface ethaud_cfg_if{
 	// set route text
 	//---------------------------------------------------------------------------
     void set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]);
+
+    void update_audio_desip_info(uint8_t dev_mac[6], uint8_t ip[4]);
 	//
 #if 0
 	void send_text_en(uint8_t audio_txen[NUM_MEDIA_INPUTS],unsigned timestamp[NUM_MEDIA_INPUTS],

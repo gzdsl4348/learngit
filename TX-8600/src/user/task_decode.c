@@ -562,6 +562,8 @@ void solution_config_recive(){
         memcpy(&solution_list.solu_info[id].begin_date,&xtcp_rx_buf[SOLU_CFG_SOLU_BEGDATE],3);
         memcpy(&solution_list.solu_info[id].end_date,&xtcp_rx_buf[SOLU_CFG_SOLU_ENDDATE],3);
     } 
+    solution_list.solu_info[id].prio = xtcp_rx_buf[SOLU_CFG_SOLU_PRIO]; 
+
     // 配置方案使能
     if(xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT]&1){ 
         if(xtcp_rx_buf[SOLU_CFG_SOLU_STATE]){
@@ -692,10 +694,17 @@ void task_config_recive(){
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn = xtcp_rx_buf[TASK_CFG_SOLU_ID];
     }
     // 任务优先级
-    if(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn==0xFF)
+    if(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn==0xFF){
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio = xtcp_rx_buf[TASK_CFG_TASK_PRIO];
-    else
+    }
+    else{ //打铃任务按方案优先级选择
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio = AUX_I1;
+        for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
+            if((solution_list.solu_info[i].state!=0xFF)&&(solution_list.solu_info[i].id==xtcp_rx_buf[TASK_CFG_SOLU_ID])){
+                g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio = solution_list.solu_info[i].prio;
+            }
+        }
+    }
     //debug_printf("task prio %d,%d\n", g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio,xtcp_rx_buf[TASK_CFG_SOLU_ID]);    
     
     // 配置失败
@@ -1012,7 +1021,7 @@ void task_bat_config_recive(){
     }
     //-------------------------------------------------------------
     create_todaytask_list(g_sys_val.time_info);
-    user_sending_len = onebyte_ack_build(state,TASK_BAT_CONFIG_CMD);
+    user_sending_len = onebyte_ack_build(state,TASK_BAT_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
 }
 
@@ -1044,7 +1053,7 @@ void task_en_recive(){
     create_todaytask_list(g_sys_val.time_info);
     state = 1;
     task_en_end:
-    user_sending_len = onebyte_ack_build(state,TASK_EN_CONFIG_CMD);
+    user_sending_len = onebyte_ack_build(state,TASK_EN_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
     //---------------------------------------------------------------------------------
     // 任务信息更新
@@ -1109,7 +1118,7 @@ void today_week_config_recive(){
     g_sys_val.today_date.month = xtcp_rx_buf[POL_DAT_BASE+2];
     g_sys_val.today_date.date = xtcp_rx_buf[POL_DAT_BASE+3];
     //    
-    user_sending_len = onebyte_ack_build(1,TASK_CONFIG_WEEK_CMD);
+    user_sending_len = onebyte_ack_build(1,TASK_CONFIG_WEEK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     create_todaytask_list(g_sys_val.time_info);
     //
@@ -1153,7 +1162,7 @@ void bat_task_divset_recive(){
         timer_task_write(&tmp_union.task_allinfo_tmp,task_id);
         dat_len +=2;
     }
-    user_sending_len = onebyte_ack_build(1,TASK_BAT_DIVSET_CMD);
+    user_sending_len = onebyte_ack_build(1,TASK_BAT_DIVSET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);   
 }
 

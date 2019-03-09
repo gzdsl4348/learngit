@@ -212,7 +212,7 @@
 #ifdef UIP_CONF_UDP_CONNS
 #define UIP_UDP_CONNS UIP_CONF_UDP_CONNS
 #else /* UIP_CONF_UDP_CONNS */
-#define UIP_UDP_CONNS    80 //20 /////////////////////////////////////
+#define UIP_UDP_CONNS    200 //20 /////////////////////////////////////
 #endif /* UIP_CONF_UDP_CONNS */
 
 /**
@@ -251,7 +251,7 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONNS       20
+#define UIP_CONNS       10
 #else /* UIP_CONF_MAX_CONNECTIONS */
 #define UIP_CONNS UIP_CONF_MAX_CONNECTIONS
 #endif /* UIP_CONF_MAX_CONNECTIONS */
@@ -265,7 +265,7 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_LISTENPORTS
-#define UIP_LISTENPORTS 20
+#define UIP_LISTENPORTS 10
 #else /* UIP_CONF_MAX_LISTENPORTS */
 #define UIP_LISTENPORTS UIP_CONF_MAX_LISTENPORTS
 #endif /* UIP_CONF_MAX_LISTENPORTS */

@@ -44,6 +44,8 @@ void audio_moudle_set();
 
 void user_audio_desip_set(uint8_t ch);
 
+void user_updatip_set(uint8_t mac[],uint8_t ip[]);
+
 void set_audio_type(enum AUDIO_TYPE_E aux_type[]);
 
 void user_fl_get_patchlist(uint8_t *buff);

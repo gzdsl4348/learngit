@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x14)
+#define VERSION_L    (0x17)
 
 #define COULD_TCP_EN    1
 
@@ -28,18 +28,18 @@ extern "C" {
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
 // 最大UDP连接数
-#define MAX_UDP_CONNET	80
+#define MAX_UDP_CONNET	200
 
-#define MAX_CONNET_LIST	(MAX_UDP_CONNET/4) //支持同时20部机建立任务
+#define MAX_CONNET_LIST	(20) //支持同时20部机建立任务
 
-#define MAX_ACCOUNT_CONNET (MAX_ACCOUNT_NUM) //同时支持20个控制机
+#define MAX_ACCOUNT_CONNET (MAX_ACCOUNT_NUM) //同时支持30个控制机
 
 //最大设备
-#define MAX_DIV_LIST    80
+#define MAX_DIV_LIST    150
 
 #define DIV_SEND_NUM    10  //每包发送设备列表数
 //最大分区
-#define MAX_AREA_NUM    80 
+#define MAX_AREA_NUM    64
 // 设备所属最大分区
 #define MAX_DIV_AREA    10
 //
@@ -224,6 +224,7 @@ typedef struct solu_info_t{
     uint8_t name[DIV_NAME_NUM];
     date_info_t begin_date;
     date_info_t end_date;
+    uint8_t prio;
 }solu_info_t;
 // 方案列表
 typedef struct  solution_list_t{

@@ -108,7 +108,7 @@ void second_process(){
         could_heart_send_timer();
         #endif
     }
-    mic_time1hz_close();
+    //mic_time1hz_close();
     timer_taskmusic_check();    //定时任务几时
     task_check_and_play();      //定时任务定时播放
     user_disp_time();           // lcd 时钟显示

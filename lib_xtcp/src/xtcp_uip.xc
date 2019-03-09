@@ -110,6 +110,7 @@ unregister_listener(listener_info_t listeners[],
                     int n_ports)
 {
   for (unsigned i=0; i<n_ports; i++) {
+    //debug_printf("%x %x\n",listeners[i].port_number ,port_number);
     if (listeners[i].active &&
       listeners[i].port_number == port_number) {
       listeners[i].active = 0;
@@ -465,7 +466,8 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
                                         HTONS(conn->lport),
                                         port_number,
                                         conn);
-          listen_port = conn->lport;
+          listen_port = HTONS(conn->lport);
+          debug_printf("%x\n",conn->lport);
         }
       } else {
         struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
@@ -645,13 +647,20 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 
     case i_xtcp[unsigned i].xtcp_conn_cmp(uint8_t tol_num):
         uint8_t uip_tol=0;
+        uint8_t tcp_tol=0;
+    
     	for(uint8_t i = 0; i < UIP_UDP_CONNS; i++) {
     		if(uip_udp_conns[i].lport != 0) {
     			uip_tol++;
     		}
     	}
+        for(uint8_t i=0;i<UIP_CONNS;i++){
+            if(uip_conns[i].tcpstateflags != UIP_CLOSED)
+                tcp_tol++;
+        }
+        
         if(uip_tol!=tol_num){
-            debug_printf("uip_tol %d\n",uip_tol);
+            debug_printf("uip_tol %d %d\n",uip_tol,tcp_tol);
         }
         break;
         

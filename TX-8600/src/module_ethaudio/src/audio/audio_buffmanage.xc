@@ -214,6 +214,28 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
 #endif
                 g_t_val->sample_rate[ch] = 44100;
 				break;
+
+            case i_ethaud_cfg[uint8_t a].update_audio_desip_info(uint8_t dev_mac[6], uint8_t ip[4]):
+            {
+#if NEW_SEND_LIST_MODE_ENABLE
+                uint8_t tmp_mac[6];
+                memcpy(tmp_mac, dev_mac, 6);
+                for(j=0; j<MAX_SENDCHAN_NUM; j++) {
+                    if(g_t_val->audio_devlist[j].channel_num && 
+                       memcmp(tmp_mac, g_t_val->audio_devlist[j].dev_mac, 6)==0) {
+                        // 更新设备IP
+                        memcpy(g_t_val->audio_devlist[j].ip, ip, 4);
+                        // 复制发送MAC地址
+                        if(!(ipaddr_maskcmp(g_t_val->ipaddr,g_t_val->audio_devlist[j].ip,g_t_val->ipmask)))
+                            memcpy(g_t_val->audio_devlist[j].mac, g_t_val->ipgate_macaddr, 6);
+                        else
+                            memcpy(g_t_val->audio_devlist[j].mac, tmp_mac, 6);                        
+                        break;
+                    }
+                }
+#endif                   
+                break;
+            }
 			case i_ethaud_cfg[uint8_t a].set_audio_type(enum AUDIO_TYPE_E audio_type[NUM_MEDIA_INPUTS]):
 				for(i=0; i<NUM_MEDIA_INPUTS; i++)
 					g_t_val->audio_type[i] = audio_type[i];

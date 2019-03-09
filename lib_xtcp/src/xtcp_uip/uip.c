@@ -472,6 +472,8 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 		return 0;
 	}
 
+    debug_printf("\n\n new tcp conn %x \n\n",conn);
+
 	conn->tcpstateflags = UIP_SYN_SENT;
 
 	conn->snd_nxt[0] = iss[0];
@@ -529,6 +531,8 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 		return 0;
 	}
 
+    debug_printf("\n\n new udp conn %x \n\n",conn);
+
 	conn->lport = HTONS(lastport);
 	conn->rport = rport;
 
@@ -545,6 +549,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 /*---------------------------------------------------------------------------*/
 void uip_unlisten(u16_t port) {
 	for (c = 0; c < UIP_LISTENPORTS; ++c) {
+        //debug_printf("%x ,%x\n",uip_listenports[c],port );
 		if (uip_listenports[c] == port) {
 			uip_listenports[c] = 0;
 			return;

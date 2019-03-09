@@ -497,7 +497,7 @@ void mic_userlist_chk_recive(){
 void time_sync_deocde(uint8_t could_s){
     if((xtcp_rx_buf[USER_TIMSYNC_DAY_B]==0) ||(xtcp_rx_buf[USER_TIMSYNC_MONTH_B]==0)||(xtcp_rx_buf[USER_TIMSYNC_WEEK_B]==0)){
         if(could_s==0){
-            user_sending_len = onebyte_ack_build(0,USER_TIMER_SYNC_CMD);
+            user_sending_len = onebyte_ack_build(0,USER_TIMER_SYNC_CMD,&xtcp_rx_buf[POL_ID_BASE]);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         }    
         return;
@@ -515,7 +515,7 @@ void time_sync_deocde(uint8_t could_s){
     ds1302_time_set();
     //
     if(could_s==0){
-        user_sending_len = onebyte_ack_build(1,USER_TIMER_SYNC_CMD);
+        user_sending_len = onebyte_ack_build(1,USER_TIMER_SYNC_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     //判断方案是否有效日期内
@@ -540,9 +540,11 @@ void cld_timer_sync_recive(){
     time_sync_deocde(1);
 }
 
+
 //===============================================================================
 // 话筒请求管理 B503
 //===============================================================================
+#if 0
 void mic_aux_request_recive(){
     uint8_t aux_type,state,ch_tmp,tol_type;
     //
@@ -579,18 +581,21 @@ void mic_aux_request_recive(){
     user_sending_len = threebyte_ack_build(xtcp_rx_buf[POL_DAT_BASE],state,ch_tmp,MIC_AUX_REQUEST_CMD);    
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }   
+#endif
 //===============================================================================
 // 话筒通道存活管理 B504
 //===============================================================================
+#if 0
 void mic_aux_heart_recive(){
     uint8_t aux_type;
     aux_type = xtcp_rx_buf[POL_DAT_BASE];
     g_sys_val.aux_ch_tim[((aux_type>>4)*AUX_RXCH_NUM) + aux_type&0x0F] = 0;
 }
-
+#endif
 //===============================================================================
 // 话筒超时关闭处理
 //===============================================================================
+#if 0
 void mic_time1hz_close(){
     for(uint8_t i=0;i<AUX_TYPE_NUM*AUX_RXCH_NUM;i++){
         if(g_sys_val.aux_ch_state[i]){
@@ -601,13 +606,12 @@ void mic_time1hz_close(){
         }
     }
 }
-
+#endif
 //===============================================================================
 // 主机在线搜索   B906
 //===============================================================================
 void user_host_search_recive(){
-    debug_printf("could send\n");
-    user_sending_len = onebyte_ack_build(1,HOST_SEARCH_CMD);
+    user_sending_len = onebyte_ack_build(1,HOST_SEARCH_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -622,7 +626,7 @@ void tmp_ipset_recive(){
         memcpy(tmp_union.ipconfig.netmask,&xtcp_rx_buf[TMP_IPSET_MASK],4);
         memcpy(tmp_union.ipconfig.gateway,&xtcp_rx_buf[TMP_IPSET_GATE],4);
         //
-        user_sending_len = onebyte_ack_build(1,TMP_IPSET_CMD);
+        user_sending_len = onebyte_ack_build(1,TMP_IPSET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);
         //
         user_xtcp_ipconfig(tmp_union.ipconfig);
@@ -632,6 +636,7 @@ void tmp_ipset_recive(){
 //===============================================================================
 // 主机IP配置   BF0B
 //===============================================================================
+#if 0
 void sysset_ipset_recive(){
     if(xtcp_rx_buf[SYSSET_IPSET_SENDSTATE]==1){
         return;
@@ -648,10 +653,9 @@ void sysset_ipset_recive(){
     memcpy(host_info.ipconfig.ipaddr,&xtcp_rx_buf[SYSSET_IPSET_IP],4);    
     memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[SYSSET_IPSET_GATE],4);    
     memcpy(host_info.ipconfig.netmask,&xtcp_rx_buf[SYSSET_IPSET_MASK],4);    
-    user_xtcp_ipconfig(host_info.ipconfig);
-    
-    
+    user_xtcp_ipconfig(host_info.ipconfig);    
 }
+#endif
 
 //================================================================================
 // 账户连接超时处理
@@ -677,16 +681,16 @@ void account_login_overtime(){
 void backup_busy_chk(){
     // 繁忙
     if(g_sys_val.tftp_busy_f){
-        user_sending_len = onebyte_ack_build(2,BACKUP_BUSY_CHK_CMD);
+        user_sending_len = onebyte_ack_build(2,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     else if(g_sys_val.backup_busy_f){
-        user_sending_len = onebyte_ack_build(1,BACKUP_BUSY_CHK_CMD);
+        user_sending_len = onebyte_ack_build(1,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     // 空闲
     else{
-        user_sending_len = onebyte_ack_build(0,BACKUP_BUSY_CHK_CMD);
+        user_sending_len = onebyte_ack_build(0,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
     }
 }

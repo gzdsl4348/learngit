@@ -68,6 +68,7 @@ typedef struct g_sys_val_t{
     uint8_t file_bat_srcpatch[PATCH_NAME_NUM];
     uint8_t file_bat_despatch[MUSIC_NAME_NUM];
     uint8_t file_bat_id[6];
+    uint8_t file_bat_could_f;
     uint8_t file_bat_resendtim;
     uint8_t file_bat_resendf;
     uint8_t file_bat_resend_inc;
@@ -111,6 +112,8 @@ typedef struct g_sys_val_t{
     // 文件操作
     uint16_t file_ack_cmd;
     xtcp_connection_t file_conn_tmp;
+    uint8_t file_contorl_couldf;
+    uint8_t file_contorl_id[6];
     //-----------------------------------------------
     // 信息更新部分
     //uint8_t connect_ip[4];
@@ -167,9 +170,11 @@ typedef struct g_sys_val_t{
     unsigned tx_timestamp[MAX_MUSIC_CH];
     //-----------------------------------------------
     // 话筒占用状态
+    #if 0
     uint8_t aux_ch_state[AUX_TYPE_NUM*AUX_RXCH_NUM];
     uint8_t aux_ch_tim[AUX_TYPE_NUM*AUX_RXCH_NUM];
     uint8_t aux_ch_ip[AUX_TYPE_NUM*AUX_RXCH_NUM][4];
+    #endif
     //-----------------------------------------------------
     // 广播连接
     xtcp_connection_t broadcast_conn;
