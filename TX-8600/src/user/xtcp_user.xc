@@ -910,10 +910,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             //获取真实数据
                             #if 0
                             debug_printf("could rec\n");
-                            for(uint8_t i=0;i<CLH_HEADEND_BASE;i++){
-                                debug_printf("%x ",all_rx_buf[i]);
+                            for(uint16_t i=0;i<(all_rx_buf[CLH_LEN_BASE]+(all_rx_buf[CLH_LEN_BASE+1]<<8))+6;i++){
+                                debug_printf("%2x ",all_rx_buf[i]);
+                                if(i%30==0)
+                                    debug_printf("\n");
                             }
-                            debug_printf("\n");
+                            debug_printf("\nrecive end \n");
+                            
                             #endif
                             xtcp_rx_buf = all_rx_buf+CLH_HEADEND_BASE;
                             // 云包头强制置云标志
@@ -941,6 +944,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                     xtcp_tx_buf[user_sending_len-4] = sum;
                                     xtcp_tx_buf[user_sending_len-3] = sum>>8;
                                     //
+                                    #if 0
                                     for(uint8_t i=0;i<user_sending_len;i++){
                                         debug_printf("%x ",xtcp_tx_buf[i]);
                                         if(i%20==0&&i!=0){
@@ -948,6 +952,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                         }
                                     }
                                     debug_printf("\n");
+                                    #endif
                                     user_xtcp_send(conn_list_tmp->conn,0);
                                 }
                                 break;

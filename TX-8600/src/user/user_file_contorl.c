@@ -354,11 +354,13 @@ void music_bat_contorl_recive(){
     uint16_t data_base = MUSIC_BAT_NAME_BASE;
     for(uint8_t i=0; i<xtcp_rx_buf[MUSIC_BAT_TOL_NUM] ;i++){
         user_file_bat_write(g_sys_val.file_bat_tolnum,&xtcp_rx_buf[data_base]);
+        #if 0
         debug_printf("get file:");
         for(uint8_t i=0;i<(MUSIC_NAME_NUM);i++){
             debug_printf("%x ",xtcp_rx_buf[data_base+i]);
         }
         debug_printf("\n");
+        #endif
         data_base += MUSIC_NAME_NUM;
         g_sys_val.file_bat_tolnum++;
     }
@@ -378,7 +380,7 @@ void music_bat_contorl_recive(){
         for(uint8_t i=0;i<*patch_tol;i++){
             if(charncmp(g_sys_val.file_bat_despatch,dir_info[i].name,PATCH_NAME_NUM)==1){
                 debug_printf("\n\n bat music chk\n");
-                debug_printf("file:%d,muc:%d",dir_info[i].music_num,g_sys_val.file_bat_tolnum);
+                debug_printf("file:%d,muc:%d\n",dir_info[i].music_num,g_sys_val.file_bat_tolnum);
                 if(dir_info[i].music_num+g_sys_val.file_bat_tolnum > MAX_SDCARD_MUSIC_NUM){
                     user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],0,MUSIC_BAT_CONTORL_CMD);    
                     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
