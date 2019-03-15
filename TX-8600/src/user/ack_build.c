@@ -281,9 +281,9 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_NAME_B],host_info.name,DIV_TYPE_NUM);
     //
-    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = VERSION_H;
+    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = VERSION_TEN_H;
    
-    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = 14;
+    xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = VERSION_TEN_L;
     debug_printf("ver %x %x  \n",xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B],xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1]);
     //
     xtcp_tx_buf[AC_LOGIN_DHCP_EN_B] = host_info.dhcp_en;
@@ -292,7 +292,11 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_IPGATE_B],host_info.ipconfig.gateway,4);
     //
+    #ifdef NO_NEED_REGISTER
+    xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 2;
+    #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
+    #endif
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
@@ -426,7 +430,7 @@ uint16_t solution_list_ack_build(uint16_t cmd){
     //
     uint16_t data_base = SOLU_CK_DAT_BASE;
     xtcp_tx_buf[SOLU_CK_TOLNUM] = 0;
-    for(uint8_t i=1; i<(MAX_TASK_SOULTION); i++){
+    for(uint8_t i=0; i<(MAX_TASK_SOULTION); i++){
         if(solution_list.solu_info[i].state==0xFF)
             continue;
         xtcp_tx_buf[data_base+SOLU_CK_ID] = solution_list.solu_info[i].id;

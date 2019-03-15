@@ -354,10 +354,10 @@ void music_bat_contorl_recive(){
     uint16_t data_base = MUSIC_BAT_NAME_BASE;
     for(uint8_t i=0; i<xtcp_rx_buf[MUSIC_BAT_TOL_NUM] ;i++){
         user_file_bat_write(g_sys_val.file_bat_tolnum,&xtcp_rx_buf[data_base]);
-        #if 0
+        #if 1
         debug_printf("get file:");
-        for(uint8_t i=0;i<(MUSIC_NAME_NUM);i++){
-            debug_printf("%x ",xtcp_rx_buf[data_base+i]);
+        for(uint8_t j=0;j<(MUSIC_NAME_NUM);j++){
+            debug_printf("%x ",xtcp_rx_buf[data_base+j]);
         }
         debug_printf("\n");
         #endif
@@ -577,7 +577,7 @@ void bat_filecontorl_resend_tim(){
             g_sys_val.file_bat_conn.id=null;
         }
     }    
-    // 批量操作回复
+    // 批量操作回复 进度回复
     static uint8_t tim=0;
     uint8_t file_process;
     tim++;

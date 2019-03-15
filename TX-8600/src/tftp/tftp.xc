@@ -22,9 +22,8 @@ static unsigned short local_tid = TFTP_SOURCE_TID_SEED;
 static unsigned short block_num;
 static unsigned short prev_block_num;
 
-extern char all_tx_buf[];
-//unsigned char tx_buffer[TFTP_TX_BUFFER_SIZE];
-#define tx_buffer all_tx_buf
+unsigned char tftp_tx_buf[TFTP_TX_BUFFER_SIZE];
+#define tx_buffer tftp_tx_buf
 
 static int num_tx_bytes;
 

@@ -27,6 +27,14 @@ uint8_t charncmp(uint8_t *c1,uint8_t *c2,unsigned len);
 #define NEED_FL_RTTASK_LIST 0x10
 
 typedef struct g_sys_val_t{
+
+    // TCP 包分割处理
+    uint8_t tcp_buff_tmp[RX_BUFFER_SIZE];
+    uint16_t tcp_tmp_len;
+    uint16_t tcp_timout;
+    uint8_t tcp_recing_f;
+    uint8_t tcp_decode_f;
+
     //-------------------------------------------
     // flash 烧写标志位
     unsigned need_flash;
@@ -223,6 +231,11 @@ typedef struct g_sys_val_t{
     // 广播端口接收处理
     xtcp_connection_t brocast_rec_conn;
     uint8_t brocast_rec_timinc;
+
+    // 云心跳计时
+    uint8_t could_heart_timcnt;
+
+    //
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

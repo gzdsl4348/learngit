@@ -332,6 +332,8 @@ void account_sys_register_recive(){
             debug_printf("B90D resend \n",g_sys_val.register_rec_s_tmp);
         }
         debug_printf("regsied updat state %d, day %d\n\n",host_info.regiser_state,host_info.regiser_days);
+        // flash info 
+        hostinfo_fl_write();    //烧写主机信息
     }
 }
 

@@ -217,6 +217,9 @@ void div_info_set_recive()
 {
     div_node_t *div_tmp_p;
     if(mac_cmp(&xtcp_rx_buf[DIVSET_MAC_B],host_info.mac)){
+        // 加快信息刷新
+        g_sys_val.could_heart_timcnt = 8;
+        
         //配置本机信息
         //-----------------------------------------------------------------
         if(xtcp_rx_buf[DIVSET_SETBITMASK_B]&01){ //SET NAME

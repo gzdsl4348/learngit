@@ -167,13 +167,11 @@ void user_could_send(uint8_t pol_type){
     all_tx_buf[CLH_TRANTYPE_BASE] = pol_type;
     all_tx_buf[CLH_DIVTYPE_BASE] = 0;   //主机类型
     //
-    #if 1
-    if(xtcp_tx_buf[POL_COM_BASE]==06){
+    #if 0
     for(uint16_t i=0;i<user_sending_len;i++){
         debug_printf("%2x ",all_tx_buf[i]);
         if((i%20==0)&&(i!=0))
             debug_printf("\n");
-    }
     }
     debug_printf("\n");
     debug_printf("end\n");

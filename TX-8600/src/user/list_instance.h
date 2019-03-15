@@ -10,9 +10,14 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x17)
+#define VERSION_L    (0x18)
 
-#define COULD_TCP_EN    1
+#define VERSION_TEN_H    (01)
+#define VERSION_TEN_L    (18)
+
+#define COULD_TCP_EN     1
+
+#define NO_NEED_REGISTER 0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -65,7 +70,7 @@ extern "C" {
 #define MAX_TASK_DATE_NUM   10  //最大指定10天   
 
 // 最大MP3解码数
-#define MAX_MUSIC_CH        NUM_MEDIA_INPUTS
+#define MAX_MUSIC_CH        NUM_MEDIA_INPUTS    //48路音频
 
 #define HOST_UNREGISTER     0
 #define HOST_REGISTER_DAYS          1

@@ -1228,7 +1228,7 @@ void uip_process(u8_t flag) {
 	tmp16 = BUF->destport;
 	/* Next, check listening connections. */
 	for(c = 0; c < UIP_LISTENPORTS; ++c) {
-		if(tmp16 == uip_udp_listenports[c]) {
+		if((tmp16 == uip_udp_listenports[c])) {
 			uip_udp_conn = 0;
 			for(c = 0; c < UIP_UDP_CONNS; ++c) {
 				if(uip_udp_conns[c].lport == 0) {
@@ -1247,7 +1247,6 @@ void uip_process(u8_t flag) {
 			}
 		}
 	}
-
 	// No matching connection found
 	goto drop;
 

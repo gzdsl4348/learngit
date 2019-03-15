@@ -112,7 +112,7 @@ static int tftp_blksize = 512;
 
 static uint8_t tftp_data_reverse = 0;
 static uint8_t tftp_frist_block = 0;
-static uint16_t tftp_upgrade_dev_type[] = {'T','X','-','8','6','0','0',0};
+//static uint16_t tftp_upgrade_dev_type[] = {'T','X','-','8','6','0','0',0};
 
 static void array_reverse(uint8_t a[], uint32_t size)
 {
@@ -424,19 +424,26 @@ void user_fldat_init(){
     unsafe{
     unsigned init_string;
     //-------------------------------------------------------------
-	//设备列表初始化
-	//div_list_init();        
-    //g_sys_val.fl_divlist_inc=0;
-    //while(!timer_fl_divlist_decode()); //烧写
+	//MAC 写入
+	#if 0
+    i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+    sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+    //
+    host_info.mac[0]=0x42;
+    host_info.mac[1]=0x4C;
+    host_info.mac[2]=0x45;
+    host_info.mac[3]=0x00;
+    host_info.mac[4]=0x72;
+    host_info.mac[5]=0x45;
     
-	//sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
-    //user_fl_sector_write(USER_DAT_SECTOR);
+	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+    user_fl_sector_write(USER_DAT_SECTOR);
+    #endif
     // sn
     //------------------------------------------------------------
     i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
 	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
     //init_string = 0;
-    
 	if(0x5AA57349==init_string){
 		return;
 	}
@@ -518,8 +525,6 @@ void sys_info_init(){
 	//----------------------------------------------------------------------------------------------------
 	i_user_flash->flash_sector_read(SOLUSION_DAT_SECTOR,tmp_union.buff);
 	sys_dat_read((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
-
-    //
     area_fl_read();    //分区表读取
     divlist_fl_read(); //列表读取
     account_list_read();//账户列表读取
@@ -638,6 +643,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     i_fs_user = (client file_server_if * unsafe) &if_fs;
     i_uart_tx = &if_uart_tx;
 	//------------------------------------------------------------------------
+	memset(&g_sys_val,0x00,sizeof(g_sys_val_t));
+	//------------------------------------------------------------------------
 	// wifi模块进入串口AT指令模式 测试
 	p_wifi_io <: 0x00;
 	#if 0
@@ -670,7 +677,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     #endif
     //------------------------------------------------------------------------
     // init fun 
-    while(if_fl_manage.is_flash_init_complete());
+    while(if_fl_manage.is_flash_init_complete())delay_milliseconds(50);
 	init_funlist_len();     //系统函数列表初始化
     user_fldat_init();      //初始化flash
 	sys_info_init();	    //系统信息 列表 获取及初始化
@@ -688,7 +695,18 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
         memcpy(&ipconfig,&host_info.ipconfig,12);
     }
     if(mac_factory_init(i_xtcp,host_info.mac)==0){
-	    i_xtcp.xtcp_init(ipconfig,host_info.mac);
+        #if 0
+        ipconfig.ipaddr[0] = 172;
+        ipconfig.ipaddr[1] = 16;
+        ipconfig.ipaddr[2] = 13;
+        ipconfig.ipaddr[3] = 116;
+
+        ipconfig.gateway[0] = 172;
+        ipconfig.gateway[1] = 16;
+        ipconfig.gateway[2] = 13;
+        ipconfig.gateway[3] = 254;
+        #endif
+        i_xtcp.xtcp_init(ipconfig,host_info.mac);
     }
 	//---------------------------------
 	// build listening form eth PORT
@@ -895,49 +913,98 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         disp_text_conn(i_xtcp);
 						break;
 		 			case XTCP_RECV_DATA:
-                        // 判断是否云命令
                         //===================================================================================
                         #if 0
-                        debug_printf("recive dat\n\n");
-                        for(uint8_t i=0;i<all_rx_buf[POL_LEN_BASE]+2;i++){
-                            debug_printf("%x ",all_rx_buf[i]);
+                        //获取真实数据
+                        debug_printf("could rec len %d\n",data_len);
+                        for(uint16_t i=0;i<data_len;i++){
+                            debug_printf("%2x ",all_rx_buf[i]);
+                            if(i%30==0 && i!=0)
+                                debug_printf("\n");
                         }
-                        debug_printf("\n\n");
-                        debug_printf("dat");
+                        debug_printf("\nrecive end \n");
                         #endif
+                        //==================================================================================
+                        // tcp 包处理
+                        if(conn.protocol == XTCP_PROTOCOL_TCP){
+                            debug_printf("rec tcp\n");
+                            //-------------------------------------------------------------------------------------
+                            //判断是否收到包头 及接收中处理
+                            if(((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG){
+                                g_sys_val.tcp_recing_f=1;
+                                g_sys_val.tcp_timout = 0;
+                                g_sys_val.tcp_tmp_len = data_len;
+                                memcpy(g_sys_val.tcp_buff_tmp,all_rx_buf,data_len);
+                            }
+                            else if((g_sys_val.tcp_recing_f)&&(g_sys_val.tcp_tmp_len+data_len<=RX_BUFFER_SIZE)){
+                                g_sys_val.tcp_timout = 0;
+                                memcpy(&g_sys_val.tcp_buff_tmp[g_sys_val.tcp_tmp_len],all_rx_buf,data_len);
+                                g_sys_val.tcp_tmp_len += data_len;
+                                #if 0
+                                for(uint16_t i=0;i<g_sys_val.tcp_tmp_len;i++){
+                                    debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
+                                    if(i%30==0 && i!=0)
+                                        debug_printf("\n");
+                                }
+                                debug_printf("\nrecive end \n");
+                                #endif
+                                
+                            }
+                            else{
+                                g_sys_val.tcp_recing_f=0;
+                                break;
+                            }
+                            //-------------------------------------------------------------------------------------
+                            //判断数据长度与包尾
+                            uint16_t rec_len = g_sys_val.tcp_buff_tmp[CLH_LEN_BASE]+(g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+1]<<8);
+                            if(rec_len >= RX_BUFFER_SIZE)
+                                break;
+                            debug_printf("tcp len %d,dat len %d\n",g_sys_val.tcp_tmp_len,rec_len);
+                            if((g_sys_val.tcp_tmp_len == rec_len+6)&&
+                               (g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+rec_len]==0x55)&&(g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+1+rec_len]==0xAA)&&g_sys_val.tcp_recing_f){
+                                
+                                g_sys_val.tcp_decode_f = 1;
+                            }
+                            else{
+                                break;
+                            }
+                        }
+                        //==================================================================================
                         // 从服务器收到云命令处理
-                        if(((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG){
+                        if((((uint32_t *)g_sys_val.tcp_buff_tmp)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG) && g_sys_val.tcp_decode_f){
+                            g_sys_val.tcp_decode_f = 0;
+                            g_sys_val.tcp_recing_f = 0;
                             //获取真实数据
                             #if 0
                             debug_printf("could rec\n");
                             for(uint16_t i=0;i<(all_rx_buf[CLH_LEN_BASE]+(all_rx_buf[CLH_LEN_BASE+1]<<8))+6;i++){
                                 debug_printf("%2x ",all_rx_buf[i]);
-                                if(i%30==0)
+                                if(i%30==0 && i!=0)
                                     debug_printf("\n");
                             }
                             debug_printf("\nrecive end \n");
                             
                             #endif
-                            xtcp_rx_buf = all_rx_buf+CLH_HEADEND_BASE;
+                            xtcp_rx_buf = g_sys_val.tcp_buff_tmp+CLH_HEADEND_BASE;
                             // 云包头强制置云标志
                             xtcp_rx_buf[POL_COULD_S_BASE] = 1;
                             // 云ID转移
-                            memcpy(&xtcp_rx_buf[POL_ID_BASE],&all_rx_buf[CLH_CONTORL_ID_BASE],6);
+                            memcpy(&xtcp_rx_buf[POL_ID_BASE],&g_sys_val.tcp_buff_tmp[CLH_CONTORL_ID_BASE],6);
                             //判断是否透传
-                            if(!ip_cmp(&all_rx_buf[CLH_DESIP_BASE],host_info.ipconfig.ipaddr)){
+                            if(!ip_cmp(&g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE],host_info.ipconfig.ipaddr)){
                                 //透传数据
                                 conn_list_t *unsafe conn_list_tmp;
                                 xtcp_ipaddr_t ip_tmp;
-                                ip_tmp[0] = all_rx_buf[CLH_DESIP_BASE];
-                                ip_tmp[1] = all_rx_buf[CLH_DESIP_BASE+1];
-                                ip_tmp[2] = all_rx_buf[CLH_DESIP_BASE+2];
-                                ip_tmp[3] = all_rx_buf[CLH_DESIP_BASE+3];
+                                ip_tmp[0] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE];
+                                ip_tmp[1] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+1];
+                                ip_tmp[2] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+2];
+                                ip_tmp[3] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+3];
                                 conn_list_tmp = get_conn_for_ip(ip_tmp);
                                 //
                                 if(conn_list_tmp!=null){
                                     debug_printf("forward: %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
                                     user_sending_len = data_len - CLH_HEADEND_BASE;
-                                    memcpy(xtcp_tx_buf,&all_rx_buf[CLH_HEADEND_BASE],user_sending_len);
+                                    memcpy(xtcp_tx_buf,&g_sys_val.tcp_buff_tmp[CLH_HEADEND_BASE],user_sending_len);
                                     //重校验
                                     uint16_t sum;
                                     sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(user_sending_len-6));
@@ -1075,10 +1142,21 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             }
             //--------------------------------------------------
             // 10hz process
+            //-------------------------------------------------
             // 系统时间戳
             g_sys_val.sys_timinc++;
             // 系统10hz线程
             timee10hz_process();
+            //--------------------------------------------------
+            // tcp 包分割处理 1.5秒超时
+            if(g_sys_val.tcp_recing_f){
+                g_sys_val.tcp_timout++;
+                if(g_sys_val.tcp_timout>15){
+                    g_sys_val.tcp_recing_f = 0;
+                    g_sys_val.tcp_tmp_len = 0;
+                }
+            }
+            
             //--------------------------------------------------------
             // 网络芯片 不正常 定时复位处理
             static uint8_t reset_ethtim=0;

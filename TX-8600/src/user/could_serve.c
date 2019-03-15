@@ -6,25 +6,18 @@
 #include "account.h"
 #include "debug_print.h"
 
-#define CLD_HEART_TIME_CNT  2
+#define CLD_HEART_TIME_CNT  10 //10秒心跳
 
 void could_heart_send_timer(){
     static uint8_t heeart_timer_cnt=0;
-    heeart_timer_cnt++;
-    if(heeart_timer_cnt>CLD_HEART_TIME_CNT){
-        heeart_timer_cnt = 0;
+    g_sys_val.could_heart_timcnt++;
+    if(g_sys_val.could_heart_timcnt>CLD_HEART_TIME_CNT){
+        g_sys_val.could_heart_timcnt = 0;
         debug_printf("cld id %d\n",g_sys_val.could_conn.id);
         if(g_sys_val.could_conn.id!=0){
-            static uint8_t tmp=0;
-            static uint8_t tmp1=0;
-            tmp++;
-            tmp1++;
-            if(tmp>=5){
-                user_sending_len = cld_heart_build();
-                user_could_send(1);  
-                debug_printf("send cld\n");
-                tmp=0;
-            }
+            user_sending_len = cld_heart_build();
+            user_could_send(1);  
+            debug_printf("send cld\n");
             #if 0
             if(tmp1>=2){
                 debug_printf("send colud\n");
@@ -34,7 +27,7 @@ void could_heart_send_timer(){
             }
             #endif
             g_sys_val.could_send_cnt++;
-            if(g_sys_val.could_send_cnt>10){    //1分钟
+            if(g_sys_val.could_send_cnt>3){    //30秒重连
                 g_sys_val.could_conn.id=0;
                 debug_printf("could send time over\n");
                 user_xtcp_close(g_sys_val.could_conn);
