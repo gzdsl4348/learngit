@@ -97,11 +97,11 @@ void mes_send_taskinfo(){
 }
 
 // 即时任务更新通知
-void mes_send_rttaskinfo(uint16_t id){
+void mes_send_rttaskinfo(uint16_t id,uint8_t contorl){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //
-    mes_send_list.len[mes_send_list.wrptr] = rttaskinfo_upgrade_build(id);
+    mes_send_list.len[mes_send_list.wrptr] = rttaskinfo_upgrade_build(id,contorl);
     memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
     mes_send_list.wrptr++;
 }

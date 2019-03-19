@@ -65,6 +65,8 @@ void dhcpc_request(void);
 
 void dhcpc_appcall(void);
 
+uint8_t n_uip_read_task_status(void);
+
 #ifdef __XC__
 unsafe void dhcpc_configured(const struct dhcpc_state * unsafe s);
 #else

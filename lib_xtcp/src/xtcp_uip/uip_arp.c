@@ -179,10 +179,24 @@ uip_arp_update(u16_t *ipaddr, struct uip_eth_addr *ethaddr)
       if(ipaddr[0] == tabptr->ipaddr[0] &&
 	 ipaddr[1] == tabptr->ipaddr[1]) {
 
+#if 0
+    if(memcmp(tabptr->ethaddr.addr, ethaddr->addr, 6) !=0 )
+    debug_printf("uip_arp_update chage - [%d.%d.%d.%d] %02x:%02x:%02x:%02x:%02x:%02x\n", 
+        tabptr->ipaddr[0]&0xff,
+        tabptr->ipaddr[0]>>8,
+        tabptr->ipaddr[1]&0xff,
+        tabptr->ipaddr[1]>>8,
+        tabptr->ethaddr.addr[0], 
+        tabptr->ethaddr.addr[1],
+        tabptr->ethaddr.addr[2],
+        tabptr->ethaddr.addr[3],
+        tabptr->ethaddr.addr[4],
+        tabptr->ethaddr.addr[5]);    
+#endif
+
 	/* An old entry found, update this and return. */
 	memcpy(tabptr->ethaddr.addr, ethaddr->addr, 6);
 	tabptr->time = arptime;
-
 	return;
       }
     }
@@ -251,6 +265,7 @@ uip_arp_ipin(void)
      (uip_hostaddr[1] & uip_netmask[1])) {
     return;
   }
+
   uip_arp_update(IPBUF->srcipaddr, &(IPBUF->ethhdr.src));
 
   return;
@@ -359,7 +374,8 @@ uip_arp_arpin(void)
  * uip_len.
  */
 /*-----------------------------------------------------------------------------------*/
-uint8_t 
+extern static_route_t g_static_route;
+int
 uip_arp_out(struct uip_udp_conn *conn)
 {
   struct arp_entry *tabptr;
@@ -383,7 +399,13 @@ uip_arp_out(struct uip_udp_conn *conn)
     IPBUF->ethhdr.dest.addr[5] = IPBUF->destipaddr[1] >> 8;
   }
   else  {
+    
     /* Check if the destination address is on the local network. */
+    if(g_static_route.flag&uip_ipaddr_maskcmp(IPBUF->destipaddr, g_static_route.dst_ip, g_static_route.dst_mask)) {
+        /* Build an ethernet header. */
+        memcpy(IPBUF->ethhdr.dest.addr, g_static_route.dst_mac, 6);
+        goto static_route;
+    }
     if(!uip_ipaddr_maskcmp(IPBUF->destipaddr, uip_hostaddr, uip_netmask)) {
       /* Destination address was not on the local network, so we need to
 	 use the default router's IP address instead of the destination
@@ -403,7 +425,7 @@ uip_arp_out(struct uip_udp_conn *conn)
     if(i == UIP_ARPTAB_SIZE) {
       /* The destination address was not in our ARP table, so we
 	 overwrite the IP packet with an ARP request. */
-
+      debug_printf("uip_arp_out no found %d.%d.%d.%d\n", ipaddr[0]&0xff, ipaddr[0]>>8, ipaddr[1]&0xff, ipaddr[1]>>8);
       memset(BUF->ethhdr.dest.addr, 0xff, 6);
       memset(BUF->dhwaddr.addr, 0x00, 6);
       memcpy(BUF->ethhdr.src.addr, uip_ethaddr.addr, 6);
@@ -435,6 +457,7 @@ uip_arp_out(struct uip_udp_conn *conn)
     /* Build an ethernet header. */
     memcpy(IPBUF->ethhdr.dest.addr, tabptr->ethaddr.addr, 6);
   }
+static_route:  
   memcpy(IPBUF->ethhdr.src.addr, uip_ethaddr.addr, 6);
 
   IPBUF->ethhdr.type = HTONS(UIP_ETHTYPE_IP);
@@ -443,7 +466,7 @@ uip_arp_out(struct uip_udp_conn *conn)
     conn->udpflags |= UDP_SENT;
 
   uip_len += sizeof(struct uip_eth_hdr);
-  return 1; 
+  return 1;
 }
 /*-----------------------------------------------------------------------------------*/
 

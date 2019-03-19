@@ -1355,7 +1355,7 @@ void rttask_config_recive(){
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     // 推送消息
     if(state){
-        mes_send_rttaskinfo(id);
+        mes_send_rttaskinfo(id,xtcp_rx_buf[RTTASK_CFG_CONTORL]);
     }
 }
 //====================================================================================================
@@ -1376,8 +1376,6 @@ void close_running_rttask(uint8_t *mac){
         runtmp_p = runtmp_p->run_next_p;
     }
 }
-
-
 
 //====================================================================================================
 // 即时任务开关控制                    B404
@@ -1503,8 +1501,10 @@ void rttask_build_recive(){
             }
             conn_tmp_p = get_conn_info_p(rttask_build_state[i].src_conn_id);
             if(conn_tmp_p!=null){
-                user_xtcp_send(conn_tmp_p->conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+                user_xtcp_send(conn_tmp_p->conn,0);
             }
+            //
+            mes_send_rttaskinfo(rttask_build_state[i].rttask_id,02);
             break;
         }
     }
@@ -1529,7 +1529,6 @@ void rttask_build_overtime10hz(){
             if(rttask_build_state[i].over_time>15){
                 rttask_build_state[i].des_conn_id=0;
                 debug_printf("rttask build timeout\n");
-
             }
         }
     }

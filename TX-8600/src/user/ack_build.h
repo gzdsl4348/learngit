@@ -109,7 +109,7 @@ uint16_t listinfo_upgrade_build(uint8_t type);
 // 任务通知
 uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t contorl,uint16_t task_id);
 // 即时任务通知
-uint16_t rttaskinfo_upgrade_build(uint16_t id);
+uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl);
 // 账户通知
 uint16_t acinfo_upgrade_build(uint16_t id);
 // 方案通知

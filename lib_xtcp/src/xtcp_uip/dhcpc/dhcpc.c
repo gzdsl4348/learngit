@@ -297,6 +297,14 @@ static int msg_for_me(void)
 }
 
 
+static uint8_t nnn_auotip_lock = 0;
+static uint32_t nnn_total_delay = 0;
+
+void n_clear_autoip_lock(void)
+{
+	nnn_auotip_lock = 0;
+}
+
 static
 PT_THREAD(handle_dhcp(void))
 {
@@ -322,7 +330,7 @@ PT_THREAD(handle_dhcp(void))
   init:
     s.state = STATE_SENDING;
     s.ticks = CLOCK_SECOND;
-
+	
     while (1)
     {
         send_discover();
@@ -347,7 +355,10 @@ PT_THREAD(handle_dhcp(void))
 #if UIP_USE_AUTOIP
         if (s.ticks == CLOCK_SECOND * 4)
         {
-            uip_autoip_start();
+			if(nnn_auotip_lock == 0)
+			{
+				uip_autoip_start();
+			}
         }
 #endif
 
@@ -374,6 +385,7 @@ PT_THREAD(handle_dhcp(void))
               {
                 parse_msg();
                 s.state = STATE_CONFIG_RECEIVED;
+				nnn_total_delay = 0;
                 goto bound;
               }
               else if (msg == DHCPNAK)
@@ -392,13 +404,42 @@ PT_THREAD(handle_dhcp(void))
     } while (s.state != STATE_CONFIG_RECEIVED);
 
   bound:
-    dhcpc_configured(&s);
+  	if( (n_uip_read_task_status()==1) && (nnn_auotip_lock!=0) )
+	{
+		goto waitcheckbusy; //Ã¦£¬µÈ´ý
+	}
+
+	if(nnn_auotip_lock)
+	{
+		if( (memcmp((uint8_t *)(&uip_hostaddr), (uint8_t *)s.ipaddr, 4) != 0) ||
+			(memcmp((uint8_t *)(&uip_draddr), (uint8_t *)s.default_router, 4) != 0) ||
+			(memcmp((uint8_t *)(&uip_netmask), (uint8_t *)s.netmask, 4) != 0))
+		{
+			dhcpc_configured(&s);
+		}
+	}
+	else{
+		dhcpc_configured(&s);
+	}
+    nnn_auotip_lock = 1; 
 
     #define MAX_TICKS ((unsigned int)(~(0))/2)
     #define MAX_TICKS32 (~((unsigned int)0))
     #define IMIN(a, b) ((a) < (b) ? (a) : (b))
 
-    if((s.lease_time[0]*65536ul + s.lease_time[1])*CLOCK_SECOND/2 <= MAX_TICKS32)
+	if(nnn_total_delay) {
+		uint32_t lease_tmp = (s.lease_time[0]*65536ul + s.lease_time[1]);
+		if(nnn_total_delay >= lease_tmp) //¹ýÆÚ?
+		{
+			goto initwait;;
+		}
+		lease_tmp -= nnn_total_delay;
+		s.lease_time[0] = (uint16_t)(lease_tmp>>16); 
+		s.lease_time[1] = (uint16_t)(lease_tmp); 
+		nnn_total_delay = 0;
+	}
+
+	if((s.lease_time[0]*65536ul + s.lease_time[1])*CLOCK_SECOND/2 <= MAX_TICKS32)
     {
         s.ticks = (s.lease_time[0]*65536ul +s.lease_time[1])*CLOCK_SECOND/2;
     }
@@ -441,23 +482,38 @@ PT_THREAD(handle_dhcp(void))
               msg = msg_for_me();
               if (msg == DHCPACK)
               {
-                parse_msg();
+                parse_msg();       
                 goto bound;
               }
               else if (msg == DHCPNAK)
-              {
+              {     
                 goto init;
               }
             }
         } while (!uip_timer_expired(&s.timer));
-
+		
     } while (s.ticks >= CLOCK_SECOND*3);
-
+    
     // Lease expired
     goto init;
 
-    PT_END(&s.pt);
+    waitcheckbusy:
+	s.ticks = CLOCK_SECOND*180;
+    uip_timer_set(&s.timer, s.ticks);
+	
+    do
+    {
+        PT_YIELD(&s.pt);
+    } while (!uip_timer_expired(&s.timer));
+	
+    if((nnn_total_delay + 180) >= (~((uint32_t)0))) {
+		nnn_total_delay = 0;
+		goto initwait;	
+	}
+	nnn_total_delay += 180;
+	goto bound;
 
+	PT_END(&s.pt);
 }
 /*---------------------------------------------------------------------------*/
 void

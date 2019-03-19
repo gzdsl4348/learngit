@@ -36,14 +36,18 @@ unsafe void renotify(unsigned client_num)
     i_xtcp[client_num].packet_ready();
   }
 }
-
+extern int uip_udp_connid_is_free(int connid);
 static unsigned get_guid(void)
 {
   static unsigned guid = 0;
-  guid++;
   
-  if(guid > 200) {
-    guid = 0;
+  while(1) {
+    if(guid++ > (0xfffffff)) {
+      guid = 1;
+    }
+    
+    //if(uip_udp_connid_is_free(guid) == 0) continue;
+    break;
   }
 
   return guid;
@@ -69,7 +73,6 @@ unsafe xtcp_connection_t create_xtcp_state(int xtcp_num,
     xtcp_conn.mss = MAX_PACKET_BYTES;
 
   xtcp_conn.stack_conn = (int) uip_lwip_conn;
-  xtcp_conn.id = xtcp_conn.stack_conn;
   return xtcp_conn;
 }
 
@@ -91,8 +94,6 @@ unsafe void enqueue_event_and_notify(unsigned client_num,
 #endif
                                      )
 {
-  //if(client_num!=0)
-  //  return;
   unsigned position = (client_heads[client_num] + client_num_events[client_num]) % CLIENT_QUEUE_SIZE;
   client_queue[client_num][position].xtcp_event = xtcp_event;
   client_queue[client_num][position].xtcp_conn = xtcp_conn;
@@ -161,9 +162,12 @@ unsafe void xtcp_if_up(void)
 #endif
   }
 }
-
+extern void n_clear_autoip_lock(void);
+extern void n_uip_clear_autoip_flag(void);
 unsafe void xtcp_if_down(void)
 {
+  n_clear_autoip_lock();
+  n_uip_clear_autoip_flag();
   ifstate = 0;
   for(unsigned i=0; i<n_xtcp; ++i) {
 #if (XTCP_STACK == LWIP)

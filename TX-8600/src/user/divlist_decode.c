@@ -68,9 +68,19 @@ void area_config_recive(){
     //
     uint16_t rx_sn;
     uint8_t i;
+    uint8_t rename_f;
     //---------------------------------------------------------------------------------------------------
     // 分区列表配置
     if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){   //添加分区
+        //名称判断
+        rename_f = 0;
+        for(uint8_t i=0;i<MAX_AREA_NUM;i++){
+            if(area_info[i].area_sn == 0xFFFF){
+                rename_f = charncmp(area_info[i].area_name,&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM);
+            }
+        }
+        //if(rename_f)
+        //    goto 
         for(i=0;i<MAX_AREA_NUM;i++){
             if(area_info[i].area_sn == 0xFFFF){
                 area_info[i].area_sn = i;

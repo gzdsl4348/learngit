@@ -24,5 +24,9 @@ void user_dispunti_init();
 // —” ±œ‘ æ
 void disp_task_delay();
 
+void dhcp_disp_en();
+void dhcp_disp_dis();
+void dhcp_disp_none();
+
 #endif
 

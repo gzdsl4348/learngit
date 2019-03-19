@@ -159,6 +159,7 @@ typedef struct g_sys_val_t{
     #define WIFI_AT_ENTER       02
     #define WIFI_AT_COM_DHCP    03
     #define WIFI_AT_COM_IP      04
+    #define WIFI_AT_APPLY       05
     //
     uint8_t wifi_io_tmp;
     uint8_t wifi_timer;
@@ -234,8 +235,8 @@ typedef struct g_sys_val_t{
 
     // ÔÆÐÄÌø¼ÆÊ±
     uint8_t could_heart_timcnt;
-
     //
+    uint8_t sys_dhcp_state_tmp;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

@@ -94,7 +94,7 @@ uint8_t conn_long_decoder(){
 //==============================================================================
 // Á¬½Ó³¬Ê±¼ì²â
 //==============================================================================
-#define CONN_OVERTIME 12
+#define CONN_OVERTIME 10
 #define CONN_LONGCON_TIME 30
 
 void conn_overtime_close(){

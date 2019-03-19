@@ -1,10 +1,15 @@
 #ifndef __PROTOCOL_ADRBASE_H
 #define __PROTOCOL_ADRBASE_H
 
-#define DIV_NAME_NUM    32  //22BYTE FOR DIVICE NAME
-#define MUSIC_NAME_NUM  64  //
-#define PATCH_NAME_NUM  32  //
+// 设备名称
+#define DIV_NAME_NUM    32  // 32BYTE FOR DIVICE NAME
+// 音乐名称
+#define MUSIC_NAME_NUM  64  // 
+// 文件夹名称
+#define PATCH_NAME_NUM  32  // 
+// 密码
 #define SYS_PASSWORD_NUM 14  // SYSTEM PASSWORD NUMBER
+// 设备类型长度
 #define DIV_TYPE_NUM  32
 
 //=======================================================================

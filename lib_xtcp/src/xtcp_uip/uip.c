@@ -472,8 +472,6 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 		return 0;
 	}
 
-    debug_printf("\n\n new tcp conn %x \n\n",conn);
-
 	conn->tcpstateflags = UIP_SYN_SENT;
 
 	conn->snd_nxt[0] = iss[0];
@@ -531,8 +529,6 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 		return 0;
 	}
 
-    debug_printf("\n\n new udp conn %x \n\n",conn);
-
 	conn->lport = HTONS(lastport);
 	conn->rport = rport;
 
@@ -549,7 +545,6 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 /*---------------------------------------------------------------------------*/
 void uip_unlisten(u16_t port) {
 	for (c = 0; c < UIP_LISTENPORTS; ++c) {
-        //debug_printf("%x ,%x\n",uip_listenports[c],port );
 		if (uip_listenports[c] == port) {
 			uip_listenports[c] = 0;
 			return;
@@ -1224,11 +1219,12 @@ void uip_process(u8_t flag) {
 			goto udp_found;
 		}
 	}
-
+    uip_udp_conn = 0;           // bugfix 防止溢出
 	tmp16 = BUF->destport;
+    if(tmp16 == 0) goto drop; // bugfix 禁止接收目的端口为0的udp数据包
 	/* Next, check listening connections. */
 	for(c = 0; c < UIP_LISTENPORTS; ++c) {
-		if((tmp16 == uip_udp_listenports[c])) {
+		if(tmp16 == uip_udp_listenports[c]) {
 			uip_udp_conn = 0;
 			for(c = 0; c < UIP_UDP_CONNS; ++c) {
 				if(uip_udp_conns[c].lport == 0) {
@@ -1247,6 +1243,7 @@ void uip_process(u8_t flag) {
 			}
 		}
 	}
+
 	// No matching connection found
 	goto drop;
 
@@ -2025,5 +2022,12 @@ void uip_send(const void *data, int len) {
 			memcpy(uip_sappdata, (data), uip_slen);
 		}
 	}
+}
+
+int uip_udp_connid_is_free(int connid) {
+    for(int i=0; i<UIP_UDP_CONNS; i++)
+        if(uip_udp_conns[i].lport!=0 && connid==uip_udp_conns[i].xtcp_conn.id)
+            return 0;
+     return 1;
 }
 /** @} */

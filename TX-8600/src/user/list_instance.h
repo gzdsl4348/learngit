@@ -131,6 +131,7 @@ typedef struct host_info_t{
     uint8_t div_brand[DIV_NAME_NUM];              //设备品牌
     uint8_t regiser_code[3][20];        //保存注册码
     uint8_t regiser_inc;
+    uint8_t sys_dhcp_state;
 }host_info_t;
 
 extern host_info_t host_info;

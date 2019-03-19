@@ -212,7 +212,7 @@
 #ifdef UIP_CONF_UDP_CONNS
 #define UIP_UDP_CONNS UIP_CONF_UDP_CONNS
 #else /* UIP_CONF_UDP_CONNS */
-#define UIP_UDP_CONNS    200 //20 /////////////////////////////////////
+#define UIP_UDP_CONNS    80 //20 /////////////////////////////////////
 #endif /* UIP_CONF_UDP_CONNS */
 
 /**
@@ -251,7 +251,7 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONNS       10
+#define UIP_CONNS       20
 #else /* UIP_CONF_MAX_CONNECTIONS */
 #define UIP_CONNS UIP_CONF_MAX_CONNECTIONS
 #endif /* UIP_CONF_MAX_CONNECTIONS */
@@ -265,7 +265,7 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_LISTENPORTS
-#define UIP_LISTENPORTS 10
+#define UIP_LISTENPORTS 20
 #else /* UIP_CONF_MAX_LISTENPORTS */
 #define UIP_LISTENPORTS UIP_CONF_MAX_LISTENPORTS
 #endif /* UIP_CONF_MAX_LISTENPORTS */
@@ -355,7 +355,7 @@
 #ifdef UIP_CONF_ARPTAB_SIZE
 #define UIP_ARPTAB_SIZE UIP_CONF_ARPTAB_SIZE
 #else
-#define UIP_ARPTAB_SIZE 70 //16 //////////////////////////
+#define UIP_ARPTAB_SIZE 80 //16 //////////////////////////
 #endif
 
 /**
@@ -385,7 +385,7 @@
  * \hideinitializer
  */
 #ifndef UIP_CONF_BUFFER_SIZE
-#define UIP_BUFSIZE     1500
+#define UIP_BUFSIZE     400
 #else /* UIP_CONF_BUFFER_SIZE */
 #define UIP_BUFSIZE UIP_CONF_BUFFER_SIZE
 #endif /* UIP_CONF_BUFFER_SIZE */

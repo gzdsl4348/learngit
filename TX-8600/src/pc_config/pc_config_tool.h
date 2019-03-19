@@ -6,6 +6,8 @@
 #include "xtcp.h"
 #include "string.h"
 
+#define  PC_CONFIG_TOOL_PORT  5121
+
 typedef struct
 {
     xtcp_ipconfig_t ipcfg;

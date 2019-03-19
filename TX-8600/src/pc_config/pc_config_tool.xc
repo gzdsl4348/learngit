@@ -71,7 +71,7 @@ static void mac_hex2char(uint8_t num, uint8_t out_tmp[])
 	out_tmp[2] = '-';
 }
 
-static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_pc_cfg_t old_param)
+static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_pc_cfg_t old_param, uint8_t ackflag)
 {
 	uint8_t ip_head[]      = {"IP: "};
 	uint8_t netmask_head[] = {" SUBNETMASK: "};
@@ -156,15 +156,21 @@ static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_p
     }
     index += 1;
     
-    
-	xtcp_connection_t broadcast_conn;
-    xtcp_ipaddr_t broadcast_ipaddr = {255,255,255,255};
-    if(i_xtcp.connect_udp(conn.remote_port, broadcast_ipaddr, broadcast_conn))
+    if(ackflag == 0)
     {
-        return;
+		i_xtcp.send_udp(conn, send_buf, index);
     }
-    i_xtcp.send_udp(broadcast_conn, send_buf, index);
-    i_xtcp.close_udp(broadcast_conn);
+    else
+    {
+		xtcp_connection_t broadcast_conn;
+		xtcp_ipaddr_t broadcast_ipaddr = {255,255,255,255};
+		if(i_xtcp.connect_udp(conn.remote_port, broadcast_ipaddr, broadcast_conn))
+		{
+		    return;
+		}
+		i_xtcp.send_udp(broadcast_conn, send_buf, index);
+		i_xtcp.close_udp(broadcast_conn);
+    }
 	
 	//debug_printf("                feedback_dev_info\n");
 }
@@ -185,7 +191,7 @@ uint8_t pc_config_handle(client xtcp_if i_xtcp, xtcp_connection_t &conn, uint8_t
 	if((memcmp(rxbuff, CONFIG_DEV_INFO, 2) == 0) && (rxlen>=27))
 	{
 		//debug_printf("                config_dev_info :%d\n", rxlen);
-		for(uint16_t i=0; i<rxlen; i++)
+		//for(uint16_t i=0; i<rxlen; i++)
 		//debug_printf("%d ",rxbuff[i]);
 		//debug_printf("\n");
 		//5A 01 AC 10 0D A6 FF FF FF 00 AC 10 0D FE AC 10 0D 70 00 00 00 00 00 00 00 00 01
@@ -196,11 +202,12 @@ uint8_t pc_config_handle(client xtcp_if i_xtcp, xtcp_connection_t &conn, uint8_t
 		memcpy(host_info.ipconfig.gateway, &rxbuff[CFG_INDEX_GATEWAY], 4);
 		//memcpy(new_param.server_ip,  &rxbuff[CFG_INDEX_HOSTIP], 4);
 
+        feedback_dev_info(i_xtcp, conn, old_param, 1);
 		return 1;
     }
 	else if(memcmp(rxbuff, CHECK_DEV_INFO, 6) == 0)
 	{
-		feedback_dev_info(i_xtcp, conn, old_param);
+		feedback_dev_info(i_xtcp, conn, old_param, 1);
 	}
 	
 	return 0;

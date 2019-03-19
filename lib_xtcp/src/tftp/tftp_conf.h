@@ -3,7 +3,7 @@
 #define TFTP_CONF_H_
 
 #ifndef TFTP_DEBUG_PRINT
-#define TFTP_DEBUG_PRINT      1 
+#define TFTP_DEBUG_PRINT      0
 #endif
 
 #ifndef TFTP_DEFAULT_PORT
@@ -14,7 +14,7 @@
 #define TFTP_BLOCK_SIZE       512       /* 512 bytes */
 #endif
 #ifndef TFTP_MAX_FILE_SIZE
-#define TFTP_MAX_FILE_SIZE      (512 *1024 * 1024)  /* 128 KB */
+#define TFTP_MAX_FILE_SIZE      (128 * 1024)  /* 128 KB */
 #endif
 
 // The number of seconds after which the connection will close if no new data is received

@@ -1075,11 +1075,47 @@ uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t con
 //==========================================================================================
 // 即时任务更新通知
 //==========================================================================================
-uint16_t rttaskinfo_upgrade_build(uint16_t id){
-    memcpy(&xtcp_tx_buf[RTTASK_CFG_CONTORL],&xtcp_rx_buf[RTTASK_CFG_CONTORL],RTTASK_CFG_DIVTOL - RTTASK_CFG_CONTORL);
+uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
+    uint8_t task_state=0;
+    
+    rt_task_read(&tmp_union.rttask_dtinfo,id);
+    //
+    // 查找任务状态
+    rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
+    while(runtmp_p!=null){
+        //比较任务id
+        if(runtmp_p->rttask_id == id){ 
+            task_state = runtmp_p->run_state;
+            break;
+        }
+        runtmp_p = runtmp_p->run_next_p;
+    }
+    xtcp_tx_buf[RTTASK_CFG_CONTORL] = contorl;
+    //
     xtcp_tx_buf[RTTASK_CFG_TASKID] = id;
     xtcp_tx_buf[RTTASK_CFG_TASKID+1] = id>>8;
-    xtcp_tx_buf[RTTASK_REFRESH_STATE] = 0;
+    memcpy(&xtcp_tx_buf[RTTASK_CFG_TASKNAME],tmp_union.rttask_dtinfo.name,DIV_NAME_NUM);
+    memcpy(&xtcp_tx_buf[RTTASK_CFG_SRCMAC],tmp_union.rttask_dtinfo.src_mas,6);
+    xtcp_tx_buf[RTTASK_CFG_TASKPRIO] = tmp_union.rttask_dtinfo.prio;
+    xtcp_tx_buf[RTTASK_CFG_TASKVOL] = tmp_union.rttask_dtinfo.task_vol;
+    // 持续时间
+    xtcp_tx_buf[RTTASK_CFG_DURATIME] = tmp_union.rttask_dtinfo.dura_time/3600;
+    xtcp_tx_buf[RTTASK_CFG_DURATIME+1] = (tmp_union.rttask_dtinfo.dura_time%3600)/60;
+    xtcp_tx_buf[RTTASK_CFG_DURATIME+2] = (tmp_union.rttask_dtinfo.dura_time%3600)%60;
+    xtcp_tx_buf[RTTASK_CFG_KETINFO] = tmp_union.rttask_dtinfo.task_key;
+    xtcp_tx_buf[RTTASK_CFG_DIVTOL] = tmp_union.rttask_dtinfo.div_tol;
+    //
+    #if 0 // 不需更新播放列表
+    uint16_t data_base = RTTASK_CFG_DIV_BASE;
+    for(uint8_t i=0;i<xtcp_tx_buf[RTTASK_CFG_DIVTOL];i++){
+        memcpy(&xtcp_tx_buf[data_base + RTTASK_CFG_MAC],tmp_union.rttask_dtinfo.des_info[i].mac,6); 
+        xtcp_tx_buf[data_base + RTTASK_CFG_AREACONTORL] = tmp_union.rttask_dtinfo.des_info[i].zone_control;
+        xtcp_tx_buf[data_base + RTTASK_CFG_AREACONTORL+1] = tmp_union.rttask_dtinfo.des_info[i].zone_control>>8;
+        data_base+=RTTASK_CFG_LEN;
+    }
+    #endif
+    
+    xtcp_tx_buf[RTTASK_REFRESH_STATE] = task_state;
     /*
     for(uint8_t i=0;i<150;i++){
         debug_printf("%x ",xtcp_tx_buf[i]);

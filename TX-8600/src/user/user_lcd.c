@@ -63,9 +63,11 @@
 #define DISP_A_ID  4
 #define DISP_B_ID  3
 #define DISP_C_ID  5
-#define DISP_D_ID  12
+//#define DISP_D_ID  12
 
 #define DISP_VER_ID 9
+
+#define DISP_DHCPS_ID 12
 
 uint8_t disp_buff[100];
 volatile uint8_t disp_len;
@@ -152,7 +154,7 @@ void user_dispunti_init(){
     disp_unti(DISP_A_ID,nowtask_char);
     disp_unti(DISP_B_ID,begtime_char);
     disp_unti(DISP_C_ID,dura_char);
-    disp_unti(DISP_D_ID,playing_char);
+    //disp_unti(DISP_D_ID,playing_char);
 }
 
 // 
@@ -589,6 +591,29 @@ void user_disp_version(){
     //
     disp_len = DAT_DISP_BASE+len;
     send_buff(DISP_VER_ID);
+}
+
+
+void dhcp_disp_en(){
+    uint8_t dhcp_enchar[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x00,0x3A,0x62,0x53,0x5F,0x00}; 
+    memcpy(&disp_buff[DAT_DISP_BASE],dhcp_enchar,14);
+    disp_len = DAT_DISP_BASE+14;
+    send_buff(DISP_DHCPS_ID);
+}
+
+void dhcp_disp_dis(){
+    uint8_t dhcp_dischar[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x00,0x3A,0x51,0x73,0x95,0xED}; 
+    memcpy(&disp_buff[DAT_DISP_BASE],dhcp_dischar,14);
+    disp_len = DAT_DISP_BASE+14;
+    send_buff(DISP_DHCPS_ID);
+}
+
+void dhcp_disp_none(){
+    uint8_t dhcp_nonechar[]={0x00,0x00}; 
+    memcpy(&disp_buff[DAT_DISP_BASE],dhcp_nonechar,2);
+    disp_len = DAT_DISP_BASE+2;
+    send_buff(DISP_DHCPS_ID);
+    
 }
 
 

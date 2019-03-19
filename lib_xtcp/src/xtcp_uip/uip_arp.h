@@ -110,7 +110,7 @@ void uip_arp_arpin(void);
    connection so that when an arp reply comes back the application layer
    is asked to retransmit the udp packet.
 */
-uint8_t uip_arp_out(struct uip_udp_conn* conn);
+int uip_arp_out(struct uip_udp_conn* conn);
 
 /* The uip_arp_timer() function should be called every ten seconds. It
    is responsible for flushing old entries in the ARP table. */

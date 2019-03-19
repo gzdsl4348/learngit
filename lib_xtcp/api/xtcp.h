@@ -48,7 +48,7 @@
 
 /** Maximum number of events in a client queue */
 #ifndef CLIENT_QUEUE_SIZE
-#define CLIENT_QUEUE_SIZE 70
+#define CLIENT_QUEUE_SIZE 100
 #endif
 
 /** Value used by lwIP's RX buffer */
@@ -73,6 +73,13 @@ typedef struct xtcp_mac_t{
 	unsigned char addr[6];
 }xtcp_mac_t;
 
+typedef struct
+{
+    uint8_t flag;
+    uint16_t dst_ip[4];
+    uint16_t dst_mask[4];
+    uint8_t dst_mac[6];
+}static_route_t;
 /** IP configuration information structure.
  *
  *  This structure describes IP configuration for an ip node.
@@ -175,6 +182,7 @@ typedef struct xtcp_connection_t {
   xtcp_appstate_t appstate;   /**< The application state associated with the
                                    connection. This is set using the
                                    set_appstate() function. */
+  xtcp_ipaddr_t target_addr;  // add 目标IP 只用于被动生成的连接 用于判断是不是广播包
   xtcp_ipaddr_t remote_addr;  /**< The remote ip address of the connection. */
   unsigned int remote_port;   /**< The remote port of the connection. */
   unsigned int local_port;    /**< The local port of the connection. */
@@ -362,7 +370,11 @@ typedef interface xtcp_if {
 
   void xtcp_arpget(xtcp_ipaddr_t ipaddr,xtcp_mac_t &t_xtcp_mac);
 
-  void xtcp_conn_cmp(uint8_t tol_num);
+  void set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]);
+
+  uint8_t get_autoip_flag(); //1：自动IP, 0：非自动IP
+
+  void set_task_status(uint8_t status); //1：忙, 0：空闲（默认状态）
 } xtcp_if;
 
 typedef struct pbuf * unsafe pbuf_p;
@@ -491,6 +503,15 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
               client ethernet_tx_if ?i_eth_tx,
               client smi_if ?i_smi,
               uint8_t phy_address);
+
+/**
+ * 向目的端口发送广播包数据
+ * 
+ * 返回值: 0 - 发送成功
+ *         1 - 连接失败, 协议栈conn已满
+ */
+int xtcp_send_broadcast(client xtcp_if i_xtcp, int remote_port, char data[], unsigned len);
+
 #endif /* __XC__ */
 
 /** Copy an IP address data structure.
@@ -508,4 +529,9 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
                                 a[2] == b[2] && \
                                 a[3] == b[3])
 
+#define XTCP_IPADDR_MASKCMP(addr1, addr2, mask) \
+                            ((addr1[0]&mask[0]) == (addr2[0]&mask[0]) && \
+                             (addr1[1]&mask[1]) == (addr2[1]&mask[1]) && \
+                             (addr1[2]&mask[2]) == (addr2[2]&mask[2]) && \
+                             (addr1[3]&mask[3]) == (addr2[3]&mask[3]))
 #endif // __xtcp_h__

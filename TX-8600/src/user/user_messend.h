@@ -32,7 +32,7 @@ void mes_send_acinfo(uint16_t id);
 void mes_send_taskinfo();
 
 // 即时任务更新通知
-void mes_send_rttaskinfo(uint16_t id);
+void mes_send_rttaskinfo(uint16_t id,uint8_t contorl);
 
 // 方案更新通知
 void mes_send_suloinfo(uint16_t id);

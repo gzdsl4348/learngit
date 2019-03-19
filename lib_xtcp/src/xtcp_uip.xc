@@ -27,6 +27,9 @@
     } \
   } while (0)
 
+// bugfix 防止已close的无效连接
+#define check_conn_correct(conn) ((conn.protocol==XTCP_PROTOCOL_UDP)?(uip_udp_conn->lport==0):(uip_conn->lport==0))
+
 typedef struct listener_info_t {
   unsigned active;
   unsigned port_number;
@@ -60,6 +63,21 @@ static unsigned uip_change_ip = 0;
 
 static int linkstate = 0;
 
+static_route_t g_static_route = {0};
+
+static uint8_t nnn_autoip_flag = 0; //1: autoip，0：other
+
+static uint8_t nnn_task_sta_flag = 0; //1: busy， 0：idle
+
+uint8_t n_uip_read_task_status(void)
+{
+	return nnn_task_sta_flag;
+}
+
+void n_uip_clear_autoip_flag(void)
+{
+	nnn_autoip_flag = 0;
+}
 
 #if UIP_USE_DHCP
 unsafe void
@@ -67,7 +85,10 @@ dhcpc_configured(const struct dhcpc_state * unsafe s)
 {
 #if UIP_USE_AUTOIP
   uip_autoip_stop();
+  nnn_autoip_flag = 0;
 #endif
+  unsafe {xtcp_if_down();}
+  
   uip_sethostaddr(s->ipaddr);
   uip_setdraddr(s->default_router);
   uip_setnetmask(s->netmask);
@@ -81,6 +102,12 @@ uip_autoip_configured(uip_ipaddr_t ipaddr)
 {
   uip_autoip_stop();
   uip_sethostaddr(ipaddr);
+
+  nnn_autoip_flag = 1;
+  uint8_t tmp_tab[4]={0,0,0,0};
+  uip_setdraddr(tmp_tab);
+  uip_setnetmask(tmp_tab);
+  
   unsafe {
     xtcp_if_up();
   }
@@ -110,7 +137,6 @@ unregister_listener(listener_info_t listeners[],
                     int n_ports)
 {
   for (unsigned i=0; i<n_ports; i++) {
-    //debug_printf("%x %x\n",listeners[i].port_number ,port_number);
     if (listeners[i].active &&
       listeners[i].port_number == port_number) {
       listeners[i].active = 0;
@@ -167,6 +193,7 @@ uip_linkup(void)
 	#endif
 	} //else uip_static_ip
 }
+
 
 void uip_linkdown(void )
 {
@@ -305,8 +332,6 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
     i_eth_cfg.add_ethertype_filter(index, 0x0800);
   }
   //
-  //smi_configure(i_smi,0, LINK_100_MBPS_FULL_DUPLEX, SMI_ENABLE_AUTONEG);
-  //
   tmr :> timeout;
   timeout += 10000000;
   
@@ -389,7 +414,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 
     case i_xtcp[unsigned i].close(const xtcp_connection_t &conn):
       set_uip_state(conn);
-
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
       if (uip_udpconnection()) {
         uip_udp_conn->lport = 0;
         enqueue_event_and_notify(conn.client_num, XTCP_CLOSED, &(uip_udp_conn->xtcp_conn));
@@ -401,6 +429,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
     case i_xtcp[unsigned i].close_udp(const xtcp_connection_t &conn) -> int res:
       res = 0;
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       if (uip_udpconnection()) {
         uip_udp_conn->lport = 0;
@@ -410,6 +442,11 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       break;
     case i_xtcp[unsigned i].abort(const xtcp_connection_t &conn):
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
+      
       xtcp_connection_t *unsafe xtcp_conn_ptr;
 
       buffer_full = 0;
@@ -430,6 +467,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 
     case i_xtcp[unsigned i].bind_local_udp(const xtcp_connection_t &conn, unsigned port_number):
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       if (!uip_udpconnection()) break;
 
@@ -439,6 +480,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 
     case i_xtcp[unsigned i].bind_remote_udp(const xtcp_connection_t &conn, xtcp_ipaddr_t ipaddr, unsigned port_number):
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       if(!uip_udpconnection()) break;
 
@@ -466,8 +511,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
                                         HTONS(conn->lport),
                                         port_number,
                                         conn);
-          listen_port = HTONS(conn->lport);
-          debug_printf("%x\n",conn->lport);
+          listen_port =  HTONS(conn->lport);
         }
       } else {
         struct uip_udp_conn * unsafe conn = uip_udp_new(&uipaddr, HTONS(port_number));
@@ -504,8 +548,13 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       break;        
     case i_xtcp[unsigned i].send(const xtcp_connection_t &conn, char data[], unsigned len):
       if (len <= 0) break;
-      if(len >= XTCP_CLIENT_BUF_SIZE) {debug_printf("\n\nxtcp send buff overflow\n");break;}
+      if (len > XTCP_CLIENT_BUF_SIZE) {debug_printf("\n\nxtcp send buff overflow\n");break;}
+      
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       // Make sure we're writing to the correct place
       if (uip_udpconnection()) {
@@ -531,8 +580,13 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
     case i_xtcp[unsigned i].send_udp(const xtcp_connection_t &conn, char data[], unsigned len) -> int res:
       res = 0;
       if (len <= 0) break;
+      if (len > XTCP_CLIENT_BUF_SIZE) {debug_printf("\n\nxtcp send_udp buff overflow\n");break;}
 
       set_uip_state(conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       // Make sure we're writing to the correct place
       if (uip_udpconnection()) {
@@ -550,7 +604,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       } else {
         uip_process(UIP_UDP_SEND_CONN);
         if(uip_arp_out(uip_udp_conn) == 0)
+        {
+            debug_printf("send_udp uip_arp_out not found\n");
             res = 2;
+        }
       }
       xtcp_tx_buffer();
       break;
@@ -575,6 +632,10 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       const xtcp_connection_t local_conn = conn;
 
       set_uip_state(local_conn);
+      if(check_conn_correct(conn)) {
+        debug_printf("check_conn_correct error in line:%d\n", __LINE__);
+        break;
+      }
 
       // The stack_conn is a pointer to the a structure belonging to uIP and will
       // therefore reside on this tile.
@@ -645,23 +706,19 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 		t_xtcp_mac = uip_arptab_get(ip_addr);
 		break;
 
-    case i_xtcp[unsigned i].xtcp_conn_cmp(uint8_t tol_num):
-        uint8_t uip_tol=0;
-        uint8_t tcp_tol=0;
-    
-    	for(uint8_t i = 0; i < UIP_UDP_CONNS; i++) {
-    		if(uip_udp_conns[i].lport != 0) {
-    			uip_tol++;
-    		}
-    	}
-        for(uint8_t i=0;i<UIP_CONNS;i++){
-            if(uip_conns[i].tcpstateflags != UIP_CLOSED)
-                tcp_tol++;
-        }
+    case i_xtcp[unsigned i].set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]):
+        memcpy(g_static_route.dst_ip, dst_ip, 4);
+        memcpy(g_static_route.dst_mask, dst_mask, 4);
+        memcpy(g_static_route.dst_mac, dst_mac, 6);
+        g_static_route.flag = 1;
+        break;
         
-        if(uip_tol!=tol_num){
-            debug_printf("uip_tol %d %d\n",uip_tol,tcp_tol);
-        }
+    case i_xtcp[unsigned i].get_autoip_flag(void) -> uint8_t flag:
+        flag = nnn_autoip_flag; 
+        break;
+        
+    case i_xtcp[unsigned i].set_task_status(uint8_t status):
+        nnn_task_sta_flag = status; 
         break;
         
     case tmr when timerafter(timeout) :> timeout:
@@ -699,6 +756,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
         }
       }
 #endif
+
       xtcp_process_periodic_timer();
       break;
     }
@@ -727,6 +785,7 @@ xtcpd_appcall(void)
     if (uip_newdata()) {
       xtcp_conn->remote_port = HTONS(UDPBUF->srcport);
       uip_ipaddr_copy(xtcp_conn->remote_addr, UDPBUF->srcipaddr);
+      uip_ipaddr_copy(xtcp_conn->target_addr, UDPBUF->destipaddr);//add 更新连接的目标IP数据
     }
   } else {
     xassert(uip_conn);
@@ -798,4 +857,18 @@ xtcpd_appcall(void)
   if (uip_closed()) {
     enqueue_event_and_notify(xtcp_conn->client_num, XTCP_CLOSED, xtcp_conn);
   }
+}
+
+
+int xtcp_send_broadcast(client xtcp_if i_xtcp, int remote_port, char data[], unsigned len)
+{
+    xtcp_connection_t broadcast_conn;
+    xtcp_ipaddr_t broadcast_ipaddr = {255,255,255,255};
+    if(i_xtcp.connect_udp(remote_port, broadcast_ipaddr, broadcast_conn))
+    {
+        return 1;
+    }
+    i_xtcp.send_udp(broadcast_conn, data, len);
+    i_xtcp.close_udp(broadcast_conn);
+    return 0;
 }

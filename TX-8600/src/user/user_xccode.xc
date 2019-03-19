@@ -209,10 +209,10 @@ void user_xtcp_unlisten(unsigned port_number){
 
 void user_xtcp_connect_tcp(xtcp_ipaddr_t ipaddr){
     unsafe{
-    static int colud_prot=0;
+    static int colud_prot;
     user_xtcp_unlisten(colud_prot);
     colud_prot = i_user_xtcp->connect(TCP_COULD_PROT, ipaddr, XTCP_PROTOCOL_TCP);
-    debug_printf("lis %x\n",colud_prot);
+    //debug_printf("lis %x\n",colud_prot);
     }
 }
 
