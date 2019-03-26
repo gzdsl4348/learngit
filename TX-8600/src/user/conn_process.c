@@ -123,5 +123,58 @@ void conn_overtime_close(){
         }
     }
 }
+#if 1
+void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,kfifo_t *kf){
+    unsigned len = MIN(1, kf->size-kf->in_index+kf->out_index);
+    unsigned l = MIN(len, kf->size - (kf->in_index & (kf->size - 1)));
+    if(l){
+        user_xtcp_fifo_get((kf->in_index & (kf->size - 1)),buff,tx_rx_f);
+    }
+    if(len-l){
+        user_xtcp_fifo_get(0,buff,tx_rx_f);
+    }
+    kf->in_index+=len;
+}
 
+void xtcp_buff_fifo_get(uint8_t tx_rx_f,uint8_t *buff,kfifo_t *kf,uint8_t clear_f){
+    unsigned len = MIN(1, kf->in_index-kf->out_index);
+    unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
+    if(l){
+        user_xtcp_fifo_get((kf->out_index & (kf->size - 1)),buff,tx_rx_f);
+    }
+    if(len-l){
+        user_xtcp_fifo_get(0,buff,tx_rx_f);
+    }
+    if(clear_f)
+        kf->out_index+=len;
+}
 
+uint8_t xtcp_check_fifobuff(kfifo_t *kf){
+    if(kf->in_index-kf->out_index)
+        return 1;
+    else
+        return 0;
+}
+
+void xtcp_fifobuff_throw(kfifo_t *kf){
+    unsigned len = MIN(1, kf->in_index-kf->out_index);
+    unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
+    kf->out_index+=len;
+}
+
+void xtcp_bufftimeout_check_10hz(){
+    g_sys_val.tx_fifo_timout++;
+    if(g_sys_val.tx_fifo_timout>7){
+        g_sys_val.tx_fifo_timout=0;
+        if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
+            if(g_sys_val.tcp_sending){
+                g_sys_val.tcp_sending = 0;
+                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
+            }
+        }   
+        xtcp_buff_fifo_get(1,all_tx_buf,&g_sys_val.tx_buff_fifo,0);
+        user_xtcp_fifo_send();
+    }
+}
+
+#endif

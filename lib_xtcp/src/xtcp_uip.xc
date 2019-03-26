@@ -430,6 +430,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       res = 0;
       set_uip_state(conn);
       if(check_conn_correct(conn)) {
+        debug_printf("%d %d\n",uip_udp_conn->rport,uip_udp_conn->lport);
         debug_printf("check_conn_correct error in line:%d\n", __LINE__);
         break;
       }

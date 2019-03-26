@@ -69,17 +69,25 @@ extern "C" {
 // 定时任务最大指定日期
 #define MAX_TASK_DATE_NUM   10  //最大指定10天   
 
+#define SOLU_MAX_PLAYCH     16
+
 // 最大MP3解码数
 #define MAX_MUSIC_CH        NUM_MEDIA_INPUTS    //48路音频
 
-#define HOST_UNREGISTER     0
+// 发送数据堆栈
+#define MAX_TXBUFF_FIFOSIZE   16
+// 接收数据堆栈
+#define MAX_RXBUFF_FIFOSIZE   16
+
+// 注册信息
+#define HOST_UNREGISTER             0
 #define HOST_REGISTER_DAYS          1
 #define HOST_REGISTER_FOREVER       2
-
+// 
 #define MAX_SDCARD_MUSIC_NUM        100
-
+//
 #define MES_STACK_NUM       3   //消息更新 堆栈数
-
+//
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
 

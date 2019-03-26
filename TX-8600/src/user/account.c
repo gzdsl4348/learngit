@@ -189,15 +189,32 @@ void account_config_recive(){
     if((xtcp_rx_buf[A_CONFIG_ACNUM_B] < MAX_ACCOUNT_NUM)&&(xtcp_rx_buf[A_CONFIG_CONTORL_B]!=0)){
         id = xtcp_rx_buf[A_CONFIG_ACNUM_B];
     }
-    // 账户重名判断
+    // 账户重名判断 手机号重名判断
     if(xtcp_rx_buf[A_CONFIG_CONTORL_B]!=2){
         for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
+            debug_printf("id %d %d\n",account_info[i].id,id);
             if((account_info[i].id!=0xFF)&&((account_info[i].id!=id)||(xtcp_rx_buf[A_CONFIG_CONTORL_B]==0))){
                 if(charncmp(account_info[i].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM))
                     goto fail_account_config;
+                for(uint8_t c=0;c<DIV_NAME_NUM;c++){
+                    debug_printf("%x ,",account_info[i].phone_num[c]);
+                }
+                debug_printf("\n");
+                for(uint8_t c=0;c<DIV_NAME_NUM;c++){
+                    debug_printf("%x ,",xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+c]);
+                }
+                debug_printf("\n");
+                
+                if((xtcp_rx_buf[A_CONFIG_PHONE_NUM_B]!=0 || xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+1]!=0)&&
+                    charncmp(account_info[i].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM)
+                  ){
+                    debug_printf("ac phone same\n");
+                    goto fail_account_config;
+                }
             }
         }
     }
+    //------------------------------------------------------------------
     // 新建账户ID
     if(xtcp_rx_buf[A_CONFIG_CONTORL_B]==0){
         //找空账户

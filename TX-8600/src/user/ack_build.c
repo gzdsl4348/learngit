@@ -230,7 +230,7 @@ uint16_t area_list_send_build(uint16_t cmd){
     return build_endpage_decode(area_dat_base,cmd,conn_sending_s.arealist.id);
 }
 
-uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl){
+uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl,uint8_t fail_div_cnt){
     uint16_t dat_len=POL_DAT_BASE;
     //-----------------------------------------------------
     //dat begin
@@ -238,7 +238,8 @@ uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl){
     xtcp_tx_buf[POL_DAT_BASE+1] =  area_sn;
     xtcp_tx_buf[POL_DAT_BASE+2] = area_sn>>8;
     xtcp_tx_buf[POL_DAT_BASE+3] = state;
-    dat_len +=4;
+    xtcp_tx_buf[POL_DAT_BASE+4] = fail_div_cnt;
+    dat_len +=5;
     //-----------------------------------------------------
     return build_endpage_decode(dat_len,AREA_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 
@@ -292,11 +293,13 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_IPGATE_B],host_info.ipconfig.gateway,4);
     //
-    #ifdef NO_NEED_REGISTER
+    #if NO_NEED_REGISTER
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 2;
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
     #endif
+
+    debug_printf("register %d day %d\n",xtcp_tx_buf[AC_LOGIN_RES_STATE_B] ,host_info.regiser_days);
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
@@ -659,7 +662,7 @@ uint16_t rttask_list_chk_build(){
         xtcp_tx_buf[data_base+RTTASK_CK_STATE] = 0;
         while(tmp_p!=null){
             if(tmp_p->rttask_id == tmp_union.rttask_dtinfo.rttask_id){
-                xtcp_tx_buf[data_base+RTTASK_CK_STATE] = rttask_lsit.run_end_p->run_state;
+                xtcp_tx_buf[data_base+RTTASK_CK_STATE] = tmp_p->run_state;
                 break;
             }
             tmp_p = tmp_p->run_next_p;

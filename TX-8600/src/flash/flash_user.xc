@@ -344,27 +344,51 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             }           
         // 批处理临时音乐文件名读取
         case if_fl_manage.if_fl_music_tmpbuf_read(unsigned num,uint8_t buff[]):
-            sdram_read(c_sdram, sdram_state, (4096/4)*USER_FILE_BAT_TMPBUF_BASE+num*64/4, (64/4), pw_buff);
+            sdram_read(c_sdram, sdram_state, USER_MUSICNAME_TMP_BASE+num*64/4, (64/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff, tmp_buff, 64);
             break;
         // 批处理临时音乐文件名存放
         case if_fl_manage.if_fl_music_tmpbuf_write(unsigned num,uint8_t buff[]):
             memcpy(tmp_buff, buff, 64);
-            sdram_write(c_sdram, sdram_state, (4096/4)*USER_FILE_BAT_TMPBUF_BASE+num*64/4, (64/4), pw_buff);
+            sdram_write(c_sdram, sdram_state, USER_MUSICNAME_TMP_BASE+num*64/4, (64/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             break;
         // 搜索设备临时存放
         case if_fl_manage.if_fl_divinfo_tmpbuf_write(unsigned num,uint8_t buff[]):
             memcpy(tmp_buff, buff, 200);
-            sdram_write(c_sdram, sdram_state, (4096/4)*USER_FILE_BAT_TMPBUF_BASE+num*200/4, (200/4), pw_buff);
+            sdram_write(c_sdram, sdram_state, USER_DIV_SEARCH_BASE+num*200/4, (200/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             break;
         // 搜索设备读取
         case if_fl_manage.if_fl_divinfo_tmpbuf_read(unsigned num,uint8_t buff[]):
-            sdram_read(c_sdram, sdram_state, (4096/4)*USER_FILE_BAT_TMPBUF_BASE+num*200/4, (200/4), pw_buff);
+            sdram_read(c_sdram, sdram_state, USER_DIV_SEARCH_BASE+num*200/4, (200/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff, tmp_buff, 200);
+            break;
+        // xtcp fifo 写入
+        case if_fl_manage.xtcp_buff_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
+            unsigned data_base;
+            if(tx_rx_f){
+                data_base = USER_XTCP_TXFIFO_BASE;
+            }else{
+                data_base = USER_XTCP_RXFIFO_BASE;
+            }
+            memcpy(tmp_buff, buff, 1472);
+            sdram_write(c_sdram, sdram_state, data_base+num*1472/4, (1472/4), pw_buff);
+            sdram_complete(c_sdram, sdram_state);
+            break;
+        // xtcp fifo 读取
+        case if_fl_manage.xtcp_buff_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
+            unsigned data_base;
+            if(tx_rx_f){
+                data_base = USER_XTCP_TXFIFO_BASE;
+            }else{
+                data_base = USER_XTCP_RXFIFO_BASE;
+            }
+            sdram_read(c_sdram, sdram_state, data_base+num*1472/4, (1472/4), pw_buff);
+            sdram_complete(c_sdram, sdram_state);
+            memcpy(buff,pw_buff,1472);
             break;
         case if_fl_manage.uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
             switch(mode){
@@ -382,6 +406,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                     break;
             } //switch
             break;
+
         }       
 	}
 }

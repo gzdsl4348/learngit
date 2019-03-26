@@ -7,6 +7,7 @@
 #include "eth_audio_config.h"
 #include "protocol_adrbase.h"
 #include "list_instance.h"
+#include "kfifo.h"
 
 #if defined(__cplusplus) || defined(__XC__)
 extern "C" {
@@ -158,10 +159,13 @@ typedef struct g_sys_val_t{
     #define WIFI_WAIT_POWERON   01
     #define WIFI_AT_ENTER       02
     #define WIFI_AT_COM_DHCP    03
-    #define WIFI_AT_COM_IP      04
-    #define WIFI_AT_APPLY       05
+    #define WIFI_LANIP_SET      04
+    #define WIFI_AT_SAVE        05
+    #define WIFI_AT_APPLY       06
     //
     uint8_t wifi_io_tmp;
+    #define D_IO_WIFI_POWER     01
+    #define D_IO_WIFI_CONTORL   02
     uint8_t wifi_timer;
     //---------------------------------
     // 重启标志
@@ -237,6 +241,12 @@ typedef struct g_sys_val_t{
     uint8_t could_heart_timcnt;
     //
     uint8_t sys_dhcp_state_tmp;
+
+    // 收发堆栈
+    kfifo_t tx_buff_fifo;
+    kfifo_t rx_buff_fifo;
+    uint8_t tx_fifo_timout;
+    uint8_t tcp_sending;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

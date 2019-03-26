@@ -8,6 +8,8 @@
 #include "user_unti.h"
 #include "fl_buff_decode.h"
 #include "uart.h"
+#include "conn_process.h"
+#include "kfifo.h"
 #include <string.h>
 
 extern client interface xtcp_if  * unsafe i_user_xtcp;
@@ -24,6 +26,12 @@ static uint8_t user_audio_txen[MAX_MUSIC_CH]={0};
 #define MUSIC_FNAME_NUM (MUSIC_NAME_NUM+PATCH_NAME_NUM)
 
 uint8_t f_name[MUSIC_FNAME_NUM];
+
+
+on tile[1]: out port p_wifi_io = XS1_PORT_4B; 
+void wifi_ioset(uint8_t io_tmp){
+    p_wifi_io <: io_tmp;
+}
 
 void user_lan_uart0_tx(uint8_t *data,uint8_t len,uint8_t mode){
     unsafe{
@@ -147,6 +155,16 @@ void user_audio_send_dis(uint8_t ch){
     }
 }
 
+void user_xtcp_fifo_send(){
+    unsafe{
+    if(g_sys_val.tcp_sending==0){
+        g_sys_val.tcp_sending = 1;
+        g_sys_val.tx_fifo_timout = 0;
+        i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
+    }
+    }
+}
+
 void user_could_send(uint8_t pol_type){
     unsafe{
     if(g_sys_val.could_conn.id==0)
@@ -176,8 +194,10 @@ void user_could_send(uint8_t pol_type){
     debug_printf("\n");
     debug_printf("end\n");
     #endif
-    i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
-    }
+    xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
+    //
+    user_xtcp_fifo_send();
+    }//unsafe
 }
 
 void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
@@ -397,6 +417,18 @@ void backup_system_chk(uint8_t *state,uint8_t *bar){
             *state=1;
         }
         #endif
+    }
+}
+
+void user_xtcp_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f){
+    unsafe{
+        ;//i_user_flash->xtcp_buff_fifo_get(num, buff, tx_rx_f);
+    }
+}
+
+void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f){
+    unsafe{
+        ;//i_user_flash->xtcp_buff_fifo_put(num, buff, tx_rx_f);
     }
 }
 

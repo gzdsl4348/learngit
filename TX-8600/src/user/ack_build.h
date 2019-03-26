@@ -38,7 +38,7 @@ uint16_t div_ipmac_list_send();
 // 分区列表组包
 uint16_t area_list_send_build(uint16_t cmd);
 // 分区配置回复
-uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl);
+uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl,uint8_t fail_div_cnt);
 // 用户登录信息回复
 uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_buf,uint16_t cmd);
 

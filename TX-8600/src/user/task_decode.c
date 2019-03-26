@@ -491,7 +491,8 @@ void solution_config_recive(){
             }
         }
     }
-    if((id>MAX_TASK_SOULTION)){        
+    if((id>MAX_TASK_SOULTION)){     
+        state = 1; //方案已满
         goto solution_config_end;
     }
     //删除方案
@@ -542,6 +543,7 @@ void solution_config_recive(){
                     timer_task_write(&tmp_union.task_allinfo_tmp,timetask_list.all_timetask_end->id);
                 }
                 else{ // 任务已满 失败
+                    state = 2;
                     break;
                 }
             }
@@ -585,7 +587,6 @@ void solution_config_recive(){
     //
     solution_data_chk(id);
     g_sys_val.need_flash |= NEED_FL_SOLUTION;
-    state = 1;
 solution_config_end:
     user_sending_len = solution_config_build(id,state,xtcp_rx_buf[SOLU_CFGACK_CONFIG]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
@@ -853,7 +854,6 @@ void task_dtinfo_config_recive(){
             }
             //-------------------------------------------------------------
             // 判断时间 自动禁止
-            #define SOLU_MAX_CH     16
             timetask_t *task_p;
             uint8_t over_time_inc=0;
             unsigned next_tasktime,beg_time,end_time;
@@ -877,9 +877,10 @@ void task_dtinfo_config_recive(){
                 if((next_tasktime >= beg_time)&&(next_tasktime<=end_time)&&(task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)){
                     over_time_inc++;
                     debug_printf("task time inc\n");
-                    if(over_time_inc>SOLU_MAX_CH){
+                    if(over_time_inc>SOLU_MAX_PLAYCH){
                         g_sys_val.task_con_state |= 16;
                         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
+                        timetask_list.timetask[g_sys_val.task_con_id].task_en=0;
                         debug_printf("task time error\n");
                         break;
                     }
@@ -967,14 +968,16 @@ void task_bat_config_recive(){
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.second = tasktime % 60;
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute = (tasktime % 3600)/60;
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour = tasktime/3600;
+            timetask_list.timetask[id].time_info = tmp_union.task_allinfo_tmp.task_coninfo.time_info;
         }
         // 延后时间
-        else if(xtcp_rx_buf[TASK_BAT_CONFIG_S]==03){
+        if(xtcp_rx_buf[TASK_BAT_CONFIG_S]==03){
             tasktime += rectime;
             tasktime = tasktime%DAY_TIME_SECOND;
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.second = tasktime % 60;
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute = (tasktime % 3600)/60;
             tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour = tasktime/3600;
+            timetask_list.timetask[id].time_info = tmp_union.task_allinfo_tmp.task_coninfo.time_info;
         }
         // 持续时间
         if(xtcp_rx_buf[TASK_BAT_DURATIME_S]==01){
@@ -985,12 +988,14 @@ void task_bat_config_recive(){
         dat_base+=2;
     }
     //-------------------------------------------------------------
+    
     // 判断时间 自动禁止
     timetask_t *task_p;
     dat_base = TASK_BAT_TASKID;
     unsigned next_tasktime,beg_time,end_time;
     uint8_t tasksolu_id;
     for(uint8_t i=0;i<xtcp_rx_buf[TASK_BAT_TASKTOL];i++){
+        uint8_t over_time_inc=0;
         task_p = timetask_list.all_timetask_head;
         id = xtcp_rx_buf[dat_base]|(xtcp_rx_buf[dat_base+1]<<8);
         timer_task_read(&tmp_union.task_allinfo_tmp,id);
@@ -1009,9 +1014,13 @@ void task_bat_config_recive(){
                              tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
             // 时间不正确
             if((next_tasktime > beg_time)&&(next_tasktime<end_time)&&(task_p->id!=id)&&(tasksolu_id==task_p->solu_id)){
-                timer_task_read(&tmp_union.task_allinfo_tmp,id);
-                tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
-                timer_task_write(&tmp_union.task_allinfo_tmp,id);
+                over_time_inc++;
+                if(over_time_inc>SOLU_MAX_PLAYCH){
+                    timer_task_read(&tmp_union.task_allinfo_tmp,id);
+                    tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
+                    timetask_list.timetask[id].task_en=0;
+                    timer_task_write(&tmp_union.task_allinfo_tmp,id);
+                }
                 break;
             }
             task_p = task_p->all_next_p;
@@ -1019,10 +1028,12 @@ void task_bat_config_recive(){
         // 下一个id
         dat_base+=2;
     }
+    
     //-------------------------------------------------------------
     create_todaytask_list(g_sys_val.time_info);
     user_sending_len = onebyte_ack_build(state,TASK_BAT_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
+    //mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
 }
 
 //====================================================================================================
@@ -1351,6 +1362,38 @@ void rttask_config_recive(){
     }    
     // 保存信息
     rt_task_write(&tmp_union.rttask_dtinfo,id);
+    // 即时任务运行中，重发
+    //----------------------------------------------------------------------------------------------------------------------------
+    div_node_t *div_tmp_p;
+    conn_list_t *div_conn_p;
+    // 查找同一音源是否有旧任务并关闭
+    rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
+    while(runtmp_p!=null){
+        //比较任务id
+        if(runtmp_p->rttask_id == id){ 
+            // 找到源设备
+            div_tmp_p = get_div_info_p(tmp_union.rttask_dtinfo.src_mas);
+            if(div_tmp_p == null){
+                break;
+            }
+            //------------------------------------------------------------------------------------------------------------
+            // 找到源连接
+            div_conn_p = get_conn_for_ip(div_tmp_p->div_info.ip);
+            if(div_conn_p == null){
+                break;
+            }
+            user_sending_len = rttask_connect_build(0, // 0 启动任务 // 1 关闭任务
+                                                    tmp_union.rttask_dtinfo.account_id,
+                                                    tmp_union.rttask_dtinfo.rttask_id,
+                                                    RTTASK_BUILD_CMD,00);
+            user_xtcp_send(div_conn_p->conn,0);
+            //有运行中任务 
+            debug_printf("old rttask rebuild\n");
+            break;
+        }
+        runtmp_p = runtmp_p->run_next_p;
+    }
+    //----------------------------------------------------------------------------------------------------------------------------
     user_sending_len = rttask_config_ack_build(id,state);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     // 推送消息

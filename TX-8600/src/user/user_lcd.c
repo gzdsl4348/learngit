@@ -602,10 +602,12 @@ void dhcp_disp_en(){
 }
 
 void dhcp_disp_dis(){
+    #if 0
     uint8_t dhcp_dischar[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x00,0x3A,0x51,0x73,0x95,0xED}; 
     memcpy(&disp_buff[DAT_DISP_BASE],dhcp_dischar,14);
     disp_len = DAT_DISP_BASE+14;
     send_buff(DISP_DHCPS_ID);
+    #endif
 }
 
 void dhcp_disp_none(){

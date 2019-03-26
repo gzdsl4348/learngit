@@ -72,6 +72,10 @@ typedef interface fl_manage_if{
     void if_fl_divinfo_tmpbuf_write(unsigned num,uint8_t buff[]);
 
     void if_fl_divinfo_tmpbuf_read(unsigned num,uint8_t buff[]);
+
+    void xtcp_buff_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
+
+    void xtcp_buff_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
 }fl_manage_if;
 
 //

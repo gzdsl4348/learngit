@@ -92,6 +92,7 @@ void timee10hz_process(){
     backup_sendmes_10hz();
     divfound_over_timeinc();
     rttask_playlist_updata();
+    xtcp_bufftimeout_check_10hz();
 }
 
 //--------------------------------------------------------------------------

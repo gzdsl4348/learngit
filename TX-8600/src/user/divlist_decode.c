@@ -68,17 +68,20 @@ void area_config_recive(){
     //
     uint16_t rx_sn;
     uint8_t i;
-    uint8_t rename_f;
+    uint8_t ack_state=1;
+    uint8_t div_fail_cnt=0;
     //---------------------------------------------------------------------------------------------------
-    // 分区列表配置
-    if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){   //添加分区
-        //名称判断
-        rename_f = 0;
+    // 重名判断
+    if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]!=1){
         for(uint8_t i=0;i<MAX_AREA_NUM;i++){
-            if(area_info[i].area_sn == 0xFFFF){
-                rename_f = charncmp(area_info[i].area_name,&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM);
+            if((area_info[i].area_sn != 0xFFFF) && charncmp(area_info[i].area_name,&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM)){
+                ack_state = 2;
+                goto area_config_decode_end;
             }
         }
+    }
+    // 分区列表配置
+    if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){   //添加分区
         //if(rename_f)
         //    goto 
         for(i=0;i<MAX_AREA_NUM;i++){
@@ -108,7 +111,7 @@ void area_config_recive(){
         }
     }
     if(i==MAX_AREA_NUM){
-        user_sending_len = area_config_ack_build(0xFFFF,0,xtcp_rx_buf[AREASET_CONFIG_BYE_B]); //分区配置失败
+        user_sending_len = area_config_ack_build(0xFFFF,0,xtcp_rx_buf[AREASET_CONFIG_BYE_B],0); //分区已满
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         return;
     }
@@ -141,16 +144,18 @@ void area_config_recive(){
                 else if((div_tmp_p->div_info.area[i]==0xFFFF)&&(num==0xFF)){    //找空位置添加设备分区
                     num=i;
                 }
+                else ;
             }
             if((i == MAX_DIV_AREA)&&(num==0xFF)){
-                user_sending_len = area_config_ack_build(0xFFFF,0,xtcp_rx_buf[AREASET_CONFIG_BYE_B]); //分区配置失败
-                user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-                return;
+                //user_sending_len = area_config_ack_build(0xFFFF,0,xtcp_rx_buf[AREASET_CONFIG_BYE_B]); //分区配置失败
+                //user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+                //return;
+                div_fail_cnt++;
             }
-                
-            div_tmp_p->div_info.area[num] = rx_sn;
-            div_tmp_p->div_info.area_contorl[num] = area_contorl;
-            
+            else{
+                div_tmp_p->div_info.area[num] = rx_sn;
+                div_tmp_p->div_info.area_contorl[num] = area_contorl;
+            }
         }
         // 设备不在所属分区
         else{
@@ -164,9 +169,11 @@ void area_config_recive(){
     } 
     divlist_fl_write(); //保存列表信息
     //----------------------------------------------------------------------------------------------------------
-    mes_send_listinfo(AREALIS_INFO_REFRESH,0);
-    user_sending_len = area_config_ack_build(rx_sn,1,xtcp_rx_buf[AREASET_CONFIG_BYE_B]); //scuess
+    area_config_decode_end:
+    user_sending_len = area_config_ack_build(rx_sn,ack_state,xtcp_rx_buf[AREASET_CONFIG_BYE_B],div_fail_cnt); //scuess
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    //
+    mes_send_listinfo(AREALIS_INFO_REFRESH,0);
     //
     debug_printf("area_config\n");
 }
@@ -633,6 +640,9 @@ void divsrc_sending_decode(){
 //=====================================================================================================
 void divresearch_hostset_recive(){
     uint16_t addr_base=SYSSET_HOSTIP_DIVMAC_B;
+    if(xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]>=MAX_DIV_LIST){
+        return;
+    }
     debug_printf("tol %d\n",xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]);
     debug_printf("%d %d %d %d\n",xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+1],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+2],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+3]);
     for(uint8_t i=0;i<xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B];i++){

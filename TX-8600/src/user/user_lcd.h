@@ -28,5 +28,7 @@ void dhcp_disp_en();
 void dhcp_disp_dis();
 void dhcp_disp_none();
 
+void ip_disp_decode(uint8_t data,uint8_t *base_adr);
+
 #endif
 

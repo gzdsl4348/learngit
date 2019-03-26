@@ -6,6 +6,8 @@
 
 void stop_all_timetask();
 
+void wifi_ioset(uint8_t io_tmp);
+
 void user_lan_uart0_tx(uint8_t *data,uint8_t len,uint8_t mode);
 
 void user_uart_tx(uint8_t *data,uint8_t len);
@@ -81,6 +83,13 @@ int user_xtcp_connect_udp(unsigned port_number, xtcp_ipaddr_t ipaddr, xtcp_conne
 uint8_t start_sysdat_backup();
 
 void backup_system_chk(uint8_t *state,uint8_t *bar);
+
+void user_xtcp_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
+
+void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
+
+void user_xtcp_fifo_send();
+
 
 #endif //__USER_XCCODE_H_
 

@@ -101,11 +101,11 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                         
                         len = audio_page_build(txbuff,g_t_val->ipaddr,
                                                          g_t_val->audio_format,
-                                                         g_t_val->audio_type,
+                                                         g_t_val->audio_type[ch],
                                                          g_t_val->audio_txvol[ch],
                                                          g_t_val->aux_timestamp[ch],
                                                          iptmp,udptmp,
-                                                         len);
+                                                         len,ch);
                         sys_timer :> t3;
 #if NEW_SEND_LIST_MODE_ENABLE
                         for(uint8_t i=0; i<MAX_SENDCHAN_NUM; i++){

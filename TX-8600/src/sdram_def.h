@@ -35,7 +35,18 @@
 
 // 批处理文件临时buff
 #define USER_FILE_BAT_TMPBUF_BASE   (((7*1024+512)*1024)/4) //7.5MB, 工512KB
+
+// 20K 存放批量操作音乐文件
+// 10K 存放设备搜索信息
+// 60K 存放xtcp tx rx fifo
+
+// 批量处理音乐buff
+#define USER_MUSICNAME_TMP_BASE     (USER_FILE_BAT_TMPBUF_BASE) //20K
 // 设备搜索临时buff
-#define USER_DIV_SEARCH_BASE        (USER_FILE_BAT_TMPBUF_BASE+10)
+#define USER_DIV_SEARCH_BASE        (USER_MUSICNAME_TMP_BASE+(20*1024/4)) //10K
+// TX发送FIFO 
+#define USER_XTCP_TXFIFO_BASE       (USER_DIV_SEARCH_BASE+(30*1024/4))  //30K
+// RX发送FIFO
+#define USER_XTCP_RXFIFO_BASE       (USER_XTCP_TXFIFO_BASE+(30*1024/4)) //30K
 
 #endif

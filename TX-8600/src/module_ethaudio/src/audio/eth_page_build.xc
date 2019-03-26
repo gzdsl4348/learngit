@@ -44,12 +44,13 @@ void aud_udpdata_init(uint8_t txbuff[],uint8_t mac_address[])
 uint16_t audio_page_build(uint8_t txbuff[],
                               uint8_t ipaddress[],
                               uint8_t &audio_format,
-                              uint8_t audio_type[],
+                              uint8_t audio_type,
                               uint8_t &volume,
                               unsigned timestamp,
                               uint16_t &iptmp,
                               uint16_t &udptmp,
-                              uint32_t mp3_frame_size)
+                              uint32_t mp3_frame_size,
+                              uint8_t ch)
 {
     //==========================================================================
     //--------------------------- RAM Define--------------------------
@@ -95,8 +96,8 @@ uint16_t audio_page_build(uint8_t txbuff[],
 	len = AUDIO_CHDATA_BASE_ADR;
     
 	//
-	txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type[i] ; //音频类型
-	txbuff[len+AUDIO_CHID_ADR] = i;				    //音频通道ID
+	txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type ; //音频类型
+	txbuff[len+AUDIO_CHID_ADR] = ch;				    //音频通道ID
 	txbuff[len+AUDIO_CHPRIO_ADR] = 100;				//音频优先级
 	txbuff[len+AUDIO_CHVOL_ADR] = volume;		    //音频音量
 	txbuff[len+AUDIO_SILENT_ADR] = 0;				//默音等级
