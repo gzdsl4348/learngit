@@ -5,6 +5,8 @@
 #include "user_xccode.h"
 #include "user_unti.h"
 #include <string.h>
+#include "kfifo.h"
+#include "user_messend.h"
 #include "debug_print.h"
 //
 //===========================================================================
@@ -109,6 +111,7 @@ void conn_overtime_close(){
         if(conn_list_tmp->over_time>CONN_OVERTIME){
             debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
             user_xtcp_close(conn_list_tmp->conn);
+            mes_list_close(conn_list_tmp->conn.id);
             delete_conn_node(conn_list_tmp->conn.stack_conn);
         }    
         //-------------------------------------------------------
@@ -124,7 +127,7 @@ void conn_overtime_close(){
     }
 }
 #if 1
-void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,kfifo_t *kf){
+void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf){
     unsigned len = MIN(1, kf->size-kf->in_index+kf->out_index);
     unsigned l = MIN(len, kf->size - (kf->in_index & (kf->size - 1)));
     if(l){
@@ -136,27 +139,27 @@ void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,kfifo_t *kf){
     kf->in_index+=len;
 }
 
-void xtcp_buff_fifo_get(uint8_t tx_rx_f,uint8_t *buff,kfifo_t *kf,uint8_t clear_f){
+void xtcp_buff_fifo_get(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf,uint8_t clear_f){
     unsigned len = MIN(1, kf->in_index-kf->out_index);
     unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
     if(l){
-        user_xtcp_fifo_get((kf->out_index & (kf->size - 1)),buff,tx_rx_f);
+        //user_xtcp_fifo_get((kf->out_index & (kf->size - 1)),buff,tx_rx_f);
     }
     if(len-l){
-        user_xtcp_fifo_get(0,buff,tx_rx_f);
+        //user_xtcp_fifo_get(0,buff,tx_rx_f);
     }
     if(clear_f)
         kf->out_index+=len;
 }
 
-uint8_t xtcp_check_fifobuff(kfifo_t *kf){
+uint8_t xtcp_check_fifobuff(xtcp_fifo_t *kf){
     if(kf->in_index-kf->out_index)
         return 1;
     else
         return 0;
 }
 
-void xtcp_fifobuff_throw(kfifo_t *kf){
+void xtcp_fifobuff_throw(xtcp_fifo_t *kf){
     unsigned len = MIN(1, kf->in_index-kf->out_index);
     unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
     kf->out_index+=len;

@@ -18,7 +18,7 @@ void could_heart_send_timer(){
             user_sending_len = cld_heart_build();
             user_could_send(1);  
             //text 
-            #if 1
+            #if 0
             user_xtcp_send(g_sys_val.broadcast_conn,0);
             user_could_send(1);  
             user_xtcp_send(g_sys_val.broadcast_conn,0);

@@ -10,14 +10,14 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x18)
+#define VERSION_L    (0x19)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (18)
+#define VERSION_TEN_L    (19)
 
 #define COULD_TCP_EN     1
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

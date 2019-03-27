@@ -7,7 +7,6 @@
 #include "eth_audio_config.h"
 #include "protocol_adrbase.h"
 #include "list_instance.h"
-#include "kfifo.h"
 
 #if defined(__cplusplus) || defined(__XC__)
 extern "C" {
@@ -26,6 +25,13 @@ uint8_t charncmp(uint8_t *c1,uint8_t *c2,unsigned len);
 #define NEED_FL_DIVLIST     0x04
 #define NEED_FL_SOLUTION    0x08
 #define NEED_FL_RTTASK_LIST 0x10
+
+typedef struct xtcp_fifo_t
+{
+    unsigned int in_index;
+    unsigned int out_index;
+    unsigned int size;
+} xtcp_fifo_t;
 
 typedef struct g_sys_val_t{
 
@@ -243,8 +249,8 @@ typedef struct g_sys_val_t{
     uint8_t sys_dhcp_state_tmp;
 
     //  ’∑¢∂—’ª
-    kfifo_t tx_buff_fifo;
-    kfifo_t rx_buff_fifo;
+    xtcp_fifo_t tx_buff_fifo;
+    xtcp_fifo_t rx_buff_fifo;
     uint8_t tx_fifo_timout;
     uint8_t tcp_sending;
 }g_sys_val_t;

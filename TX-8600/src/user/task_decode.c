@@ -590,7 +590,7 @@ void solution_config_recive(){
 solution_config_end:
     user_sending_len = solution_config_build(id,state,xtcp_rx_buf[SOLU_CFGACK_CONFIG]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-    if(state){
+    if(state==0){
         mes_send_suloinfo(id);
     }
     create_todaytask_list(g_sys_val.time_info);

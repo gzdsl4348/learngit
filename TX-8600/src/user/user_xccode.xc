@@ -194,9 +194,10 @@ void user_could_send(uint8_t pol_type){
     debug_printf("\n");
     debug_printf("end\n");
     #endif
-    xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
+    //xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
     //
-    user_xtcp_fifo_send();
+    //user_xtcp_fifo_send();
+    i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
     }//unsafe
 }
 
@@ -422,13 +423,13 @@ void backup_system_chk(uint8_t *state,uint8_t *bar){
 
 void user_xtcp_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f){
     unsafe{
-        ;//i_user_flash->xtcp_buff_fifo_get(num, buff, tx_rx_f);
+        i_user_flash->xtcp_buff_fifo_get(num, buff, tx_rx_f);
     }
 }
 
 void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f){
     unsafe{
-        ;//i_user_flash->xtcp_buff_fifo_put(num, buff, tx_rx_f);
+        i_user_flash->xtcp_buff_fifo_put(num, buff, tx_rx_f);
     }
 }
 
