@@ -690,7 +690,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.could_ip[2] = 110;
     g_sys_val.could_ip[3] = 183;
     #endif
-    #if 1
+    #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
     g_sys_val.could_ip[2] = 13;
@@ -997,7 +997,18 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					case XTCP_SENT_DATA:
                         if(conn.id == g_sys_val.could_conn.id){
                             g_sys_val.could_send_cnt = 0;
-                            xtcp_sendend_decode();
+                            /*
+                            if(g_sys_val.tcp_sending){
+                                g_sys_val.tcp_sending = 0;
+                                g_sys_val.tx_fifo_timout=0;
+                                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
+                            }
+                            debug_printf("could send_end\n");
+                            if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
+                                //xtcp_buff_fifo_get(1,all_tx_buf,&g_sys_val.tx_buff_fifo,0);
+                                user_xtcp_fifo_send(); 
+                            }
+                            */
                         }
                         //ÁÐ±í·¢ËÍ
 						xtcp_sending_decoder();

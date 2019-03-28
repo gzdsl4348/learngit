@@ -128,46 +128,28 @@ void conn_overtime_close(){
 }
 #if 1
 void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf){
-    #if 1
     unsigned len = MIN(1, kf->size-kf->in_index+kf->out_index);
     unsigned l = MIN(len, kf->size - (kf->in_index & (kf->size - 1)));
     if(l){
-        user_xtcp_fifo_put((kf->in_index & (kf->size - 1)),buff,tx_rx_f);
+        user_xtcp_fifo_get((kf->in_index & (kf->size - 1)),buff,tx_rx_f);
     }
     if(len-l){
-        user_xtcp_fifo_put(0,buff,tx_rx_f);
+        user_xtcp_fifo_get(0,buff,tx_rx_f);
     }
     kf->in_index+=len;
-    #endif
 }
 
 void xtcp_buff_fifo_get(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf,uint8_t clear_f){
     unsigned len = MIN(1, kf->in_index-kf->out_index);
     unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
     if(l){
-        user_xtcp_fifo_get((kf->out_index & (kf->size - 1)),buff,tx_rx_f);
+        //user_xtcp_fifo_get((kf->out_index & (kf->size - 1)),buff,tx_rx_f);
     }
     if(len-l){
-        user_xtcp_fifo_get(0,buff,tx_rx_f);
+        //user_xtcp_fifo_get(0,buff,tx_rx_f);
     }
     if(clear_f)
         kf->out_index+=len;
-}
-
-void xtcp_tx_fifo_put(){
-    xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
-}
-
-void xtcp_rx_fifo_put(){
-    xtcp_buff_fifo_put(0,all_rx_buf,&g_sys_val.rx_buff_fifo);
-}
-
-void xtcp_tx_fifo_get(){
-    xtcp_buff_fifo_get(1,all_tx_buf,&g_sys_val.tx_buff_fifo,0);
-}
-
-void xtcp_rx_fifo_get(){
-    xtcp_buff_fifo_get(0,all_tx_buf,&g_sys_val.tx_buff_fifo,1);
 }
 
 uint8_t xtcp_check_fifobuff(xtcp_fifo_t *kf){
@@ -190,34 +172,12 @@ void xtcp_bufftimeout_check_10hz(){
         if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
             if(g_sys_val.tcp_sending){
                 g_sys_val.tcp_sending = 0;
-                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);            
-                user_xtcp_fifo_send();
+                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
             }
         }   
+        xtcp_buff_fifo_get(1,all_tx_buf,&g_sys_val.tx_buff_fifo,0);
+        user_xtcp_fifo_send();
     }
 }
-
-void xtcp_sendend_decode(){
-    if(g_sys_val.tcp_sending){
-        g_sys_val.tcp_sending = 0;
-        g_sys_val.tx_fifo_timout=0;
-        xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
-    }
-    debug_printf("could send_end\n");
-    if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
-        user_xtcp_fifo_send(); 
-    }
-}
-
-void user_xtcp_fifo_send(){
-    if(g_sys_val.tcp_sending==0){
-        debug_printf("send fifo tcp\n");
-        g_sys_val.tcp_sending = 1;
-        g_sys_val.tx_fifo_timout = 0;
-        xtcp_tx_fifo_get();
-        user_xtcp_send_could();
-    }
-}
-
 
 #endif

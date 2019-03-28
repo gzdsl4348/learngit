@@ -24,17 +24,6 @@ void xtcp_fifobuff_throw(xtcp_fifo_t *kf);
 
 void xtcp_bufftimeout_check_10hz();
 
-void xtcp_sendend_decode();
-
-void user_xtcp_fifo_send();
-
-void xtcp_tx_fifo_put();
-
-void xtcp_rx_fifo_put();
-
-void xtcp_tx_fifo_get();
-
-void xtcp_rx_fifo_get();
 
 #endif  //__CONN_PROCESS_H
 

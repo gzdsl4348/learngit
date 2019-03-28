@@ -214,7 +214,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
     timer tmr;
     uint32_t i, t1, t2;
     
-    uint8_t tmp_buff[1500];
+    uint8_t tmp_buff[256];
     uint32_t write_backup_offset = 0;
     
     s_sdram_state sdram_state;
@@ -374,7 +374,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             }else{
                 data_base = USER_XTCP_RXFIFO_BASE;
             }
-            memcpy(pw_buff, buff, 1472);
+            memcpy(tmp_buff, buff, 1472);
             sdram_write(c_sdram, sdram_state, data_base+num*1472/4, (1472/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             break;
