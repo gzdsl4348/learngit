@@ -128,6 +128,10 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
         *num = 0;
         memset(buff, 0, buff_size);
     }
+    else if(mark == 2)
+    {
+        offset = sizeof(music_info_t)*(*num);
+    }
     
     res = f_opendir(dir,(const TCHAR*)path); //打开一个目录
     if (res == FR_OK)
@@ -218,7 +222,7 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         //排除相同文件名称
                         for(i=0; i<(*num); i++)
                         {
-                            if(wstrcmp(fn, ((music_info_t*)&buff[0])->name) == 0) break;
+                            if(wstrcmp(fn, ((music_info_t*)&buff[0])[i].name) == 0) break;
                         }
                         if(i != (*num)) continue;
                         
@@ -790,7 +794,7 @@ filelist_layer_2:   //二层路径处理逻辑
             dir_tbl_sdram->m[dir_index].music_num = music_tbl->num;
             
             //当操作的音乐文件夹已满文件数时, 删除音乐文件需要重新轮训列表
-            if(dir_tbl_sdram->m[dir_index].music_num_full & is_del)
+            if(dir_tbl_sdram->m[dir_index].music_num_full && is_del)
             {
                 mf_scan_files((TCHAR *)dir_name, 2, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), (int*)&music_tbl->num, &dir_tbl_sdram->m[dir_index].music_num_full);
                 if(music_tbl->num > F_MUSIC_MAX_NUM)
