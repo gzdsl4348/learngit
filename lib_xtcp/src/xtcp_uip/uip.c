@@ -442,7 +442,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 	if(lastport >= 32000) {
 		lastport = 8800;
 	}
-
+    debug_printf("lisp %x\n",lastport);
 	/* Check if this port is already in use, and if so try to find another one. */
 	for(c = 0; c < UIP_CONNS; ++c) {
 		conn = &uip_conns[c];
