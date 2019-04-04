@@ -70,20 +70,26 @@ void area_config_recive(){
     uint8_t i;
     uint8_t ack_state=1;
     uint8_t div_fail_cnt=0;
+    uint16_t tmp_area_id = xtcp_rx_buf[AREASET_AREA_SN_B]|(xtcp_rx_buf[AREASET_AREA_SN_B+1]<<8);
     //---------------------------------------------------------------------------------------------------
     // 重名判断
     if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]!=1){
+        
         for(uint8_t i=0;i<MAX_AREA_NUM;i++){
             if((area_info[i].area_sn != 0xFFFF) && charncmp(area_info[i].area_name,&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM)){
-                ack_state = 2;
-                goto area_config_decode_end;
+                if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){
+                    ack_state = 2;
+                    goto area_config_decode_end;
+                }
+                if(area_info[i].area_sn!=tmp_area_id){
+                    ack_state = 2;
+                    goto area_config_decode_end;                    
+                }
             }
         }
     }
     // 分区列表配置
     if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){   //添加分区
-        //if(rename_f)
-        //    goto 
         for(i=0;i<MAX_AREA_NUM;i++){
             if(area_info[i].area_sn == 0xFFFF){
                 area_info[i].area_sn = i;
@@ -115,6 +121,7 @@ void area_config_recive(){
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         return;
     }
+    debug_printf("area set\n");
     area_fl_write();    // 烧写保存分区信息
     //---------------------------------------------------------------------------------------------------------
     //设备列表配置
@@ -144,7 +151,6 @@ void area_config_recive(){
                 else if((div_tmp_p->div_info.area[i]==0xFFFF)&&(num==0xFF)){    //找空位置添加设备分区
                     num=i;
                 }
-                else ;
             }
             if((i == MAX_DIV_AREA)&&(num==0xFF)){
                 //user_sending_len = area_config_ack_build(0xFFFF,0,xtcp_rx_buf[AREASET_CONFIG_BYE_B]); //分区配置失败
@@ -170,6 +176,7 @@ void area_config_recive(){
     divlist_fl_write(); //保存列表信息
     //----------------------------------------------------------------------------------------------------------
     area_config_decode_end:
+    debug_printf("div fail %d %d\n",div_fail_cnt,ack_state);
     user_sending_len = area_config_ack_build(rx_sn,ack_state,xtcp_rx_buf[AREASET_CONFIG_BYE_B],div_fail_cnt); //scuess
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     //
@@ -380,7 +387,7 @@ void div_heart_recive(){
     //--------------------------
     static uint8_t tmp=0;
     if((div_info_p->div_info.div_onlineok)&&(div_info_p->div_info.div_state == 0)&&(xtcp_rx_buf[HEART_STATE_B]!=0)){
-        debug_printf("divlist ud online\n");
+        debug_printf("\ndivlist ud online\n\n");
         div_info_p->div_info.div_state = ONLINE;
         //设备上线 异常即时任务恢复
         if(rttask_run_state_set(01,div_info_p->div_info.mac)){
@@ -389,6 +396,7 @@ void div_heart_recive(){
         need_send = 1;
     }
     //
+    //debug_printf("change state %d\n",div_info_p->div_info.div_state);
     if((div_info_p->div_info.div_state!=0)&&(div_info_p->div_info.div_state!=xtcp_rx_buf[HEART_STATE_B])){
         div_info_p->div_info.div_state = xtcp_rx_buf[HEART_STATE_B];    //获取设备状态
         if(div_info_p->div_info.div_state==0){
@@ -466,8 +474,7 @@ uint8_t div_online_tolist(){
         div_info_p->div_info.div_onlineok = 1;
         return 1;
     }
-    div_info_p->div_info.div_state = SN_ER;    
-                                                        
+    //div_info_p->div_info.div_state = SN_ER;                                     
     return 0;
 }
 

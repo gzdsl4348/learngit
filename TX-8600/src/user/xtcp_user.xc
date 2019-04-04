@@ -430,8 +430,8 @@ void user_fldat_init(){
     host_info.mac[1]=0x4C;
     host_info.mac[2]=0x45;
     host_info.mac[3]=0x00;
-    host_info.mac[4]=0x72;
-    host_info.mac[5]=0x45;
+    host_info.mac[4]=0x71;
+    host_info.mac[5]=0x3B;
     
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(USER_DAT_SECTOR);
@@ -690,7 +690,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.could_ip[2] = 110;
     g_sys_val.could_ip[3] = 183;
     #endif
-    #if 1
+    #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
     g_sys_val.could_ip[2] = 13;
@@ -871,7 +871,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             debug_printf("rec tcp\n");
                             //-------------------------------------------------------------------------------------
                             //判断是否收到包头 及接收中处理
-                            if(((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG){
+                            if((((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG)&&(g_sys_val.tcp_recing_f==0)){
                                 g_sys_val.tcp_recing_f=1;
                                 g_sys_val.tcp_timout = 0;
                                 g_sys_val.tcp_tmp_len = data_len;
@@ -995,10 +995,15 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						debug_printf("resend_data:%x\n",conn.id);
 						break;
 					case XTCP_SENT_DATA:
+                        //-------------------------------------------------
+                        // 优先堆栈内发送
                         if(conn.id == g_sys_val.could_conn.id){
                             g_sys_val.could_send_cnt = 0;
-                            xtcp_sendend_decode();
+                            if(xtcp_sendend_decode()){
+                                break;
+                            }
                         }
+                        //-------------------------------------------------
                         //列表发送
 						xtcp_sending_decoder();
                         mes_send_decode();

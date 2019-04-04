@@ -830,6 +830,25 @@ void task_dtinfo_config_recive(){
             //----------------------------------------------------------------------------------------------
             // 配置成功
             if(g_sys_val.task_creat_s){
+                //------------------------------------------------------------------------------------------------------
+                //任务数量判断
+                uint16_t tasknum_cnt=0;
+                timetask_t *task_p = timetask_list.all_timetask_head;
+                //
+                while(task_p!=null){
+                    if(task_p->solu_id==g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn)
+                        tasknum_cnt++;
+                    task_p = task_p->all_next_p;
+                }
+                if((tasknum_cnt>=MAX_TIMED_TASK_NUM)&&(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn==0xFF)){
+                    g_sys_val.task_con_state |= 1;
+                    goto dtinfo_send_end;
+                }
+                if(tasknum_cnt>=MAX_SOUL_HAVETASK){
+                    g_sys_val.task_con_state |= 1;
+                    goto dtinfo_send_end;
+                }
+                //-------------------------------------------------------------------------------------------------
                 uint16_t id;
                 if(create_task_node()){ //任务添加成功   
                     id = timetask_list.all_timetask_end->id;
@@ -1382,6 +1401,9 @@ void rttask_config_recive(){
             if(div_conn_p == null){
                 break;
             }
+            runtmp_p->dura_time = tmp_union.rttask_dtinfo.dura_time;
+            runtmp_p->over_time = 0;
+            
             user_sending_len = rttask_connect_build(0, // 0 启动任务 // 1 关闭任务
                                                     tmp_union.rttask_dtinfo.account_id,
                                                     tmp_union.rttask_dtinfo.rttask_id,

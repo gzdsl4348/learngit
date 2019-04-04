@@ -106,11 +106,11 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                 debug_printf("TFTP: IP Down\n");
 #endif
                 tftp_app_transfer_error();
-
-                tftp_close(i_xtcp);
-
-                tftp_state == TFTP_IDLE;
             }
+
+            tftp_close(i_xtcp);
+
+            tftp_state == TFTP_IDLE;            
             break;
         }
         case XTCP_NEW_CONNECTION:

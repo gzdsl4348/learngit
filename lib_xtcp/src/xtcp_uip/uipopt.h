@@ -212,7 +212,7 @@
 #ifdef UIP_CONF_UDP_CONNS
 #define UIP_UDP_CONNS UIP_CONF_UDP_CONNS
 #else /* UIP_CONF_UDP_CONNS */
-#define UIP_UDP_CONNS    80 //20 /////////////////////////////////////
+#define UIP_UDP_CONNS    200 //20 /////////////////////////////////////
 #endif /* UIP_CONF_UDP_CONNS */
 
 /**
@@ -355,7 +355,7 @@
 #ifdef UIP_CONF_ARPTAB_SIZE
 #define UIP_ARPTAB_SIZE UIP_CONF_ARPTAB_SIZE
 #else
-#define UIP_ARPTAB_SIZE 80 //16 //////////////////////////
+#define UIP_ARPTAB_SIZE 180 //16 //////////////////////////
 #endif
 
 /**

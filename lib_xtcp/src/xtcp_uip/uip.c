@@ -200,7 +200,7 @@ static u8_t iss[4]; /* The iss variable is used for the TCP
  initial sequence number. */
 
 #if UIP_ACTIVE_OPEN
-static u16_t lastport; /* Keeps track of the last port used for
+static u16_t lastport=8800; /* Keeps track of the last port used for
  a new connection. */
 #endif /* UIP_ACTIVE_OPEN */
 
@@ -440,7 +440,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 4096;
+		lastport = 8800;
 	}
 
 	/* Check if this port is already in use, and if so try to find another one. */
@@ -1301,7 +1301,7 @@ void uip_process(u8_t flag) {
 
 	/* TCP input processing. */
 	tcp_input: UIP_STAT(++uip_stat.tcp.recv);
-
+    debug_printf("tcp input\n");
 	/* Start of TCP input header processing code. */
 
 	if (uip_tcpchksum() != 0xffff) { /* Compute and check the TCP
@@ -1316,6 +1316,7 @@ void uip_process(u8_t flag) {
 		if (uip_connr->tcpstateflags != UIP_CLOSED && BUF->destport
 				== uip_connr->lport && BUF->srcport == uip_connr->rport
 				&& uip_ipaddr_cmp(BUF->srcipaddr, uip_connr->ripaddr)) {
+			debug_printf("tcp found conn\n");
 			goto found;
 		}
 	}
@@ -1331,8 +1332,10 @@ void uip_process(u8_t flag) {
 	tmp16 = BUF->destport;
 	/* Next, check listening connections. */
 	for (c = 0; c < UIP_LISTENPORTS; ++c) {
-		if (tmp16 == uip_listenports[c])
+		if (tmp16 == uip_listenports[c]){
+            debug_printf("tcp found listen\n");
 			goto found_listen;
+        }
 	}
 
 	/* No matching connection found, so we send a RST packet. */

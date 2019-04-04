@@ -821,6 +821,23 @@ xtcpd_appcall(void)
                                      HTONS(uip_conn->rport),
                                      uip_conn);
     }
+    uint8_t tol=0;
+    for(uint8_t i=0;i<UIP_CONNS;i++){
+        if(uip_conns[i].tcpstateflags != UIP_CLOSED){
+            tol++;
+            debug_printf("have conn %d\n",i);
+        }
+    }
+    debug_printf("\n tcp tol :%d\n",tol);
+
+    tol=0;
+    for(uint8_t i=0;i<UIP_UDP_CONNS;i++){
+        if(uip_udp_conns[i].lport != 0){
+            tol++;
+        }
+    }
+    debug_printf("\n udp tol :%d\n",tol);
+    
     enqueue_event_and_notify(client_num, XTCP_NEW_CONNECTION, xtcp_conn);
   }
 

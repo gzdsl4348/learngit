@@ -45,7 +45,7 @@ static unsigned get_guid(void)
     if(guid++ > (0xfffffff)) {
       guid = 1;
     }
-    
+    debug_printf("\nxtcp build id %x\n\n",guid);
     //if(uip_udp_connid_is_free(guid) == 0) continue;
     break;
   }

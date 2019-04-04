@@ -10,16 +10,19 @@
 
 void could_heart_send_timer(){
     static uint8_t heeart_timer_cnt=0;
+    #if COULD_TCP_EN
     g_sys_val.could_heart_timcnt++;
-    if(g_sys_val.could_heart_timcnt>CLD_HEART_TIME_CNT){
+    if(g_sys_val.could_heart_timcnt>1){//CLD_HEART_TIME_CNT){
         g_sys_val.could_heart_timcnt = 0;
         debug_printf("cld id %d\n",g_sys_val.could_conn.id);
         if(g_sys_val.could_conn.id!=0){
             user_sending_len = cld_heart_build();
             user_could_send(1);  
             //text 
-            #if 1
+            #if 0
+            user_sending_len = cld_heart_build();
             user_could_send(1);  
+            user_sending_len = cld_heart_build();
             user_could_send(1);  
             #endif
             debug_printf("send cld\n");
@@ -48,6 +51,7 @@ void could_heart_send_timer(){
             user_xtcp_connect_tcp(g_sys_val.could_ip);
         }
     }
+    #endif
 }
 
 

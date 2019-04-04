@@ -98,7 +98,7 @@ void account_login_recive(){
 // 账户列表查询
 //================================================================================
 void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
-        //是否有列表正在发送
+    //是否有列表正在发送
     if(conn_sending_s.id!=null)
         return;
     //-----------------------------------------------------------------
@@ -234,8 +234,11 @@ void account_config_recive(){
         }
     } 
     debug_printf("config ac id %d\n",id);
-    if(id==0)
-        return;
+    if(id==0){
+        memcpy(account_info[id].sn,&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
+        state = 1;
+        goto  ac_config_succes;
+    }
     if(id!=0xFF){
         //--------------------------------------------------------------------------------------
         if(xtcp_rx_buf[A_CONFIG_CONTORL_B]==2){
@@ -335,6 +338,9 @@ void account_sys_register_recive(){
             host_info.regiser_state = 2;
         }
         // 有限期注册
+        else if((host_info.regiser_state==2)&&(host_info.regiser_days==0)){
+            host_info.regiser_state = 0;
+        }
         else{
             host_info.regiser_state = 1;
         }

@@ -314,7 +314,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
             *block_num_glob = block_num;
 
             // Check that we've received the correct block of data and it's not a duplicate
-            if (block_num == (prev_block_num + 1))
+            if (block_num == (unsigned short)(prev_block_num + 1))
             {
                 *can_put_data = 1;
                 
@@ -343,7 +343,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
             {
                 *can_put_data = 0;
 #if 1||TFTP_DEBUG_PRINT
-                debug_printf("TFTP: Rvcd invalid data, block #%d\n", block_num);
+                debug_printf("TFTP: Rvcd invalid data, block #%d %d\n", block_num, (unsigned short)(prev_block_num + 1));
 #endif
 
             }

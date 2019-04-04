@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x19)
+#define VERSION_L    (0x18)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (19)
+#define VERSION_TEN_L    (18)
 
 #define COULD_TCP_EN     1
 
@@ -63,7 +63,10 @@ extern "C" {
 #define MAX_RTTASK_CONTORL_NUM     10
 
 // 最大方案数
-#define MAX_TASK_SOULTION   10 //4打铃  
+#define MAX_TASK_SOULTION   4 //10 //4打铃 
+
+#define MAX_SOUL_HAVETASK   100
+
 // 任务最大歌曲数
 #define MAX_MUSIC_NUM   20   //20首歌曲 
 // 定时任务最大指定日期
