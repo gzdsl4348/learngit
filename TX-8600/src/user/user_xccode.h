@@ -90,8 +90,6 @@ void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
 
 void user_xtcp_fifo_send();
 
-void user_xtcp_send_could();
-
 
 #endif //__USER_XCCODE_H_
 

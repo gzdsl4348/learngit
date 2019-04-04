@@ -155,11 +155,13 @@ void user_audio_send_dis(uint8_t ch){
     }
 }
 
-void user_xtcp_send_could(){
+void user_xtcp_fifo_send(){
     unsafe{
-        if(g_sys_val.could_conn.id==0)
-            return;
+    if(g_sys_val.tcp_sending==0){
+        g_sys_val.tcp_sending = 1;
+        g_sys_val.tx_fifo_timout = 0;
         i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
+    }
     }
 }
 
@@ -192,10 +194,10 @@ void user_could_send(uint8_t pol_type){
     debug_printf("\n");
     debug_printf("end\n");
     #endif
+    //xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
     //
-    xtcp_tx_fifo_put();
-    user_xtcp_fifo_send();
-    //i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
+    //user_xtcp_fifo_send();
+    i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
     }//unsafe
 }
 
