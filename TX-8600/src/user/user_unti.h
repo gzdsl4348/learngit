@@ -107,7 +107,7 @@ typedef struct g_sys_val_t{
     //-------------------------------------------
     // 任务连续播放
     // 
-    uint8_t task_wait_state;
+    uint8_t task_wait_state[MAX_MUSIC_CH];
     uint8_t play_ok;
     uint16_t music_task_id[MAX_MUSIC_CH];
     uint8_t play_error_inc[MAX_MUSIC_CH];
@@ -253,6 +253,7 @@ typedef struct g_sys_val_t{
     xtcp_fifo_t rx_buff_fifo;
     uint8_t tx_fifo_timout;
     uint8_t tcp_sending;
+    uint8_t tcp_resend_cnt;
     uint16_t tx_fifo_len[MAX_TXBUFF_FIFOSIZE];
     uint16_t rx_fifo_len[MAX_RXBUFF_FIFOSIZE];
 }g_sys_val_t;

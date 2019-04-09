@@ -222,8 +222,11 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
     tftp_packet_t *pkt = (tftp_packet_t*) &rx_buf[0];
 
     n16_t opcode = ntoh16(pkt->opcode);
-    
-    *write_mode = 1;
+
+    if(opcode == TFTP_OPCODE_RRQ)
+        *write_mode = 0;
+    else if(opcode == TFTP_OPCODE_WRQ)
+        *write_mode = 1;
     
     switch (opcode)
     {
@@ -233,9 +236,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
         {
             // We don't support read requests - reply with an error packet
             return tftp_make_error_pkt(tx_buf, TFTP_ERROR_NOT_DEFINED, "Read not supported", error);
-        }       
-#else
-        *write_mode = 0;
+        }
 #endif
         case TFTP_OPCODE_WRQ: // Write Request
         {

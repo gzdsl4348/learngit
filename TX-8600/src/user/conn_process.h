@@ -36,5 +36,11 @@ void xtcp_tx_fifo_get();
 
 void xtcp_rx_fifo_get();
 
+void xtcp_resend_decode();
+
+void user_xtcp_sendfifo_init();
+
+void broadcast_for_minute();
+
 #endif  //__CONN_PROCESS_H
 

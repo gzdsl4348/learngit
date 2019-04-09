@@ -92,7 +92,7 @@ void timee10hz_process(){
     backup_sendmes_10hz();
     divfound_over_timeinc();
     rttask_playlist_updata();
-    //xtcp_bufftimeout_check_10hz();
+    xtcp_bufftimeout_check_10hz();
 }
 
 //--------------------------------------------------------------------------
@@ -110,7 +110,8 @@ void second_process(){
         #endif
     }
     //mic_time1hz_close();
-    timer_taskmusic_check();    //定时任务几时
+    broadcast_for_minute();
+    timer_taskmusic_check();    //定时任务播放计时
     task_check_and_play();      //定时任务定时播放
     user_disp_time();           // lcd 时钟显示
     timer_task_disp();          // 显示切换

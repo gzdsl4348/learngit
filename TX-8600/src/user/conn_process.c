@@ -92,6 +92,17 @@ uint8_t conn_long_decoder(){
 }
 #endif
 //------------------------------------------------------------------------
+//每分钟发送广播包
+void broadcast_for_minute(){
+    static uint8_t time_cnt=0;
+    time_cnt++;
+    if(time_cnt>60){
+        time_cnt = 0;
+        memset(xtcp_tx_buf,0,64);
+        user_sending_len = 64;
+        user_xtcp_send(g_sys_val.broadcast_conn,0);
+    }
+}
 
 //==============================================================================
 // 连接超时检测
@@ -191,15 +202,15 @@ void xtcp_fifobuff_throw(xtcp_fifo_t *kf){
 
 void xtcp_bufftimeout_check_10hz(){
     g_sys_val.tx_fifo_timout++;
-    if(g_sys_val.tx_fifo_timout>10){
+    if(g_sys_val.tx_fifo_timout>15){
         g_sys_val.tx_fifo_timout=0;
         if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
             if(g_sys_val.tcp_sending){
                 g_sys_val.tcp_sending = 0;
-                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);    
-                 if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo))
-                    user_xtcp_fifo_send();
+                xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);   
             }
+            if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo))
+                user_xtcp_fifo_send();
         }   
     }
 }
@@ -207,6 +218,7 @@ void xtcp_bufftimeout_check_10hz(){
 uint8_t xtcp_sendend_decode(){
     if(g_sys_val.tcp_sending){
         g_sys_val.tcp_sending = 0;
+        g_sys_val.tcp_resend_cnt =0;
         g_sys_val.tx_fifo_timout=0;
         xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
     }
@@ -218,6 +230,19 @@ uint8_t xtcp_sendend_decode(){
     return 0;
 }
 
+void xtcp_resend_decode(){
+    g_sys_val.tcp_resend_cnt++;
+    g_sys_val.tcp_sending = 0;
+    g_sys_val.tx_fifo_timout=0;
+    if(g_sys_val.tcp_resend_cnt>3){
+        g_sys_val.tcp_resend_cnt =0;
+        xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
+    }
+    if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
+        user_xtcp_fifo_send();
+    }   
+}
+
 void user_xtcp_fifo_send(){
     if(g_sys_val.tcp_sending==0){
         debug_printf("send fifo tcp\n");
@@ -227,6 +252,13 @@ void user_xtcp_fifo_send(){
         
         user_xtcp_send_could();
     }
+}
+
+void user_xtcp_sendfifo_init(){
+    g_sys_val.tx_buff_fifo.in_index  = 0;
+    g_sys_val.tx_buff_fifo.out_index = 0;
+    g_sys_val.tcp_resend_cnt = 0;
+    g_sys_val.tcp_sending = 0;
 }
 
 void user_xtcp_rxfifo_decode10hz(){

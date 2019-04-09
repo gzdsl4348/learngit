@@ -29,6 +29,7 @@ static int num_tx_bytes;
 
 static xtcp_connection_t tftp_conn;
 
+static int write_mode = 0;
 static int signal_error;
 static int signal_complete;
 
@@ -36,6 +37,7 @@ static unsigned int tftp_tmr_poll_flag = 0;
 
 void tftp_init(client xtcp_if i_xtcp)
 {
+    write_mode = 0;
     signal_error = 0;
     signal_complete = 0;
 
@@ -57,7 +59,8 @@ void tftp_close(client xtcp_if i_xtcp)
         i_xtcp.close(tftp_conn);
     };
     tftp_conn.id = -1;
-
+    
+    write_mode = 0;
     signal_error = 0;
     signal_complete = 0;
     block_num = 0;
@@ -154,7 +157,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
             {
                 int res = SHORTLY_ACK_SUCCEED;
                 int can_put_data = 0;
-                int write_mode = 0;
+
                 num_tx_bytes = tftp_process_packet(tx_buffer, rxbuff, response_len, block_num, write_mode, can_put_data, signal_error, signal_complete);
 
                 if(!signal_error && (rxbuff[1]==TFTP_OPCODE_WRQ || rxbuff[1]==TFTP_OPCODE_RRQ))
@@ -189,7 +192,17 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                         res = SHORTLY_ACK_SUCCEED;
                     }
                 }
+                //TFTP read 操作时, 特别处理远端最后一个请求包, 不回复, 并结束连接
+                if(signal_complete && write_mode==0)
+                {
+                    tftp_app_transfer_complete();
 
+                    tftp_close(i_xtcp);
+
+                    tftp_state = TFTP_WAITING_FOR_CONNECTION;
+                    break;
+                }
+                
                 if(num_tx_bytes > 0 && res!= DELAYED_ACK)
                 {
                     //debug_printf("tftp shortly send %d\n", num_tx_bytes);

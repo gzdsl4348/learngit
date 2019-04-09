@@ -44,7 +44,7 @@ void user_music_stop(uint8_t ch);
 
 void audio_moudle_set();
 
-void user_audio_desip_set(uint8_t ch);
+void user_audio_desip_set(uint8_t ch,uint8_t prio);
 
 void user_updatip_set(uint8_t mac[],uint8_t ip[]);
 

@@ -83,7 +83,7 @@ void task_music_send(uint8_t ch){
     //i_ethaud_cfg->set_audio_type(g_sys_val.audio_type);
     set_audio_type(g_sys_val.audio_type);
     // 配置目标
-    user_audio_desip_set(ch);
+    user_audio_desip_set(ch,tmp_union.task_allinfo_tmp.task_coninfo.task_prio);
     // 配置音量
     set_audio_vol(ch,tmp_union.task_allinfo_tmp.task_coninfo.task_vol);
     // 发送使能

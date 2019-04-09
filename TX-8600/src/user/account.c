@@ -352,7 +352,7 @@ void account_sys_register_recive(){
                 user_xtcp_send(g_sys_val.regsiter_conn,g_sys_val.register_could_f);
             g_sys_val.regsiter_conn.id = 0;
             g_sys_val.register_need_send = 0;
-            debug_printf("B90D resend \n",g_sys_val.register_rec_s_tmp);
+            debug_printf("B90D resend %d %d\n",g_sys_val.register_rec_s_tmp,host_info.regiser_state);
         }
         debug_printf("regsied updat state %d, day %d\n\n",host_info.regiser_state,host_info.regiser_days);
         // flash info 

@@ -231,9 +231,12 @@ void task_check_and_play(){
         ){
             //--------------------------------------------------------------
             // 置为现在播放
+            uint8_t play_num;
+            play_num = i%MAX_MUSIC_CH;
+            //
             if(g_sys_val.file_bat_contorl_s==0){
-                g_sys_val.music_task_id[i] = timetask_list.today_timetask_head->id;
-                g_sys_val.task_wait_state |= 1<<i;
+                g_sys_val.music_task_id[play_num] = timetask_list.today_timetask_head->id;
+                g_sys_val.task_wait_state[play_num] = 1;
                 g_sys_val.play_ok = 1;
             }
             //--------------------------------------------------------------
@@ -254,8 +257,8 @@ void task_10hz_mutich_play(){
         return;
     g_sys_val.play_ok = 0;
     for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
-        if((g_sys_val.task_wait_state>>j)&1){
-            g_sys_val.task_wait_state ^= (1<<j);
+        if(g_sys_val.task_wait_state[j]){
+            g_sys_val.task_wait_state[j] = 0;
             for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
                 if(timetask_now.ch_state[i]==0xFF){
                     debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
@@ -1052,7 +1055,7 @@ void task_bat_config_recive(){
     create_todaytask_list(g_sys_val.time_info);
     user_sending_len = onebyte_ack_build(state,TASK_BAT_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
-    //mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
+    mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
 }
 
 //====================================================================================================
@@ -1117,8 +1120,18 @@ void task_playtext_recive(){
     if(tmp_union.task_allinfo_tmp.task_coninfo.task_id==0xFFFF){
         goto play_text_fail;
     }
-    // 播放任务 测试任务固定ch0播放
-    task_music_config_play(0,id);
+    //--------------------------------------------------------------
+    // 播放任务 
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        if(g_sys_val.task_wait_state[i]==0){
+            g_sys_val.music_task_id[i] = id;
+            g_sys_val.task_wait_state[i] = 1;
+            g_sys_val.play_ok = 1;
+            user_disptask_refresh();
+            break;
+        }
+    }
+    //--------------------------------------------------------------
     //
     play_text_sucess:
     user_sending_len =  id_ack_build(id,1,TASK_PLAYTEXT_CMD);

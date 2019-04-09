@@ -214,7 +214,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
     timer tmr;
     uint32_t i, t1, t2;
     
-    uint8_t tmp_buff[256];
+    uint8_t tmp_buff[1572];
     uint32_t write_backup_offset = 0;
     
     s_sdram_state sdram_state;

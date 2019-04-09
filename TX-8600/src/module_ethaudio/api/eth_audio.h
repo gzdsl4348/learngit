@@ -61,7 +61,7 @@ typedef interface ethaud_cfg_if{
 	//---------------------------------------------------------------------------
 	// set audio destination ip and mac to send fun
 	//---------------------------------------------------------------------------
-	void set_audio_desip_infolist(audio_txlist_t *t_audio_txlist,uint8_t ch);
+	void set_audio_desip_infolist(audio_txlist_t *t_audio_txlist,uint8_t ch,uint8_t priority);
 	//
 	//---------------------------------------------------------------------------
 	// set audio ch0-chx type

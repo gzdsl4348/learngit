@@ -200,7 +200,7 @@ static u8_t iss[4]; /* The iss variable is used for the TCP
  initial sequence number. */
 
 #if UIP_ACTIVE_OPEN
-static u16_t lastport=8800; /* Keeps track of the last port used for
+static u16_t lastport; /* Keeps track of the last port used for
  a new connection. */
 #endif /* UIP_ACTIVE_OPEN */
 
@@ -420,7 +420,7 @@ void uip_init(void) {
 	memset(uip_udp_listenports, 0, sizeof(uip_listenports));
 	memset(uip_conns, 0, sizeof(uip_conns));
 #if UIP_ACTIVE_OPEN
-	lastport = 1024;
+	lastport = 10000;
 #endif /* UIP_ACTIVE_OPEN */
 
 #if UIP_UDP
@@ -440,9 +440,9 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 8800;
+		lastport = 10000;
 	}
-    debug_printf("lisp %x\n",lastport);
+    debug_printf("lisp %d\n",lastport);
 	/* Check if this port is already in use, and if so try to find another one. */
 	for(c = 0; c < UIP_CONNS; ++c) {
 		conn = &uip_conns[c];
@@ -508,7 +508,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 4096;
+		lastport = 10000;
 	}
 
 	for(c = 0; c < UIP_UDP_CONNS; ++c) {

@@ -709,7 +709,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     memset(ipconfig.ipaddr,255,4);
     i_xtcp.connect_udp(ETH_COMMUN_PORT,ipconfig.ipaddr,g_sys_val.broadcast_conn);
     i_xtcp.bind_local_udp(g_sys_val.broadcast_conn,LISTEN_BROADCAST_LPPORT);
-    i_xtcp.listen(LISTEN_BROADCAST_LPPORT,XTCP_PROTOCOL_UDP);
     
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
@@ -820,8 +819,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         debug_printf("New :%d,%d,%d,%d\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3]);
                         #if COULD_TCP_EN
                         if(conn.protocol==XTCP_PROTOCOL_TCP){
-                            debug_printf("\n\n TPC NEW \n could id%d\n",g_sys_val.could_conn.id);
+                            debug_printf("TPC NEW \n");
                             if(g_sys_val.could_conn.id==0){
+                                debug_printf("could id%d\n\n",g_sys_val.could_conn.id);
                                 g_sys_val.could_conn = conn;
                                 register_could_chk();
                             }
@@ -992,6 +992,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_RESEND_DATA:	
                         //user_xtcp_send(conn);
+                        xtcp_resend_decode();
 						debug_printf("resend_data:%x\n",conn.id);
 						break;
 					case XTCP_SENT_DATA:

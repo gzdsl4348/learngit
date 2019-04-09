@@ -526,8 +526,9 @@ void div_heart_overtime_close(){
                 //----------------------------------------------------------------------------------
                 if(rttask_run_state_set(02,div_node_tmp->div_info.mac)){
                     state = RTTASKERROR_INFO_REFRESH;
+                    mes_send_listinfo(state,0);
                 }
-                mes_send_listinfo(state,0);
+                mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
                 //---------------------------------------------------------------------------------------                    
                 //
                 divlist_fl_write(); //保存列表信息 设备状态随后改变

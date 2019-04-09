@@ -5,6 +5,7 @@
 #include "user_unti.h"
 #include "account.h"
 #include "debug_print.h"
+#include "conn_process.h"
 
 #define CLD_HEART_TIME_CNT  10 //10ÃëÐÄÌø
 
@@ -12,7 +13,7 @@ void could_heart_send_timer(){
     static uint8_t heeart_timer_cnt=0;
     #if COULD_TCP_EN
     g_sys_val.could_heart_timcnt++;
-    if(g_sys_val.could_heart_timcnt>1){//CLD_HEART_TIME_CNT){
+    if(g_sys_val.could_heart_timcnt>CLD_HEART_TIME_CNT){
         g_sys_val.could_heart_timcnt = 0;
         debug_printf("cld id %d\n",g_sys_val.could_conn.id);
         if(g_sys_val.could_conn.id!=0){
@@ -46,6 +47,7 @@ void could_heart_send_timer(){
         else if(g_sys_val.colud_connect_f==0){
             g_sys_val.colud_connect_f=1;
             g_sys_val.could_send_cnt = 0;
+            user_xtcp_sendfifo_init();
             debug_printf("colud connect\n");
             //user_xtcp_unlisten(g_sys_val.colud_port);
             user_xtcp_connect_tcp(g_sys_val.could_ip);

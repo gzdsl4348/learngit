@@ -59,6 +59,10 @@ static void inset_media_list(media_info_t media_list[NUM_MEDIA_INPUTS], uint8_t 
             break;
         }
     }
+    if(i==channel_num){
+        media_list[i] = info;
+        channel_num++;
+    }
 }
 
 static void remove_media_list(media_info_t media_list[NUM_MEDIA_INPUTS], uint8_t &channel_num, uint8_t ch)
@@ -138,11 +142,11 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
 				// Reset gobal val
 				g_t_val->standby=1;
 				break;
-			case i_ethaud_cfg[uint8_t a].set_audio_desip_infolist(audio_txlist_t *t_audio_txlist,uint8_t ch):
+			case i_ethaud_cfg[uint8_t a].set_audio_desip_infolist(audio_txlist_t *t_audio_txlist,uint8_t ch,uint8_t priority):
 #if NEW_SEND_LIST_MODE_ENABLE
                 timer tmr;
                 uint32_t t1, t2;
-                uint8_t priority = 0;
+                //uint8_t priority = 0;
                 media_info_t info;
                 int audio_devlist_free_index = -1;
                 

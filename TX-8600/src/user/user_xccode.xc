@@ -122,9 +122,9 @@ void user_music_stop(uint8_t ch){
     }
 }
 
-void user_audio_desip_set(uint8_t ch){
+void user_audio_desip_set(uint8_t ch,uint8_t prio){
     unsafe{
-        i_ethaud_cfg->set_audio_desip_infolist(&t_audio_txlist,ch);
+        i_ethaud_cfg->set_audio_desip_infolist(&t_audio_txlist,ch,prio);
     }
 }
 
@@ -243,7 +243,7 @@ void user_xtcp_connect(uint8_t ipaddr[]){
 
 void user_xtcp_close(xtcp_connection_t conn){
 	unsafe{
-        debug_printf("close\n");
+        //debug_printf("close\n");
 		i_user_xtcp->close(conn);
 	}
 }
