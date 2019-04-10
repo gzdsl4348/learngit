@@ -354,7 +354,7 @@ void music_bat_contorl_recive(){
     uint16_t data_base = MUSIC_BAT_NAME_BASE;
     for(uint8_t i=0; i<xtcp_rx_buf[MUSIC_BAT_TOL_NUM] ;i++){
         user_file_bat_write(g_sys_val.file_bat_tolnum,&xtcp_rx_buf[data_base]);
-        #if 1
+        #if 0
         debug_printf("get file:");
         for(uint8_t j=0;j<(MUSIC_NAME_NUM);j++){
             debug_printf("%x ",xtcp_rx_buf[data_base+j]);
@@ -367,6 +367,7 @@ void music_bat_contorl_recive(){
     //----------------------------------------------------------------------------------------
     g_sys_val.file_batpack_inc++;
     g_sys_val.file_bat_overtime = 0;
+    debug_printf("pack tol %d cnt %d\n",xtcp_rx_buf[MUSIC_BAT_PACKTOL],xtcp_rx_buf[MUSIC_BAT_PACKINC]);
     //完成分包接收
     if(((xtcp_rx_buf[MUSIC_BAT_PACKINC]+1)==xtcp_rx_buf[MUSIC_BAT_PACKTOL])&&(g_sys_val.file_batpack_inc == xtcp_rx_buf[MUSIC_BAT_PACKTOL])){
         //======================================================================================================================    

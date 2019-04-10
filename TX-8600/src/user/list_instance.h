@@ -17,7 +17,7 @@ extern "C" {
 
 #define COULD_TCP_EN     1
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

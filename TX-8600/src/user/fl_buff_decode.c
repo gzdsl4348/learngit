@@ -67,12 +67,13 @@ void area_fl_write(){
 void area_fl_read(){
     user_fl_sector_read(AREA_INFOLIST_SECTOR);
     memcpy(&area_info,tmp_union.buff,sizeof(area_info_t)*MAX_AREA_NUM);    
-    
+    #if 0
     for(uint8_t i=0;i<MAX_AREA_NUM;i++){
         
         debug_printf("a sn:%x ",area_info[i].area_sn);
     }
     debug_printf("\n");
+    #endif
 }
 // Ð´flash ÊµÌå
 uint8_t timer_fl_arealist_decode(){

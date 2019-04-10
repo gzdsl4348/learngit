@@ -869,6 +869,14 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         // tcp 包处理
                         if(conn.protocol == XTCP_PROTOCOL_TCP){
                             debug_printf("rec tcp\n");
+                            //获取真实数据
+                            debug_printf("could rec len %d\n",data_len);
+                            for(uint16_t i=0;i<data_len;i++){
+                                debug_printf("%2x ",all_rx_buf[i]);
+                                if(i%30==0 && i!=0)
+                                    debug_printf("\n");
+                            }
+                            debug_printf("\nrecive end \n");
                             //-------------------------------------------------------------------------------------
                             //判断是否收到包头 及接收中处理
                             if((((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG)&&(g_sys_val.tcp_recing_f==0)){
@@ -877,6 +885,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 g_sys_val.tcp_tmp_len = data_len;
                                 memcpy(g_sys_val.tcp_buff_tmp,all_rx_buf,data_len);
                             }
+                            // tcp 数据接收中
                             else if((g_sys_val.tcp_recing_f)&&(g_sys_val.tcp_tmp_len+data_len<=RX_BUFFER_SIZE)){
                                 g_sys_val.tcp_timout = 0;
                                 memcpy(&g_sys_val.tcp_buff_tmp[g_sys_val.tcp_tmp_len],all_rx_buf,data_len);
@@ -1142,7 +1151,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             // wifi按键长按
             if(g_sys_val.key_wait_release==KEY_WIFI_RELEASE && g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE && g_sys_val.key_wait_inc>30){  //长按3秒
                 // DHCP使能
-                debug_printf("dhcp en\n");
+                //debug_printf("dhcp en\n");
                 g_sys_val.wifi_mode=WIFI_DHCPEN_MODE;
                 dhcp_disp_en();
             }
@@ -1154,7 +1163,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
         // KEY process
         //------------------------------------------------------------------------------
         case  p_wifi_chk when pinsneq(g_sys_val.key_state) :> g_sys_val.key_state:
-            debug_printf("key \n");
+            //debug_printf("key \n");
             //---------------------------------------------------------------------------------
             if(g_sys_val.sys_timinc<20){
                 break;
@@ -1172,7 +1181,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     wifi_ioset(0);
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,2);
                     dhcp_disp_none();
-                    debug_printf("key wifi off\n");
+                    //debug_printf("key wifi off\n");
                 }
                 else{
                     // 开启wifi模块
@@ -1184,7 +1193,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     g_sys_val.wifi_io_tmp = D_IO_WIFI_POWER|D_IO_WIFI_CONTORL;
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,1);
                     wifi_ioset(g_sys_val.wifi_io_tmp);
-                    debug_printf("key wifi on\n");
+                    //debug_printf("key wifi on\n");
                 }
             }
             //-----------------------------------------------------------------------------------
@@ -1198,7 +1207,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             }
             // key 松开 11 = 1011B 松开 
             if((g_sys_val.key_state==11)&&(g_sys_val.key_delay == 0)){
-                debug_printf("key rel\n");
+                //debug_printf("key rel\n");
                 g_sys_val.key_wait_release = 0;
                 g_sys_val.key_delay = 1;
                 //g_sys_val.key_delay = 0;

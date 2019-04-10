@@ -31,7 +31,7 @@ void task_music_send(uint8_t ch){
         }
         //if(div_tmp_p->div_info.div_state == 00)
         //    continue;
-        debug_printf("div ok\n");
+        //debug_printf("div ok\n");
         //
         //获得mac
         memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,6);
@@ -94,7 +94,7 @@ void task_music_stop(uint8_t ch){
     user_music_stop(ch);
     // 发送禁止
     user_audio_send_dis(ch);
-    debug_printf("music stop\n");
+    //debug_printf("music stop\n");
 }
 
 void task_music_play(uint8_t ch,uint8_t num){
@@ -134,7 +134,7 @@ void task_music_play(uint8_t ch,uint8_t num){
     #endif
     // 播放通道音乐
     user_music_play(ch);
-    debug_printf("music play out\n");
+    //debug_printf("music play out\n");
 }
 
 
