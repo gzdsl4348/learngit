@@ -266,6 +266,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_PHONENUM_B],account_info[user_id].phone_num,DIV_NAME_NUM);
     //
+    debug_printf("log state %d\n",log_state);
     xtcp_tx_buf[AC_LOGIN_STATE_B] = log_state;
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYSSN_B],host_info.sn,SYS_PASSWORD_NUM);

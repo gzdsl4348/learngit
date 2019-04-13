@@ -45,8 +45,16 @@ void account_login_recive(){
         //获得用户详细信息
         account_fl_read(&tmp_union.account_all_info,i);
         // 判断账户是否有效
+        debug_printf("ac %d\n",account_info[i].id);
         if(account_info[i].id==0xFF)
             continue;
+        for(uint8_t i=0;i<32;i++){
+            debug_printf("%2x",xtcp_rx_buf[A_LOGIN_NAME_B+i]);
+        }
+        for(uint8_t i=0;i<32;i++){
+            debug_printf("%2x",tmp_union.account_all_info.account_info.name[i]);
+        }
+        
         // 判断用户名
         if(!charncmp(&xtcp_rx_buf[A_LOGIN_NAME_B],tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
             continue;
@@ -85,7 +93,7 @@ void account_login_recive(){
         // 添加进消息队列
         mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
         //
-        //debug_printf("login\n");
+        debug_printf("login ok\n");
         return; //success
     }
     user_sending_len = account_login_ack_build(1,0,null,ACCOUNT_LOGIN_CMD);   //账户不存在
@@ -196,6 +204,7 @@ void account_config_recive(){
             if((account_info[i].id!=0xFF)&&((account_info[i].id!=id)||(xtcp_rx_buf[A_CONFIG_CONTORL_B]==0))){
                 if(charncmp(account_info[i].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM))
                     goto fail_account_config;
+                #if 0
                 for(uint8_t c=0;c<DIV_NAME_NUM;c++){
                     debug_printf("%x ,",account_info[i].phone_num[c]);
                 }
@@ -204,7 +213,7 @@ void account_config_recive(){
                     debug_printf("%x ,",xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+c]);
                 }
                 debug_printf("\n");
-                
+                #endif
                 if((xtcp_rx_buf[A_CONFIG_PHONE_NUM_B]!=0 || xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+1]!=0)&&
                     charncmp(account_info[i].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM)
                   ){
@@ -234,11 +243,6 @@ void account_config_recive(){
         }
     } 
     debug_printf("config ac id %d\n",id);
-    if(id==0){
-        memcpy(account_info[id].sn,&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
-        state = 1;
-        goto  ac_config_succes;
-    }
     if(id!=0xFF){
         //--------------------------------------------------------------------------------------
         if(xtcp_rx_buf[A_CONFIG_CONTORL_B]==2){
@@ -248,9 +252,13 @@ void account_config_recive(){
             goto  ac_config_succes;
         }    
         // 配设备信息
-        memcpy(account_info[id].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM);
+        if(id!=0){   // 管理员账号不能修改名称 类型 手机号
+            memcpy(account_info[id].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM);
+            account_info[id].type = xtcp_rx_buf[A_CONFIG_ACTYPE_B];
+            memcpy(account_info[id].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM);
+        }
+        //
         memcpy(account_info[id].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM);
-        account_info[id].type = xtcp_rx_buf[A_CONFIG_ACTYPE_B];
         memcpy(account_info[id].sn,&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
         account_info[id].div_tol = xtcp_rx_buf[A_CONFIG_AC_DIVTOL_B];
         tmp_union.account_all_info.account_info = account_info[id];
