@@ -411,10 +411,16 @@ void div_heart_recive(){
         mes_send_listinfo(state,!xtcp_rx_buf[HEART_NEEDACK_B]);
     }
     // 应答回复
-    if((xtcp_rx_buf[HEART_NEEDACK_B])&&(div_info_p->div_info.div_state)){
-        //debug_printf("stamp %d\n",g_sys_val.sys_timinc);
-        user_sending_len = heart_ack_build(host_info.hostmode);
-        user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    if((xtcp_rx_buf[HEART_NEEDACK_B])){
+        if(div_info_p->div_info.div_state){
+            //debug_printf("stamp %d\n",g_sys_val.sys_timinc);
+            user_sending_len = heart_ack_build(host_info.hostmode);
+            user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        }
+        else{// 设备离线，需要重新上线
+            user_sending_len = heart_ack_build(2);
+            user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        }
     }    
 }
 //---------------------------------------------------------------------------

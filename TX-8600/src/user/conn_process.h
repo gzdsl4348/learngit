@@ -7,6 +7,11 @@
 //--------------------------------------
 // 指令接收处理
 void conn_decoder();
+
+void udp_xtcp_recive_decode(uint16_t data_len);
+
+void tcp_xtcp_recive_decode(uint16_t data_len);
+
 //--------------------------------------
 // 发送完成及数据连发处理
 void xtcp_sending_decoder();

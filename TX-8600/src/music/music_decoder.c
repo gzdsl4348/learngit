@@ -241,7 +241,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     res = f_read(&p_dev->file, tag, 10, &br);
 	f_offset += get_mp3_datastart(tag, 10);
 
-    res = f_lseek(&p_dev->file, f_offset);
+    res = f_lseek(&p_dev->file, f_offset+10);
     if(res != FR_OK)
     {
         return res;
@@ -570,7 +570,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                 else
                 {
                     // 处理file_buff_offset数据
-                    set_file_buff_offset(p_dev, offset);
+                    set_file_buff_offset(p_dev, file_buff_left/2);
                 }
                 
 			}
@@ -595,7 +595,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                     else
                     {
                         // 处理file_buff_offset数据
-                        set_file_buff_offset(p_dev, offset);
+                        set_file_buff_offset(p_dev, offset+2);
                     }
                 }
                 else

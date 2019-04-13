@@ -868,136 +868,14 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         //==================================================================================
                         // tcp 包处理
                         if(conn.protocol == XTCP_PROTOCOL_TCP){
-                            debug_printf("rec tcp\n");
-                            //获取真实数据
-                            debug_printf("could rec len %d\n",data_len);
-                            for(uint16_t i=0;i<data_len;i++){
-                                debug_printf("%2x ",all_rx_buf[i]);
-                                if(i%30==0 && i!=0)
-                                    debug_printf("\n");
-                            }
-                            debug_printf("\nrecive end \n");
-                            //-------------------------------------------------------------------------------------
-                            //判断是否收到包头 及接收中处理
-                            if((((uint32_t *)all_rx_buf)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG)&&(g_sys_val.tcp_recing_f==0)){
-                                g_sys_val.tcp_recing_f=1;
-                                g_sys_val.tcp_timout = 0;
-                                g_sys_val.tcp_tmp_len = data_len;
-                                memcpy(g_sys_val.tcp_buff_tmp,all_rx_buf,data_len);
-                            }
-                            // tcp 数据接收中
-                            else if((g_sys_val.tcp_recing_f)&&(g_sys_val.tcp_tmp_len+data_len<=RX_BUFFER_SIZE)){
-                                g_sys_val.tcp_timout = 0;
-                                memcpy(&g_sys_val.tcp_buff_tmp[g_sys_val.tcp_tmp_len],all_rx_buf,data_len);
-                                g_sys_val.tcp_tmp_len += data_len;
-                                #if 0
-                                for(uint16_t i=0;i<g_sys_val.tcp_tmp_len;i++){
-                                    debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
-                                    if(i%30==0 && i!=0)
-                                        debug_printf("\n");
-                                }
-                                debug_printf("\nrecive end \n");
-                                #endif
-                                
-                            }
-                            else{
-                                g_sys_val.tcp_recing_f=0;
-                                break;
-                            }
-                            //-------------------------------------------------------------------------------------
-                            //判断数据长度与包尾
-                            uint16_t rec_len = g_sys_val.tcp_buff_tmp[CLH_LEN_BASE]+(g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+1]<<8);
-                            if(rec_len >= RX_BUFFER_SIZE)
-                                break;
-                            debug_printf("tcp len %d,dat len %d\n",g_sys_val.tcp_tmp_len,rec_len);
-                            if((g_sys_val.tcp_tmp_len == rec_len+6)&&
-                               (g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+rec_len]==0x55)&&(g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+1+rec_len]==0xAA)&&g_sys_val.tcp_recing_f){
-                                
-                                g_sys_val.tcp_decode_f = 1;
-                            }
-                            else{
-                                break;
-                            }
-                        }
-                        //==================================================================================
-                        // 从服务器收到云命令处理
-                        if((((uint32_t *)g_sys_val.tcp_buff_tmp)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG) && g_sys_val.tcp_decode_f){
-                            g_sys_val.tcp_decode_f = 0;
-                            g_sys_val.tcp_recing_f = 0;
-                            //获取真实数据
-                            #if 0
-                            debug_printf("could rec\n");
-                            for(uint16_t i=0;i<(all_rx_buf[CLH_LEN_BASE]+(all_rx_buf[CLH_LEN_BASE+1]<<8))+6;i++){
-                                debug_printf("%2x ",all_rx_buf[i]);
-                                if(i%30==0 && i!=0)
-                                    debug_printf("\n");
-                            }
-                            debug_printf("\nrecive end \n");
-                            
-                            #endif
-                            xtcp_rx_buf = g_sys_val.tcp_buff_tmp+CLH_HEADEND_BASE;
-                            // 云包头强制置云标志
-                            xtcp_rx_buf[POL_COULD_S_BASE] = 1;
-                            // 云ID转移
-                            memcpy(&xtcp_rx_buf[POL_ID_BASE],&g_sys_val.tcp_buff_tmp[CLH_CONTORL_ID_BASE],6);
-                            //判断是否透传
-                            if(!ip_cmp(&g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE],host_info.ipconfig.ipaddr)){
-                                //透传数据
-                                conn_list_t *unsafe conn_list_tmp;
-                                xtcp_ipaddr_t ip_tmp;
-                                ip_tmp[0] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE];
-                                ip_tmp[1] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+1];
-                                ip_tmp[2] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+2];
-                                ip_tmp[3] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+3];
-                                conn_list_tmp = get_conn_for_ip(ip_tmp);
-                                //
-                                if(conn_list_tmp!=null){
-                                    debug_printf("forward: %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
-                                    user_sending_len = data_len - CLH_HEADEND_BASE;
-                                    memcpy(xtcp_tx_buf,&g_sys_val.tcp_buff_tmp[CLH_HEADEND_BASE],user_sending_len);
-                                    //重校验
-                                    uint16_t sum;
-                                    sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(user_sending_len-6));
-                                    xtcp_tx_buf[user_sending_len-4] = sum;
-                                    xtcp_tx_buf[user_sending_len-3] = sum>>8;
-                                    //
-                                    #if 0
-                                    for(uint8_t i=0;i<user_sending_len;i++){
-                                        debug_printf("%x ",xtcp_tx_buf[i]);
-                                        if(i%20==0&&i!=0){
-                                            debug_printf("\n");
-                                        }
-                                    }
-                                    debug_printf("\n");
-                                    #endif
-                                    user_xtcp_send(conn_list_tmp->conn,0);
-                                }
-                                break;
-                            }
-                            debug_printf("is could dat\n");
+                            tcp_xtcp_recive_decode(data_len);
                         }
                         //===================================================================================
                         // 局域网命令处理
                         else{
-                            xtcp_rx_buf = all_rx_buf;
-                            //是否透传云命令
-                            #if COULD_TCP_EN
-                            if(xtcp_rx_buf[POL_COULD_S_BASE]){
-                                user_sending_len = data_len;
-                                memcpy(xtcp_tx_buf,xtcp_rx_buf,user_sending_len);
-                                user_xtcp_send(g_sys_val.could_conn,1);
-                                break;
-                            }
-                            #endif
+                            udp_xtcp_recive_decode(data_len);
                         }
                         //===================================================================================
-                        if(((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xD000&&
-                            ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB905&&
-                            ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB90C&&
-                            (conn.remote_addr[3]!=214)){                        
-                            debug_printf("rec ip %d,%d,%d,%d %x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]);
-                        }
-                        conn_decoder();
 						break;
 					case XTCP_RESEND_DATA:	
                         //user_xtcp_send(conn);
