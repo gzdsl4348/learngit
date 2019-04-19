@@ -823,6 +823,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             if(g_sys_val.could_conn.id==0){
                                 debug_printf("could id%d\n\n",g_sys_val.could_conn.id);
                                 g_sys_val.could_conn = conn;
+                                disp_couldstate(1);
                                 register_could_chk();
                             }
                             else{

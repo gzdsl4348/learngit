@@ -53,7 +53,7 @@
 #define DISP_TASKNAME_ID 11
 #define DISP_TASKTIME_ID 13
 #define DISP_TASKDURA_ID 14
-#define DISP_TASKPLAY_ID 15
+#define DISP_TASKPLAY_ID 16
 
 #define DISP_IP_ID 7
 #define DISP_GATE_ID 8
@@ -63,7 +63,8 @@
 #define DISP_A_ID  4
 #define DISP_B_ID  3
 #define DISP_C_ID  5
-//#define DISP_D_ID  12
+
+#define DISP_COULDSTATE_ID  15
 
 #define DISP_VER_ID 9
 
@@ -618,4 +619,25 @@ void dhcp_disp_none(){
     
 }
 
+void disp_couldstate(uint8_t state){
+    uint8_t could_dispchar[8]={0x4E,0x91,0x94,0xFE,0x63,0xA5,0x00,0x3A};
+    memcpy(&disp_buff[DAT_DISP_BASE],could_dispchar,8);
+    // 云链接打开
+    if(state){
+        disp_buff[DAT_DISP_BASE+8]=0x62; 
+        disp_buff[DAT_DISP_BASE+9]=0x53;
+
+    }
+    // 云链接断开
+    else{
+        disp_buff[DAT_DISP_BASE+8]=0x65;
+        disp_buff[DAT_DISP_BASE+9]=0xAD;
+    }
+    disp_buff[DAT_DISP_BASE+10]=0x5F;
+    disp_buff[DAT_DISP_BASE+11]=0x00;
+    
+    disp_len = DAT_DISP_BASE+12;
+    send_buff(DISP_COULDSTATE_ID);
+    
+}
 

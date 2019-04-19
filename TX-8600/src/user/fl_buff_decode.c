@@ -112,6 +112,11 @@ void divlist_fl_read(){
         sector_num++;
     }//while    
     for(uint8_t i=0;i<MAX_DIV_LIST;i++){
+
+        // 复位设备离线标志
+        div_list.div_node[i].div_info.div_state = 0;
+        div_list.div_node[i].div_info.div_onlineok = 0;
+
         div_list.div_node[i].next_p = null;
         if(div_list.div_node[i].div_info.id!=0xFF){
             // 防止FLASH 错乱

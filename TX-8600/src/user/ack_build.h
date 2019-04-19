@@ -52,7 +52,7 @@ uint16_t account_maclist_ack_build(account_all_info_t *account_all_info);
 uint16_t account_control_ack_build(uint8_t contorl,uint8_t id,uint8_t state);
 
 // 方案列表查看
-uint16_t solution_list_ack_build(uint16_t cmd);
+uint16_t solution_list_ack_build(uint16_t cmd,uint8_t task_num_en);
 // 方案列表配置回复
 uint16_t solution_config_build(uint16_t id,uint8_t state,uint8_t config);
 
@@ -60,7 +60,7 @@ uint16_t solution_config_build(uint16_t id,uint8_t state,uint8_t config);
 uint16_t task_config_ack_build(uint16_t id,uint8_t state);
 
 // 任务列表发送
-uint16_t task_list_ack_build();
+uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num);
 
 // 任务详细信息发送
 uint16_t task_dtinfo_chk_build();
@@ -139,6 +139,10 @@ uint16_t cld_resiger_request_build();
 uint16_t cld_timesysnc_request_build();
 
 uint16_t cld_appregsied_request_build();
+
+// B312
+uint16_t taskview_page_build();
+
 
 #if defined(__cplusplus) || defined(__XC__)
 }

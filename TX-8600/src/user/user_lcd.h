@@ -24,6 +24,9 @@ void user_dispunti_init();
 // 延时显示
 void disp_task_delay();
 
+// 显示云链接状态
+void disp_couldstate(uint8_t state);
+
 void dhcp_disp_en();
 void dhcp_disp_dis();
 void dhcp_disp_none();

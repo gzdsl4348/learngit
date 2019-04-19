@@ -6,6 +6,7 @@
 #include "account.h"
 #include "debug_print.h"
 #include "conn_process.h"
+#include "user_lcd.h"
 
 #define CLD_HEART_TIME_CNT  10 //10ÃëÐÄÌø
 
@@ -50,6 +51,7 @@ void could_heart_send_timer(){
             user_xtcp_sendfifo_init();
             debug_printf("colud connect\n");
             //user_xtcp_unlisten(g_sys_val.colud_port);
+            disp_couldstate(0);
             user_xtcp_connect_tcp(g_sys_val.could_ip);
         }
     }

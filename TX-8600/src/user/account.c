@@ -48,18 +48,20 @@ void account_login_recive(){
         debug_printf("ac %d\n",account_info[i].id);
         if(account_info[i].id==0xFF)
             continue;
+        #if 0
         for(uint8_t i=0;i<32;i++){
             debug_printf("%2x",xtcp_rx_buf[A_LOGIN_NAME_B+i]);
         }
         for(uint8_t i=0;i<32;i++){
             debug_printf("%2x",tmp_union.account_all_info.account_info.name[i]);
         }
-        
+        #endif
         // 判断用户名
         if(!charncmp(&xtcp_rx_buf[A_LOGIN_NAME_B],tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
             continue;
         }
         // 判断密码
+        #if 0
         debug_printf("sn:");
         for(uint8_t i=0;i<SYS_PASSWORD_NUM;i++){
             debug_printf("%x,",tmp_union.account_all_info.account_info.sn[i]);
@@ -69,6 +71,7 @@ void account_login_recive(){
             debug_printf("%x,",xtcp_rx_buf[A_LOGIN_SN_B+i]);
         }
         debug_printf("\n");
+        #endif
         if(!sn_cmp(&xtcp_rx_buf[A_LOGIN_SN_B],tmp_union.account_all_info.account_info.sn)){
             filename_decoder(&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
             user_sending_len = account_login_ack_build(02,0,null,ACCOUNT_LOGIN_CMD);
@@ -487,6 +490,7 @@ void account_sysonline_recive(){
 
 // 手机在线保持
 void app_sysonline_recive(){
+    //debug_printf("rec app online\n");
     sysonline_recive();
 }
 

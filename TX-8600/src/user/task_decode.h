@@ -125,5 +125,11 @@ void rttask_build_overtime10hz();
 // 关闭运行中即时任务
 void close_running_rttask(uint8_t *mac);
 
+void task_pageshow_recive();
+
+void solulist_chk_forapp_recive();
+
+void tasklist_forsolu_chk_recive();
+
 #endif  //__TASK_DECODE_H_
 

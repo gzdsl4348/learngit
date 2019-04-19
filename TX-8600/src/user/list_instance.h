@@ -17,7 +17,7 @@ extern "C" {
 
 #define COULD_TCP_EN     1
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -486,6 +486,9 @@ typedef struct tasklist_sending_t{
     timetask_t *task_p;
     uint8_t  pack_inc;
     uint8_t  id[6];
+    uint8_t  solu_id;
+    uint8_t  solu_en;
+    uint16_t cmd;
 }tasklist_sending_t;
 // 任务详细信息
 typedef struct task_dtinfo_sending_t{
