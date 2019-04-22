@@ -536,6 +536,20 @@ typedef struct divsrc_sending_t{
 
 //---------------------------------------------------------------------
 // senging 事件状态位 列表发送标记 同一时间只能往一个设备列表
+
+typedef union{
+    divlist_sending_t divlist;
+    arealist_sending_t arealist;
+    tasklist_sending_t tasklist;
+    task_dtinfo_sending_t task_dtinfo;
+    rttasklist_sending_t rttasklist;
+    patchlist_sending_t patchlist;
+    musiclist_sending_t musiclist;
+    account_sending_t ac_list;
+    divsrc_sending_t divsrc_list;
+}conn_list_s;
+
+
 typedef struct conn_sending_s_t{    
     int id;
     uint16_t conn_state; 
