@@ -1395,7 +1395,12 @@ void rttask_config_recive(){
     // 配置音量
     tmp_union.rttask_dtinfo.task_vol = xtcp_rx_buf[RTTASK_CFG_TASKVOL];
     // 任务持续时间
-    tmp_union.rttask_dtinfo.dura_time = xtcp_rx_buf[RTTASK_CFG_DURATIME]*3600+xtcp_rx_buf[RTTASK_CFG_DURATIME+1]*60+xtcp_rx_buf[RTTASK_CFG_DURATIME+2];
+    if(xtcp_rx_buf[RTTASK_CFG_DURATIME]==0xFF && xtcp_rx_buf[RTTASK_CFG_DURATIME+1]==0xFF && xtcp_rx_buf[RTTASK_CFG_DURATIME+2]==0xFF){
+        tmp_union.rttask_dtinfo.dura_time=0xFFFFFFFF;
+    }
+    else{
+        tmp_union.rttask_dtinfo.dura_time = xtcp_rx_buf[RTTASK_CFG_DURATIME]*3600+xtcp_rx_buf[RTTASK_CFG_DURATIME+1]*60+xtcp_rx_buf[RTTASK_CFG_DURATIME+2];
+    }
     // 遥控按键配置
     tmp_union.rttask_dtinfo.task_key = xtcp_rx_buf[RTTASK_CFG_KETINFO];
     // 设置优先级

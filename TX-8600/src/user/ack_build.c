@@ -672,9 +672,16 @@ uint16_t rttask_list_chk_build(){
         // 任务音量
         xtcp_tx_buf[data_base+RTTASK_CK_TASKVOL] = tmp_union.rttask_dtinfo.task_vol;
         // 持续时间
-        xtcp_tx_buf[data_base+RTTASK_CK_DURATIME] = tmp_union.rttask_dtinfo.dura_time/3600;
-        xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+1] = (tmp_union.rttask_dtinfo.dura_time%3600)/60;
-        xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+2] = (tmp_union.rttask_dtinfo.dura_time%3600)%60;
+        if(tmp_union.rttask_dtinfo.dura_time=0xFFFFFFFF){
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME] = 0xFF;
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+1] = 0xFF;
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+2] = 0xFF;
+        }
+        else{
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME] = tmp_union.rttask_dtinfo.dura_time/3600;
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+1] = (tmp_union.rttask_dtinfo.dura_time%3600)/60;
+            xtcp_tx_buf[data_base+RTTASK_CK_DURATIME+2] = (tmp_union.rttask_dtinfo.dura_time%3600)%60;
+        }
         // 遥控按键
         xtcp_tx_buf[data_base+RTTASK_CK_KEYINFO] = tmp_union.rttask_dtinfo.task_key;
         // 任务状态
@@ -1123,9 +1130,17 @@ uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
     xtcp_tx_buf[RTTASK_CFG_TASKPRIO] = tmp_union.rttask_dtinfo.prio;
     xtcp_tx_buf[RTTASK_CFG_TASKVOL] = tmp_union.rttask_dtinfo.task_vol;
     // 持续时间
-    xtcp_tx_buf[RTTASK_CFG_DURATIME] = tmp_union.rttask_dtinfo.dura_time/3600;
-    xtcp_tx_buf[RTTASK_CFG_DURATIME+1] = (tmp_union.rttask_dtinfo.dura_time%3600)/60;
-    xtcp_tx_buf[RTTASK_CFG_DURATIME+2] = (tmp_union.rttask_dtinfo.dura_time%3600)%60;
+        // 任务持续时间
+    if(tmp_union.rttask_dtinfo.dura_time==0xFFFFFFFF){
+        xtcp_tx_buf[RTTASK_CFG_DURATIME] = 0xFF;
+        xtcp_tx_buf[RTTASK_CFG_DURATIME+1] = 0xFF;
+        xtcp_tx_buf[RTTASK_CFG_DURATIME+2] = 0xFF;
+    }
+    else{
+        xtcp_tx_buf[RTTASK_CFG_DURATIME] = tmp_union.rttask_dtinfo.dura_time/3600;
+        xtcp_tx_buf[RTTASK_CFG_DURATIME+1] = (tmp_union.rttask_dtinfo.dura_time%3600)/60;
+        xtcp_tx_buf[RTTASK_CFG_DURATIME+2] = (tmp_union.rttask_dtinfo.dura_time%3600)%60;
+    }
     xtcp_tx_buf[RTTASK_CFG_KETINFO] = tmp_union.rttask_dtinfo.task_key;
     xtcp_tx_buf[RTTASK_CFG_DIVTOL] = tmp_union.rttask_dtinfo.div_tol;
     //
