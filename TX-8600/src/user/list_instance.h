@@ -90,6 +90,8 @@ extern "C" {
 #define MAX_SDCARD_MUSIC_NUM        100
 //
 #define MES_STACK_NUM       3   //消息更新 堆栈数
+
+#define MAX_SEND_ACCOUNT_NUM_FORPACK    10
 //
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
@@ -418,7 +420,7 @@ extern rec_fun_lis_t rec_fun_lis[]; //接收函数列表
 //---------------------------------------------
 
 typedef struct sending_fun_lis_t{
-    void (*sending_fun)(void); 
+    void (*sending_fun)(uint8_t list_num); 
 }sending_fun_lis_t; 
 
 extern sending_fun_lis_t sending_fun_lis[]; //列表发送函数表 xtcp sending 事件
@@ -451,41 +453,36 @@ extern rttask_build_state_t rttask_build_state[MAX_RTTASK_CONTORL_NUM];
 //xtcp conn list def 链接列表定义
 //===================================================
 //
+#define MAX_SEND_LIST_NUM   5
+
 enum CONN_STATE_E{
-    CONN_INIT=0,
-    DIV_LIST_SENDING=0x01,
-    AREA_LIST_SENDING=0x02,
-    TASK_LIST_SENDING=0x04,
-    TASK_DTINFO_SENDING=0X08,
-    RTTASK_LIST_SENDING=0x10,
-    PATCH_LIST_SENDING=0x20,
-    MUSICNAME_LIST_SENDING=0x40,
-    AC_LIST_SENDING=0x80,
-    DIVSRC_LIST_SENDING=0x100,
+    DIV_LIST_SENDING=0x00,
+    AREA_LIST_SENDING=0x01,
+    TASK_LIST_SENDING=0x02,
+    TASK_DTINFO_SENDING=0X03,
+    RTTASK_LIST_SENDING=0x04,
+    PATCH_LIST_SENDING=0x05,
+    MUSICNAME_LIST_SENDING=0x06,
+    AC_LIST_SENDING=0x07,
+    DIVSRC_LIST_SENDING=0x08,
+    
+    LIST_SEND_INIT=0xFF,
 };
 //-------------------------------------------
 // 设备列表发送状态
 // 设备列表
 typedef struct divlist_sending_t{
-    uint8_t pack_total;
-    uint8_t pack_inc;
     uint16_t cmd;
-    uint8_t  id[6];
     div_node_t *div_list_p;
 }divlist_sending_t;
 // 分区列表
 typedef struct arealist_sending_t{
-    uint8_t  pack_total;
-    uint8_t  pack_inc;
     uint16_t cmd;
     uint16_t area_inc;
-    uint8_t  id[6];
 }arealist_sending_t;
 // 任务列表
 typedef struct tasklist_sending_t{
     timetask_t *task_p;
-    uint8_t  pack_inc;
-    uint8_t  id[6];
     uint8_t  solu_id;
     uint8_t  solu_en;
     uint16_t cmd;
@@ -493,45 +490,30 @@ typedef struct tasklist_sending_t{
 // 任务详细信息
 typedef struct task_dtinfo_sending_t{
     uint8_t  music_inc;
-    uint8_t  pack_inc;
-    uint8_t  id[6];
+    uint16_t task_id;
 }task_dtinfo_sending_t;
 // 即时任务信息
 typedef struct rttasklist_sending_t{
     rttask_info_t *rttask_p;
-    uint8_t  pack_inc;
-    uint8_t  id[6];
 }rttasklist_sending_t;
 // 文件夹名称信息
 typedef struct patchlist_sending_t{
     uint8_t  patch_inc;
-    uint8_t  pack_inc;
-    uint8_t  pack_tol;
-    uint8_t  id[6];
 }patchlist_sending_t;
 
 // 音乐名称信息
 typedef struct musiclist_sending_t{
     uint8_t  music_inc;
     uint8_t  sector_index;
-    uint8_t  pack_inc;
-    uint8_t  pack_tol;
-    uint8_t  id[6];
 }musiclist_sending_t;
 
 typedef struct account_sending_t{
     uint8_t account_inc;
-    uint8_t  pack_inc;
-    uint8_t  pack_tol;
-    uint8_t  id[6];
-    uint8_t  could_cmd;
+    uint8_t could_send_en;
 }account_sending_t;
 
 typedef struct divsrc_sending_t{
     uint8_t div_inc;
-    uint8_t  pack_inc;
-    uint8_t  pack_tol;
-    uint8_t  id[6];
 }divsrc_sending_t;
 
 //---------------------------------------------------------------------
@@ -550,24 +532,18 @@ typedef union{
 }conn_list_s;
 
 
-typedef struct conn_sending_s_t{    
-    int id;
-    uint16_t conn_state; 
-    uint8_t conn_sending_tim;
-    uint8_t could_s;
-    xtcp_connection_t conn;
-    divlist_sending_t divlist;
-    arealist_sending_t arealist;
-    tasklist_sending_t tasklist;
-    task_dtinfo_sending_t task_dtinfo;
-    rttasklist_sending_t rttasklist;
-    patchlist_sending_t patchlist;
-    musiclist_sending_t musiclist;
-    account_sending_t ac_list;
-    divsrc_sending_t divsrc_list;
-}conn_sending_s_t;
+typedef struct list_connsend_t{    
+    uint16_t conn_state;  // 列表状态
+    uint8_t pack_inc;   // 包序号
+    uint8_t pack_tol;   // 包总数
+    uint8_t tim_cnt;    // 超时计时器
+    uint8_t could_s;    // 云标志
+    uint8_t could_id[6];    // 云id
+    xtcp_connection_t conn; // 连接信息
+    conn_list_s list_info;  // 列表信息
+}list_connsend_t;
 
-extern conn_sending_s_t conn_sending_s;
+extern list_connsend_t t_list_connsend[MAX_SEND_LIST_NUM];
 //---------------------------------------------------------------------
 typedef struct conn_list_t{
 	xtcp_connection_t conn;

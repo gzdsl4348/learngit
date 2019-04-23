@@ -68,8 +68,12 @@ void mes_send_decode(){
 
 // 信息列表更新通知
 void mes_send_listinfo(uint8_t type,uint8_t need_send){
-    if((mes_send_list.wrptr>=MES_STACK_NUM)&&(conn_sending_s.id!=null))
+    if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
+    for(uint8_t i=0;i<MAX_SEND_LIST_NUM;i++){
+        if(t_list_connsend[i].conn_state!=LIST_SEND_INIT)
+            return;
+    }
     //备份发送数据
     mes_send_list.len[mes_send_list.wrptr] = listinfo_upgrade_build(type);
     memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);

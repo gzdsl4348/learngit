@@ -22,7 +22,7 @@ void account_userlist_recive();
 // 手机在线保持
 void app_sysonline_recive();
 
-void ac_list_sending_decode();
+void ac_list_sending_decode(uint8_t list_num);
 //-----------------------------------------
 // 权限列表处理
 void account_div_list_recive();
@@ -53,8 +53,6 @@ void mic_aux_request_recive();
 // 话筒通道存活包
 void mic_aux_heart_recive();
 
-// 超时关闭话筒通道
-void mic_time1hz_close();
 
 //恢复操作繁忙查询
 void backup_busy_chk();

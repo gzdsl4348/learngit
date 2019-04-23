@@ -505,8 +505,9 @@ void sys_gobalval_init(){
     //
     memcpy(g_sys_val.sn_key,sn_key,DIV_NAME_NUM);
     //
-	conn_sending_s.id =null;
-	conn_sending_s.conn_state = CONN_INIT;
+    for(uint8_t i=0;i<MAX_SEND_LIST_NUM;i++){
+	    t_list_connsend[i].conn_state = LIST_SEND_INIT;
+    }
 }
 
 //--------------------------------------------------------------------------------------

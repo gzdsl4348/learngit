@@ -85,7 +85,7 @@ sending_fun_lis_t sending_fun_lis[]={div_sending_decode,         //设备列表
                                      divsrc_sending_decode,         //
                                     };
 // 多包发送状态
-conn_sending_s_t conn_sending_s;
+list_connsend_t t_list_connsend[MAX_SEND_LIST_NUM];
     
 //---------------------------------------------------------------------------
 uint16_t fun_list_len;

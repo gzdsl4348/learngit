@@ -5,11 +5,11 @@
 
 void music_patch_list_chk_recive();
 
-void music_patch_list_send_decode();
+void music_patch_list_send_decode(uint8_t list_num);
 
 void music_music_list_chk_recive();
 
-void music_music_list_send_decode();
+void music_music_list_send_decode(uint8_t list_num);
 
 void music_patchname_config_recive();
 

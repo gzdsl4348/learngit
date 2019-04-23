@@ -22,7 +22,7 @@ void solution_data_chk(uint8_t id);
 // 任务列表查询
 void task_check_recive();
 // 任务列表连发
-void tasklist_sending_decode();
+void tasklist_sending_decode(uint8_t list_num);
 
 // 任务详细信息查询
 void task_dtinfo_check_recive();
@@ -49,7 +49,7 @@ void bat_task_divset_recive();
 void task_en_recive();
 
 // 任务信息连发
-void task_dtinfo_decode();
+void task_dtinfo_decode(uint8_t list_num);
 // 超时接收失败
 void task_dtinfo_overtime_recive_close();
 
@@ -89,7 +89,7 @@ void fl_rttask_dat_init();
 void rt_task_list_read();
 
 // 即时任务列表连续传送
-void rttask_list_sending_decode();
+void rttask_list_sending_decode(uint8_t list_num);
 
 // 即时任务  ip列表更新            BF0C
 void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p);

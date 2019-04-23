@@ -10,6 +10,7 @@
 #include "debug_print.h"
 #include "user_messend.h"
 #include "user_lcd.h"
+#include "conn_process.h"
 
 extern uint8_t f_name[];
 
@@ -379,31 +380,25 @@ void solution_check_recive(){
 // 任务列表查询
 //====================================================================================================
 void task_check_recive(){
-    //同一时间只能发送一种列表
-    if((conn_sending_s.id!=null)||(g_sys_val.task_recid!=0xFFFF))
+    uint8_t list_num = list_sending_init(TASK_CHECK_CMD,TASK_LIST_SENDING);
+    if(list_num == LIST_SEND_INIT)
         return;
-    conn_sending_s.conn_sending_tim = 0;
+    // 特殊处理
+    t_list_connsend[list_num].list_info.tasklist.solu_en=0; //查找所有任务
+    t_list_connsend[list_num].list_info.tasklist.solu_id=0;
     //
-    conn_sending_s.tasklist.pack_inc=0;
-    conn_sending_s.tasklist.task_p = timetask_list.all_timetask_head;
-    memcpy(conn_sending_s.tasklist.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.conn_state |= TASK_LIST_SENDING;
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    conn_sending_s.tasklist.solu_en=0;
-    conn_sending_s.tasklist.solu_id=0;
-    conn_sending_s.tasklist.cmd = TASK_CHECK_CMD;
-    user_sending_len = task_list_ack_build(conn_sending_s.tasklist.cmd,conn_sending_s.tasklist.solu_en,0);
-    user_xtcp_send(conn,conn_sending_s.could_s );
-    //debug_printf("timetask list check\n");
+    user_sending_len = task_list_ack_build(TASK_CHECK_CMD,0,0,list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 //
 //--------------------------------------------
 // 任务列表连发处理
-void tasklist_sending_decode(){
-    user_sending_len = task_list_ack_build(conn_sending_s.tasklist.cmd,conn_sending_s.tasklist.solu_en,conn_sending_s.tasklist.solu_id);
-    user_xtcp_send(conn,conn_sending_s.could_s );
+void tasklist_sending_decode(uint8_t list_num){
+    user_sending_len = task_list_ack_build(t_list_connsend[list_num].list_info.tasklist.cmd,
+                                           t_list_connsend[list_num].list_info.tasklist.solu_en,
+                                           t_list_connsend[list_num].list_info.tasklist.solu_id,
+                                           list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
     //debug_printf("tasklist_sending\n");
 }
 
@@ -411,40 +406,27 @@ void tasklist_sending_decode(){
 // 获取定时任务详细信息协议 B304
 //====================================================================================================
 void task_dtinfo_check_recive(){
-    uint16_t id;
-    //同一时间只能发送一种列表
-    if(conn_sending_s.id!=null)
+    uint8_t list_num = list_sending_init(TASK_DTINFO_CK_CMD,TASK_DTINFO_SENDING);
+    if(list_num == LIST_SEND_INIT)
         return;
-    conn_sending_s.conn_sending_tim = 0;
     //
-    id = (xtcp_rx_buf[TASK_DTG_TASK_ID+1]<<8)|xtcp_rx_buf[TASK_DTG_TASK_ID];
-
-    //debug_printf("rttask id %d\n",id);
-    
-    g_sys_val.dtinfo_chk_task_id = id;
+    uint16_t id = xtcp_rx_buf[TASK_DTG_TASK_ID+1]<<8 |xtcp_rx_buf[TASK_DTG_TASK_ID];
     if(id>MAX_HOST_TASK)
         return;
-    
-    timer_task_read(&tmp_union.task_allinfo_tmp,id);
-    //初始化发送状态
-    conn_sending_s.task_dtinfo.pack_inc=0;
-    conn_sending_s.task_dtinfo.music_inc=0;
-    memcpy(conn_sending_s.task_dtinfo.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.conn_state |= TASK_DTINFO_SENDING;
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
     //
-    user_sending_len = task_dtinfo_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s );
+    timer_task_read(&tmp_union.task_allinfo_tmp,id);
+    //
+    user_sending_len = task_dtinfo_chk_build(list_num);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     debug_printf("dtchk task %d\n",id);
 }
 
 //----------------------------------------------
 // 详细信息连发处理
-void task_dtinfo_decode(){
-    timer_task_read(&tmp_union.task_allinfo_tmp,g_sys_val.dtinfo_chk_task_id);
-    user_sending_len = task_dtinfo_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s );
+void task_dtinfo_decode(uint8_t list_num){
+    timer_task_read(&tmp_union.task_allinfo_tmp,t_list_connsend[list_num].list_info.task_dtinfo.task_id);
+    user_sending_len = task_dtinfo_chk_build(list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
     //debug_printf("task dtinfo send\n");
 }
 
@@ -1259,26 +1241,18 @@ void rt_task_list_read(){
 // 即时任务列表查询                     B400
 //====================================================================================================
 void rttask_list_check_recive(){
-    if((conn_sending_s.id!=null))
+    uint8_t list_num = list_sending_init(RTTASK_CHECK_CMD,RTTASK_LIST_SENDING);
+    if(list_num==LIST_SEND_INIT)
         return;
-    //-----------------------------------------
-    conn_sending_s.conn_sending_tim = 0;
     //
-    conn_sending_s.rttasklist.pack_inc=0;
-    conn_sending_s.rttasklist.rttask_p = rttask_lsit.all_head_p;
-    memcpy(conn_sending_s.rttasklist.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.conn_state |= RTTASK_LIST_SENDING;
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    user_sending_len = rttask_list_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s);
+    user_sending_len = rttask_list_chk_build(list_num);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     //debug_printf("rttask list check\n");
 }
 
-void rttask_list_sending_decode(){
-    user_sending_len = rttask_list_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s);
+void rttask_list_sending_decode(uint8_t list_num){
+    user_sending_len = rttask_list_chk_build(list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
     //debug_printf("rttask list sending\n");
 }
 
@@ -1732,22 +1706,13 @@ void solulist_chk_forapp_recive(){
 // B311 查看指定数量 B311
 //====================================================================================================
 void tasklist_forsolu_chk_recive(){
-        //同一时间只能发送一种列表
-    if((conn_sending_s.id!=null)||(g_sys_val.task_recid!=0xFFFF))
+    uint8_t list_num = list_sending_init(TASK_TASK_FORSOLU_B311_CMD,TASK_LIST_SENDING);
+    if(list_num==LIST_SEND_INIT)
         return;
-    conn_sending_s.conn_sending_tim = 0;
     //
-    conn_sending_s.tasklist.pack_inc=0;
-    conn_sending_s.tasklist.task_p = timetask_list.all_timetask_head;
-    memcpy(conn_sending_s.tasklist.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.conn_state |= TASK_LIST_SENDING;
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    conn_sending_s.tasklist.solu_en=1;
-    conn_sending_s.tasklist.solu_id=xtcp_rx_buf[POL_DAT_BASE];
-    conn_sending_s.tasklist.cmd = TASK_TASK_FORSOLU_B311_CMD;
-    user_sending_len = task_list_ack_build(conn_sending_s.tasklist.cmd,conn_sending_s.tasklist.solu_en,0);
-    user_xtcp_send(conn,conn_sending_s.could_s );
+    t_list_connsend[list_num].list_info.tasklist.solu_en=1;
+    t_list_connsend[list_num].list_info.tasklist.solu_id=xtcp_rx_buf[POL_DAT_BASE];
+    user_sending_len = task_list_ack_build(t_list_connsend[list_num].list_info.tasklist.cmd,1,t_list_connsend[list_num].list_info.tasklist.solu_id,list_num);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 

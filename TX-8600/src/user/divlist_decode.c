@@ -9,55 +9,27 @@
 #include "fl_buff_decode.h"
 #include "user_messend.h"
 #include "task_decode.h"
+#include "conn_process.h"
 
 uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 
 //---------------------------------------------------------------------------
 // 分区列表发送
 //--------------------------------------------------------------------------
-void arealist_send(uint16_t cmd){
-    //是否有列表正在发送
-    if(conn_sending_s.id!=null)
-        return;
-    //-----------------------------------
-    conn_sending_s.conn_sending_tim = 0;
-    //-------------------------------------------------------------------------------------
-    // get area total num
-    conn_sending_s.arealist.pack_total=0;
-    for(uint8_t i=0;i<MAX_AREA_NUM;i++){
-        if(area_info[i].area_sn!=0xFFFF)
-            conn_sending_s.arealist.pack_total++;
-    }
-    conn_sending_s.arealist.pack_total = conn_sending_s.arealist.pack_total/AREA_SEND_NUM;
-    if(((conn_sending_s.arealist.pack_total%AREA_SEND_NUM)!=0)||conn_sending_s.arealist.pack_total==0)
-        conn_sending_s.arealist.pack_total++;
-    //-------------------------------------------------------------------------------------
-    // Send area list contorl
-    conn_sending_s.arealist.pack_inc=0;
-    conn_sending_s.arealist.area_inc=0;
-    memcpy(conn_sending_s.arealist.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.arealist.cmd = cmd;
-    //
-    conn_sending_s.conn_state |= AREA_LIST_SENDING;
-    //
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    user_sending_len = area_list_send_build(cmd);
-    user_xtcp_send(conn,conn_sending_s.could_s);
-}
-//---------------------------------------------
-// APP 请求获取分区列表
-//---------------------------------------------
 void arealist_request_rec(){
-    arealist_send(AREA_GETREQUEST_CMD);
+    uint8_t list_num = list_sending_init(AREA_GETREQUEST_CMD,AREA_LIST_SENDING);
+    if(list_num == LIST_SEND_INIT)
+        return;
+    //
+    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD,list_num);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 //---------------------------------------------
-// 列表连发处理
+// 分区列表连发处理
 //---------------------------------------------
-void arealist_sending_decode(){
-    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD);
-    user_xtcp_send(conn,conn_sending_s.could_s);
+void arealist_sending_decode(uint8_t list_num){
+    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD,list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 
 //========================================================================================
@@ -197,40 +169,19 @@ void div_extra_info_recive(){
 //---------------------------------------------------------------------------
 // 设备列表发送列表管理
 //---------------------------------------------------------------------------
-void divlist_list_send(uint16_t cmd){
-    //是否有列表正在发送
-    if(conn_sending_s.id!=null)
+void divlist_request_recive(){
+    uint8_t list_num = list_sending_init(DIVLIST_REQUEST_CMD,DIV_LIST_SENDING);
+    if(list_num==LIST_SEND_INIT)
         return;
-    //-----------------------------------------------------------------
-    conn_sending_s.conn_sending_tim = 0;
-    conn_sending_s.divlist.pack_total = div_list.div_tol/DIV_SEND_NUM;
-    if(((div_list.div_tol%DIV_SEND_NUM)!=0)||(div_list.div_tol==0)){
-        conn_sending_s.divlist.pack_total++;
-    }
-    conn_sending_s.divlist.pack_inc=0;
-    memcpy(conn_sending_s.divlist.id,&xtcp_rx_buf[POL_ID_BASE],6);
-    conn_sending_s.conn_state |= DIV_LIST_SENDING;
     //
-    conn_sending_s.divlist.div_list_p=div_list.div_head_p;
-    //
-    conn_sending_s.divlist.cmd = cmd;
-
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    user_sending_len = div_list_resend_build(conn_sending_s.divlist.cmd,&conn_sending_s.divlist.div_list_p,DIV_SEND_NUM);
+    user_sending_len = div_list_resend_build(DIVLIST_REQUEST_CMD,&t_list_connsend[list_num].list_info.divlist.div_list_p,DIV_SEND_NUM,list_num);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
-
-// 终端请求列表管理
-void divlist_request_recive(){
-    divlist_list_send(DIVLIST_REQUEST_CMD);
-}
-
-void div_sending_decode(){
-    user_sending_len = div_list_resend_build(conn_sending_s.divlist.cmd,&conn_sending_s.divlist.div_list_p,DIV_SEND_NUM);
-    user_xtcp_send(conn,conn_sending_s.could_s);
+void div_sending_decode(uint8_t list_num){
+    user_sending_len = div_list_resend_build(t_list_connsend[list_num].list_info.divlist.cmd,
+                                             &t_list_connsend[list_num].list_info.divlist.div_list_p,DIV_SEND_NUM,list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 
 
@@ -617,35 +568,37 @@ void sysset_divfound_recive(){
     research_lan_div();
 }
 
+// 搜索设备上传
 void divfound_over_timeinc(){
     if(g_sys_val.divsreach_f){
         g_sys_val.divsreach_tim_inc++;
         if(g_sys_val.divsreach_tim_inc>=30){ //3秒
-             //是否有列表正在发送
-            if(conn_sending_s.id!=null)
+            //查找是否有空列表
+            uint8_t list_num = list_sending_init(SYSSET_DIVFOUNT_CMD,DIVSRC_LIST_SENDING);
+            if(list_num==LIST_SEND_INIT)
                 return;
             g_sys_val.divsreach_f=0;
             //-----------------------------------
+            //搜索列表特殊处理
             debug_printf("send divsreach list %d\n",g_sys_val.search_div_tol);
-            conn_sending_s.id = g_sys_val.divsearch_conn.id;
-            conn_sending_s.conn_sending_tim = 0;
-            conn_sending_s.could_s = g_sys_val.divsreach_could_f;
-            memcpy(conn_sending_s.divsrc_list.id,g_sys_val.contorl_id,6);
-            conn_sending_s.divsrc_list.div_inc = 0;
-            conn_sending_s.divsrc_list.pack_inc = 0;
-            conn_sending_s.conn_state |= DIVSRC_LIST_SENDING;
-            user_sending_len = divsrc_list_build();
+            t_list_connsend[list_num].conn = g_sys_val.divsearch_conn;
+            t_list_connsend[list_num].could_s = g_sys_val.divsreach_could_f;
+            t_list_connsend[list_num].pack_inc = 0;
+            memcpy(t_list_connsend[list_num].could_id,g_sys_val.contorl_id,6);
+            t_list_connsend[list_num].list_info.divsrc_list.div_inc = 0;
+            //
+            user_sending_len = divsrc_list_build(list_num);
             debug_printf("srclis len %d\n",user_sending_len);
-            user_xtcp_send(g_sys_val.divsearch_conn,conn_sending_s.could_s);
+            user_xtcp_send(g_sys_val.divsearch_conn,t_list_connsend[list_num].could_s);
         }
     }
 }
 //---------------------------------------------
 // 列表连发处理
 //---------------------------------------------
-void divsrc_sending_decode(){
+void divsrc_sending_decode(uint8_t list_num){
     user_sending_len = divsrc_list_build(AREA_GETREQUEST_CMD);
-    user_xtcp_send(g_sys_val.divsearch_conn,conn_sending_s.could_s);
+    user_xtcp_send(g_sys_val.divsearch_conn,t_list_connsend[list_num].could_s);
 }
 
 //=====================================================================================================

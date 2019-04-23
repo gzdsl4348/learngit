@@ -17,7 +17,7 @@ void div_online_recive();   //0xB000
 // 设备列表请求管理
 void divlist_request_recive(); //0xB100
 
-void div_sending_decode(); //列表分包传送处理
+void div_sending_decode(uint8_t list_num); //列表分包传送处理
 //--------------------------------------------------
 
 // 详细信息获取管理
@@ -29,7 +29,7 @@ void div_info_set_recive(); //B104
 //分区信息请求
 void arealist_request_rec();    // B200
 
-void arealist_sending_decode();
+void arealist_sending_decode(uint8_t list_num);
 //
 //分区配置
 void area_config_recive();  //B202
@@ -54,7 +54,7 @@ void divresearch_hostset_recive();
 //
 void divfound_over_timeinc();
 //
-void divsrc_sending_decode();
+void divsrc_sending_decode(uint8_t list_num);
 
 
 #if defined(__cplusplus) || defined(__XC__)

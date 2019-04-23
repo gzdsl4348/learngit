@@ -106,45 +106,17 @@ void account_login_recive(){
 }
 
 //===============================================================================
-// 账户列表查询
+// 账户列表查询         ACCOUNT_USER_LIST_CMD     B901
 //================================================================================
 void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
-    //是否有列表正在发送
-    if(conn_sending_s.id!=null)
+    //
+    uint8_t list_num = list_sending_init(ACCOUNT_USER_LIST_CMD,AC_LIST_SENDING);
+    if(list_num == LIST_SEND_INIT){
         return;
+    }
     //-----------------------------------------------------------------
-    conn_sending_s.conn_sending_tim = 0;
-    // Send area list contorl
-    conn_sending_s.ac_list.pack_tol=0;
-    conn_sending_s.ac_list.pack_inc=0;
-    conn_sending_s.ac_list.account_inc=0;
-    conn_sending_s.ac_list.could_cmd = could_cmd;
-    memcpy(conn_sending_s.ac_list.id,id,6);
-    //
-    conn_sending_s.conn_state |= AC_LIST_SENDING;
-    //
-    conn_sending_s.could_s = could_f;
-    if(could_f){
-        conn_sending_s.id = g_sys_val.could_conn.id;
-    }
-    else{
-        conn_sending_s.id = conn.id;
-    }
-    //
-    //------------------------------------------------
-    // 获取总包数
-    uint8_t total_user=0;
-    //    
-    for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
-        if(account_info[i].id!=0xFF){
-            total_user++;
-        }
-    }
-    conn_sending_s.ac_list.pack_tol = total_user/10;
-    if(total_user%10)
-        conn_sending_s.ac_list.pack_tol++;
-    //----------------------------------------------------------------------------------
-    user_sending_len = account_list_ack_build();
+    t_list_connsend[list_num].list_info.ac_list.could_send_en = could_cmd;
+    user_sending_len = account_list_ack_build(list_num);
 }
 
 
@@ -156,16 +128,16 @@ void account_userlist_recive(){
 //---------------------------------------------
 // 列表连发处理
 //---------------------------------------------
-void ac_list_sending_decode(){
-    user_sending_len = account_list_ack_build();
+void ac_list_sending_decode(uint8_t list_num){
+    user_sending_len = account_list_ack_build(list_num);
     //向云推送
-    if(conn_sending_s.ac_list.could_cmd){
+    if(t_list_connsend[list_num].list_info.ac_list.could_send_en){
         user_could_send(1);        
         debug_printf("send list\n");
     }
     //其他转发
     else{
-        user_xtcp_send(conn,conn_sending_s.could_s);
+        user_xtcp_send(conn,t_list_connsend[list_num].could_s);
     }
 }
 

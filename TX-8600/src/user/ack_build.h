@@ -31,19 +31,20 @@ uint16_t heart_ack_build(uint8_t state);
 uint16_t extra_info_build_ack();
 
 // 设备列表发送
-uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_send_num);
+uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_send_num8,uint8_t list_num);
+
 // ip mac 列表发送
 uint16_t div_ipmac_list_send();
 
 // 分区列表组包
-uint16_t area_list_send_build(uint16_t cmd);
+uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num);
 // 分区配置回复
 uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl,uint8_t fail_div_cnt);
 // 用户登录信息回复
 uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_buf,uint16_t cmd);
 
 // 账户列表查看
-uint16_t account_list_ack_build();
+uint16_t account_list_ack_build(uint8_t list_num);
 
 // 账户权限列表查看
 uint16_t account_maclist_ack_build(account_all_info_t *account_all_info);
@@ -60,10 +61,10 @@ uint16_t solution_config_build(uint16_t id,uint8_t state,uint8_t config);
 uint16_t task_config_ack_build(uint16_t id,uint8_t state);
 
 // 任务列表发送
-uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num);
+uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8_t list_num);
 
 // 任务详细信息发送
-uint16_t task_dtinfo_chk_build();
+uint16_t task_dtinfo_chk_build(uint8_t list_num);
 
 // 今日任务查询
 uint16_t todaytask_ack_build();
@@ -72,7 +73,7 @@ uint16_t todaytask_ack_build();
 uint16_t rttask_config_ack_build(uint16_t id,uint8_t state);
 
 // 即时任务列表获取
-uint16_t rttask_list_chk_build();
+uint16_t rttask_list_chk_build(uint8_t list_num);
 
 // 即时任务详细信息查询
 uint16_t rttask_dtinfo_chk_build(uint16_t id);
@@ -90,10 +91,10 @@ uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttas
 uint16_t mic_userlist_ack_build(uint8_t state,account_all_info_t *account_all_info);
 
 // 音乐文件列表查询
-uint16_t music_patchlist_chk_build();
+uint16_t music_patchlist_chk_build(uint8_t list_num);
 
 // 音乐列表名查询
-uint16_t music_namelist_chk_build(uint8_t state);
+uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num);
 // 文件操作进度查询
 uint16_t file_progress_build(uint8_t state,uint8_t progress,uint8_t id[],uint8_t *name,uint8_t *patch);
 
@@ -124,7 +125,7 @@ uint16_t backup_updata_build(uint8_t state,uint8_t bar);
 uint16_t sync_hostip_build(uint8_t mac[],uint8_t *ipaddr);
 
 // 搜索设备列表 协议  BF09
-uint16_t divsrc_list_build();
+uint16_t divsrc_list_build(uint8_t list_num);
 
 // 云服务器心跳 协议  BE00
 uint16_t cld_heart_build();

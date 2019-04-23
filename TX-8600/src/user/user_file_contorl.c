@@ -8,6 +8,8 @@
 #include "string.h"
 #include "user_messend.h"
 #include "task_decode.h"
+#include "conn_process.h"
+
 #include "debug_print.h"
 
 extern uint8_t f_name[];
@@ -16,62 +18,40 @@ extern uint8_t f_name[];
 // 音乐库 文件夹名称列表获取                MUSIC_PATCH_CHK_CMD     0xB800
 //====================================================================================================
 void music_patch_list_chk_recive(){
-    //是否有列表正在发送
-    if(conn_sending_s.id!=null)
-        return;
-    conn_sending_s.conn_sending_tim = 0;
-    // 连发状态初始化
-    conn_sending_s.conn_state |= PATCH_LIST_SENDING;
-    conn_sending_s.patchlist.patch_inc =0;
-    conn_sending_s.patchlist.pack_inc=0;
-    memcpy(conn_sending_s.patchlist.id,&xtcp_rx_buf[POL_ID_BASE],6);
+    uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING);
     //
-    conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-    could_list_init();
-    //
-    user_sending_len = music_patchlist_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s);
+    user_sending_len = music_patchlist_chk_build(list_num);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     
 }
 
-void music_patch_list_send_decode(){
-    user_sending_len = music_patchlist_chk_build();
-    user_xtcp_send(conn,conn_sending_s.could_s);
+void music_patch_list_send_decode(uint8_t list_num){
+    user_sending_len = music_patchlist_chk_build(list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 
 //====================================================================================================
 // 音乐库 详细音乐名称列表获取   MUSIC_LIB_CHK_CMD                 0xB801
 //====================================================================================================
 void music_music_list_chk_recive(){
-    //是否有列表正在发送
-    if(conn_sending_s.id!=null)
+    uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING);
+    if(list_num==LIST_SEND_INIT)
         return;
-    #if 0
-    for(uint8_t i=0;i<100;i++){
-        debug_printf("%2x ",xtcp_rx_buf[i]);
-        if(i%20==0){
-            debug_printf("\n");
-        }
-    }
-    #endif
     //获取文件夹列表
     user_fl_get_patchlist(tmp_union.buff);
     uint32_t *patch_tol = &tmp_union.buff[0];
     dir_info_t *dir_info = &tmp_union.buff[4];
-    //比较文件夹
-
-    //debug_printf("src floa:");
-    //for(uint8_t j=0;j<PATCH_NAME_NUM;j++){
-    //        debug_printf("%x,",xtcp_rx_buf[(MUS_LIBHCK_CHKPATCH_NAME)+j]);
-    //    }
-    //debug_printf("\n");
-    
+    //----------------------------------------------------------------------------------
+    //查找指定文件夹
+    #if 0
+    debug_printf("src floa:");
+    for(uint8_t j=0;j<PATCH_NAME_NUM;j++){
+            debug_printf("%x,",xtcp_rx_buf[(MUS_LIBHCK_CHKPATCH_NAME)+j]);
+        }
+    debug_printf("\n");
+    #endif
+    //----------------------------------------------------------------------------------
     for(uint8_t i=0;i<*patch_tol;i++){
-        //debug_printf("des floa:");
-        //for(uint8_t j=0;j<PATCH_NAME_NUM/2;j++){
-        //    debug_printf("%x,",dir_info[i].name[j]);
-        //}
-        //debug_printf("\n");
         #if 0
         for(uint8_t j=0;j<PATCH_NAME_NUM;j++){
             debug_printf("%x ",xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME+j]);
@@ -82,35 +62,25 @@ void music_music_list_chk_recive(){
         } 
         debug_printf("\n");
         #endif
-        
+        // 找到指定音乐文件夹
         if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],dir_info[i].name,PATCH_NAME_NUM)==1){
-            conn_sending_s.musiclist.sector_index = dir_info[i].sector;
-            conn_sending_s.musiclist.music_inc = 0;
-            conn_sending_s.musiclist.pack_inc = 0;
-            memcpy(conn_sending_s.musiclist.id,&xtcp_rx_buf[POL_ID_BASE],6);
+            t_list_connsend[list_num].list_info.musiclist.sector_index = dir_info[i].sector;
+            t_list_connsend[list_num].list_info.musiclist.music_inc = 0;
             //
-            conn_sending_s.conn_sending_tim = 0;
-            conn_sending_s.conn_state |= MUSICNAME_LIST_SENDING;
-            conn_sending_s.musiclist.sector_index;
-            //
-            conn_sending_s.could_s = xtcp_rx_buf[POL_COULD_S_BASE];
-            could_list_init();
-            //debug_printf("conn id %d recid %d\n",g_sys_val.could_conn.id,conn.id);
-            //
-            user_sending_len = music_namelist_chk_build(1);
+            user_sending_len = music_namelist_chk_build(1,list_num);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
             return;
         }
     }
-    user_sending_len = music_namelist_chk_build(0);
+    user_sending_len = music_namelist_chk_build(0,list_num);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
 //音乐名称连发
-void music_music_list_send_decode(){
+void music_music_list_send_decode(uint8_t list_num){
     debug_printf("music send\n");
-    user_sending_len = music_namelist_chk_build(1);
-    user_xtcp_send(conn,conn_sending_s.could_s);
+    user_sending_len = music_namelist_chk_build(1,list_num);
+    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 
 //====================================================================================================

@@ -219,22 +219,148 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
 // sending xtcp data  发送完成与数据连发处理线程
 //==============================================================================
 void xtcp_sending_decoder(){
+    uint8_t i=0;
     //debug_printf("cid %d rcid %d\n",conn_sending_s.id,conn.id);
-    if(conn_sending_s.id == conn.id){
-        uint8_t i=0;
-        uint16_t conn_state = conn_sending_s.conn_state;
-        debug_printf("send list\n");
-        while(conn_state){
-            if((conn_state&01)!=0){
-                sending_fun_lis[i].sending_fun();
-                return;
-            }
-            i++;
-            conn_state >>=1;
+    for(i=0;i<MAX_SEND_LIST_NUM;i++){
+        // 找到有效连接
+        if(t_list_connsend[i].conn_state==LIST_SEND_INIT){
+            continue;
+        }
+        debug_printf("chk list send %d\n",i);
+        //-------------------------------------------------------------------------------------------------------------------------
+        // 上一个连接的列表数据包发送已完成
+        if(t_list_connsend[i].conn.id==conn.id && charncmp(t_list_connsend[i].could_id,&xtcp_rx_buf[POL_ID_BASE],6)){
+            debug_printf("find list send %d\n",i);
+            // 发送超时清零
+            t_list_connsend[i].tim_cnt=0;
+            // 发送下一个连接的列数据包
+            for(uint8_t cnt=0;cnt<MAX_SEND_LIST_NUM;cnt++){
+                i++;
+                if(i>=MAX_SEND_LIST_NUM){
+                    i=0;
+                }
+                //找到下一个有效连接
+                debug_printf("next list send %d\n",i);
+                if(t_list_connsend[i].conn_state!=LIST_SEND_INIT){
+                    sending_fun_lis[t_list_connsend[i].conn_state].sending_fun(i);
+                    break;
+                }
+            }   
+            break;
+        }
+        //-------------------------------------------------------------------------------------------------------------------------
+    }
+}
+
+#define LIST_SENDING_OVERTIMECNT  15
+
+// 发送列表超时处理
+void list_sending_overtime(){
+    uint8_t i;
+    for(i=0;i<MAX_SEND_LIST_NUM;i++){
+        t_list_connsend[i].tim_cnt++;
+        if((t_list_connsend[i].conn_state!=LIST_SEND_INIT)&&
+           (t_list_connsend[i].tim_cnt>LIST_SENDING_OVERTIMECNT)){
+               t_list_connsend[i].conn_state = LIST_SEND_INIT;
         }
     }
 }
 
+uint8_t list_sending_init(uint16_t cmd,uint8_t list_state){
+    uint8_t i;
+    //---------------------------------------------------------------
+    // 找空闲的列表发送
+    for(i=0;i<MAX_SEND_LIST_NUM;i++){
+        if(t_list_connsend[i].conn_state==LIST_SEND_INIT){
+            break;
+        }
+    }
+    // 没有空闲的列表发送
+    if(i==MAX_SEND_LIST_NUM){
+        debug_printf("list send full\n");
+        return LIST_SEND_INIT;
+    }
+    //----------------------------------------------------------------
+    //初始化发送状态
+    t_list_connsend[i].pack_inc=0;
+    t_list_connsend[i].pack_tol=0;
+    t_list_connsend[i].tim_cnt = 0;
+    t_list_connsend[i].conn_state = list_state;
+    memcpy(t_list_connsend[i].could_id,&xtcp_rx_buf[POL_ID_BASE],6);
+    t_list_connsend[i].could_s = xtcp_rx_buf[POL_COULD_S_BASE];
+    t_list_connsend[i].conn = conn;
+    //不同列表发送处理
+    switch(list_state){
+        // 设备列表
+        case DIV_LIST_SENDING:
+            // 计算总包数
+            t_list_connsend[i].pack_tol = div_list.div_tol/DIV_SEND_NUM;
+            if(div_list.div_tol%DIV_SEND_NUM){
+                t_list_connsend[i].pack_tol++;
+            }
+            //初始化设备列表发送信息
+            t_list_connsend[i].list_info.divlist.div_list_p = div_list.div_head_p;
+            t_list_connsend[i].list_info.divlist.cmd = cmd;
+            break;
+        //---------------------------------------------------
+        // 分区列表
+        case AREA_LIST_SENDING:
+            // 获取分区总数
+            for(uint8_t i=0;i<MAX_AREA_NUM;i++){
+                if(area_info[i].area_sn!=0xFFFF)
+                    t_list_connsend[i].pack_tol++;
+            }
+            // 计算总包数
+            t_list_connsend[i].pack_tol = t_list_connsend[i].pack_tol/AREA_SEND_NUM;
+            if( t_list_connsend[i].pack_tol%AREA_SEND_NUM){
+                t_list_connsend[i].pack_tol++;
+            }
+            //初始化分区列表发送信息
+            t_list_connsend[i].list_info.arealist.cmd = cmd;
+            t_list_connsend[i].list_info.arealist.area_inc = 0;
+            break;
+        //---------------------------------------------------
+        // 任务列表
+        case TASK_LIST_SENDING:
+            t_list_connsend[i].list_info.tasklist.task_p = timetask_list.all_timetask_head;
+            break;
+        // 任务详细信息列表
+        case TASK_DTINFO_SENDING:
+            t_list_connsend[i].list_info.task_dtinfo.music_inc = 0;
+            t_list_connsend[i].list_info.task_dtinfo.task_id = xtcp_rx_buf[TASK_DTG_TASK_ID+1]<<8 |xtcp_rx_buf[TASK_DTG_TASK_ID];
+            break;
+        // 即时任务列表
+        case RTTASK_LIST_SENDING:
+            t_list_connsend[i].list_info.rttasklist.rttask_p = rttask_lsit.all_head_p;
+            break;
+        // 文件夹列表
+        case PATCH_LIST_SENDING:
+            t_list_connsend[i].list_info.patchlist.patch_inc=0;
+            break;
+        // 音乐文件名列表    
+        case MUSICNAME_LIST_SENDING:
+            break;
+        // 账号列表
+        case AC_LIST_SENDING:
+            t_list_connsend[i].list_info.ac_list.account_inc = 0;
+            //------------------------------------------------
+            // 获取总包数
+            uint8_t total_user=0;
+            for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
+                if(account_info[i].id!=0xFF){
+                    total_user++;
+                }
+            }
+            t_list_connsend[i].pack_tol = total_user/10;
+            if(total_user%MAX_SEND_ACCOUNT_NUM_FORPACK)
+                t_list_connsend[i].pack_tol++;
+            break;
+        // 设备搜索列表
+        case DIVSRC_LIST_SENDING:
+            break;
+    }
+    return i;
+}
 
 //============================================================================
 // UDP 长连接初始化
@@ -292,7 +418,6 @@ void broadcast_for_minute(){
 // 连接超时检测
 //==============================================================================
 #define CONN_OVERTIME 10
-#define CONN_LONGCON_TIME 30
 
 void conn_overtime_close(){
     // 关闭连接 conn
@@ -311,14 +436,6 @@ void conn_overtime_close(){
         }    
         //-------------------------------------------------------
         conn_list_tmp = conn_next_p;
-    }
-    // 列表发送超时
-    if(conn_sending_s.id!=null){
-        conn_sending_s.conn_sending_tim++;
-        if(conn_sending_s.conn_sending_tim>=3){
-            debug_printf("reset conn sending\n");
-            conn_sending_s.id=null;
-        }
     }
 }
 #if 1
