@@ -187,6 +187,7 @@ uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_
     //
     xtcp_tx_buf[DIVLISTRE_TOTALDIV_B] = div_inc;
     t_list_connsend[list_num].pack_inc++;
+    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     //----------------------------------------------------------------------------
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
@@ -223,6 +224,7 @@ uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num){
     xtcp_tx_buf[AREAGET_TOTALAREA_B] = area_inc;
     //
     t_list_connsend[list_num].pack_inc++;
+    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
     }
@@ -387,8 +389,8 @@ uint16_t account_list_ack_build(uint8_t list_num){
     xtcp_tx_buf[AC_LISTCK_TOLNUM_B] = total_user;
     xtcp_tx_buf[AC_LISTCK_TOLPAGE_B] = t_list_connsend[list_num].pack_tol;
 
-    t_list_connsend[list_num].pack_inc;
-    
+    t_list_connsend[list_num].pack_inc++;
+    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
     }
@@ -484,8 +486,12 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     task_coninfo_t * tmp_p;
     //-----------------------------------------------------
     xtcp_tx_buf[TASK_CK_TOLPACK] = timetask_list.task_total/MAX_TASK_ONCESEND;
+    
     if(timetask_list.task_total%MAX_TASK_ONCESEND)
         xtcp_tx_buf[TASK_CK_TOLPACK]++;
+    debug_printf("task tol %d tol %d\n",timetask_list.task_total,xtcp_tx_buf[TASK_CK_TOLPACK]);
+
+    
     xtcp_tx_buf[TASK_CK_PACK_NUM] = t_list_connsend[list_num].pack_inc;
     //
     uint16_t data_base = TASK_CK_DAT_BASE;
@@ -536,6 +542,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     }
     xtcp_tx_buf[TASK_CK_TASK_TOL] = i;
     t_list_connsend[list_num].pack_inc++;
+    debug_printf("tol %d inc %d\n",xtcp_tx_buf[TASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc>=xtcp_tx_buf[TASK_CK_TOLPACK]){
         t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
     }
@@ -643,8 +650,8 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     uint16_t data_base;
     //-----------------------------------------------------
     // 获得总包数
-    xtcp_tx_buf[RTTASK_CK_TOLPACK] = (rttask_lsit.rttask_tol/MAX_RTTASK_SEND);
-    if(rttask_lsit.rttask_tol%MAX_RTTASK_SEND!=0){
+    xtcp_tx_buf[RTTASK_CK_TOLPACK] = rttask_lsit.rttask_tol/MAX_RTTASK_SEND;
+    if(rttask_lsit.rttask_tol%MAX_RTTASK_SEND){
         xtcp_tx_buf[RTTASK_CK_TOLPACK]++;
     }
     // 当前包序号
@@ -916,7 +923,7 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
     }
     //-----------------------------------------------------
     xtcp_tx_buf[MUS_PTHCHK_PACKTOL] = *patch_tol/MAX_PATCHNUM_SEND;
-    if((*patch_tol%MAX_PATCHNUM_SEND!=0)||(*patch_tol==0))
+    if(*patch_tol%MAX_PATCHNUM_SEND)
         xtcp_tx_buf[MUS_PTHCHK_PACKTOL]++;
     xtcp_tx_buf[MUS_PTHCHK_CURRENTPACK] = t_list_connsend[list_num].pack_inc;
     //
@@ -960,7 +967,7 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
         music_info = &tmp_union.buff[4];
         //-------------------------------------------------------------------------
         xtcp_tx_buf[MUS_LIBCHK_PACKTOL] = *music_tol/MAX_MUSICNUM_SEND;
-        if((xtcp_tx_buf[MUS_LIBCHK_PACKTOL]%MAX_MUSICNUM_SEND!=0)||(xtcp_tx_buf[MUS_LIBCHK_PACKTOL]==0))
+        if(*music_tol%MAX_MUSICNUM_SEND || xtcp_tx_buf[MUS_LIBCHK_PACKTOL]==0)
             xtcp_tx_buf[MUS_LIBCHK_PACKTOL]++;
         xtcp_tx_buf[MUS_PTHCHK_CURRENTPACK] = t_list_connsend[list_num].pack_inc;
     }
@@ -984,6 +991,7 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     xtcp_tx_buf[MUS_LIBCHK_MUSICTOL] = i;
     //
     t_list_connsend[list_num].pack_inc++;
+    debug_printf("tol %d inc %d\n",xtcp_tx_buf[MUS_LIBCHK_PACKTOL],t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[MUS_LIBCHK_PACKTOL]){
         t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
     }

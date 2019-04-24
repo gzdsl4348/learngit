@@ -380,7 +380,7 @@ void solution_check_recive(){
 // 任务列表查询
 //====================================================================================================
 void task_check_recive(){
-    uint8_t list_num = list_sending_init(TASK_CHECK_CMD,TASK_LIST_SENDING);
+    uint8_t list_num = list_sending_init(TASK_CHECK_CMD,TASK_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT)
         return;
     // 特殊处理
@@ -406,7 +406,7 @@ void tasklist_sending_decode(uint8_t list_num){
 // 获取定时任务详细信息协议 B304
 //====================================================================================================
 void task_dtinfo_check_recive(){
-    uint8_t list_num = list_sending_init(TASK_DTINFO_CK_CMD,TASK_DTINFO_SENDING);
+    uint8_t list_num = list_sending_init(TASK_DTINFO_CK_CMD,TASK_DTINFO_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT)
         return;
     //
@@ -1241,7 +1241,7 @@ void rt_task_list_read(){
 // 即时任务列表查询                     B400
 //====================================================================================================
 void rttask_list_check_recive(){
-    uint8_t list_num = list_sending_init(RTTASK_CHECK_CMD,RTTASK_LIST_SENDING);
+    uint8_t list_num = list_sending_init(RTTASK_CHECK_CMD,RTTASK_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num==LIST_SEND_INIT)
         return;
     //
@@ -1706,7 +1706,7 @@ void solulist_chk_forapp_recive(){
 // B311 查看指定数量 B311
 //====================================================================================================
 void tasklist_forsolu_chk_recive(){
-    uint8_t list_num = list_sending_init(TASK_TASK_FORSOLU_B311_CMD,TASK_LIST_SENDING);
+    uint8_t list_num = list_sending_init(TASK_TASK_FORSOLU_B311_CMD,TASK_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num==LIST_SEND_INIT)
         return;
     //

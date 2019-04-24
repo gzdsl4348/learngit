@@ -17,18 +17,18 @@ uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 // 分区列表发送
 //--------------------------------------------------------------------------
 void arealist_request_rec(){
-    uint8_t list_num = list_sending_init(AREA_GETREQUEST_CMD,AREA_LIST_SENDING);
+    uint8_t list_num = list_sending_init(AREA_GETREQUEST_CMD,AREA_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT)
         return;
     //
-    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD,list_num);
+    user_sending_len = area_list_send_build(t_list_connsend[list_num].list_info.arealist.cmd,list_num);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 //---------------------------------------------
 // 分区列表连发处理
 //---------------------------------------------
 void arealist_sending_decode(uint8_t list_num){
-    user_sending_len = area_list_send_build(AREA_GETREQUEST_CMD,list_num);
+    user_sending_len = area_list_send_build(t_list_connsend[list_num].list_info.arealist.cmd,list_num);
     user_xtcp_send(conn,t_list_connsend[list_num].could_s);
 }
 
@@ -170,7 +170,7 @@ void div_extra_info_recive(){
 // 设备列表发送列表管理
 //---------------------------------------------------------------------------
 void divlist_request_recive(){
-    uint8_t list_num = list_sending_init(DIVLIST_REQUEST_CMD,DIV_LIST_SENDING);
+    uint8_t list_num = list_sending_init(DIVLIST_REQUEST_CMD,DIV_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num==LIST_SEND_INIT)
         return;
     //
@@ -574,7 +574,7 @@ void divfound_over_timeinc(){
         g_sys_val.divsreach_tim_inc++;
         if(g_sys_val.divsreach_tim_inc>=30){ //3秒
             //查找是否有空列表
-            uint8_t list_num = list_sending_init(SYSSET_DIVFOUNT_CMD,DIVSRC_LIST_SENDING);
+            uint8_t list_num = list_sending_init(SYSSET_DIVFOUNT_CMD,DIVSRC_LIST_SENDING,g_sys_val.contorl_id,g_sys_val.divsreach_could_f);
             if(list_num==LIST_SEND_INIT)
                 return;
             g_sys_val.divsreach_f=0;
@@ -582,9 +582,6 @@ void divfound_over_timeinc(){
             //搜索列表特殊处理
             debug_printf("send divsreach list %d\n",g_sys_val.search_div_tol);
             t_list_connsend[list_num].conn = g_sys_val.divsearch_conn;
-            t_list_connsend[list_num].could_s = g_sys_val.divsreach_could_f;
-            t_list_connsend[list_num].pack_inc = 0;
-            memcpy(t_list_connsend[list_num].could_id,g_sys_val.contorl_id,6);
             t_list_connsend[list_num].list_info.divsrc_list.div_inc = 0;
             //
             user_sending_len = divsrc_list_build(list_num);

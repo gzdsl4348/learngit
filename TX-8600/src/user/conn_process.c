@@ -222,26 +222,31 @@ void xtcp_sending_decoder(){
     uint8_t i=0;
     //debug_printf("cid %d rcid %d\n",conn_sending_s.id,conn.id);
     for(i=0;i<MAX_SEND_LIST_NUM;i++){
+
+        debug_printf("chk list %d\n",i);
+
         // 找到有效连接
         if(t_list_connsend[i].conn_state==LIST_SEND_INIT){
             continue;
         }
-        debug_printf("chk list send %d\n",i);
+        
+        debug_printf("chk list en %d\n",i);
         //-------------------------------------------------------------------------------------------------------------------------
         // 上一个连接的列表数据包发送已完成
         if(t_list_connsend[i].conn.id==conn.id && charncmp(t_list_connsend[i].could_id,&xtcp_rx_buf[POL_ID_BASE],6)){
-            debug_printf("find list send %d\n",i);
+            debug_printf("have list send %d\n",i);
             // 发送超时清零
             t_list_connsend[i].tim_cnt=0;
             // 发送下一个连接的列数据包
             for(uint8_t cnt=0;cnt<MAX_SEND_LIST_NUM;cnt++){
                 i++;
+                debug_printf("find next send %d\n",i);
                 if(i>=MAX_SEND_LIST_NUM){
                     i=0;
                 }
                 //找到下一个有效连接
-                debug_printf("next list send %d\n",i);
                 if(t_list_connsend[i].conn_state!=LIST_SEND_INIT){
+                    debug_printf("next list send %d %d\n",i,t_list_connsend[i].conn_state);
                     sending_fun_lis[t_list_connsend[i].conn_state].sending_fun(i);
                     break;
                 }
@@ -266,9 +271,18 @@ void list_sending_overtime(){
     }
 }
 
-uint8_t list_sending_init(uint16_t cmd,uint8_t list_state){
+uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uint8_t could_s){
     uint8_t i;
     //---------------------------------------------------------------
+    // 找是否有重复连接
+    for(uint8_t i=0;i<MAX_SEND_LIST_NUM;i++){
+        if(t_list_connsend[i].conn_state!=LIST_SEND_INIT){
+            //查是否重复
+            if(conn.id==t_list_connsend[i].conn.id && charncmp(t_list_connsend[i].could_id,could_id,6)){
+                return LIST_SEND_INIT;
+            }
+        }
+    }
     // 找空闲的列表发送
     for(i=0;i<MAX_SEND_LIST_NUM;i++){
         if(t_list_connsend[i].conn_state==LIST_SEND_INIT){
@@ -286,8 +300,8 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state){
     t_list_connsend[i].pack_tol=0;
     t_list_connsend[i].tim_cnt = 0;
     t_list_connsend[i].conn_state = list_state;
-    memcpy(t_list_connsend[i].could_id,&xtcp_rx_buf[POL_ID_BASE],6);
-    t_list_connsend[i].could_s = xtcp_rx_buf[POL_COULD_S_BASE];
+    memcpy(t_list_connsend[i].could_id,could_id,6);
+    t_list_connsend[i].could_s = could_s;
     t_list_connsend[i].conn = conn;
     //不同列表发送处理
     switch(list_state){
@@ -304,25 +318,29 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state){
             break;
         //---------------------------------------------------
         // 分区列表
-        case AREA_LIST_SENDING:
+        case AREA_LIST_SENDING:{
             // 获取分区总数
+            uint8_t area_tmp;
             for(uint8_t i=0;i<MAX_AREA_NUM;i++){
                 if(area_info[i].area_sn!=0xFFFF)
-                    t_list_connsend[i].pack_tol++;
+                    area_tmp++;
             }
             // 计算总包数
-            t_list_connsend[i].pack_tol = t_list_connsend[i].pack_tol/AREA_SEND_NUM;
-            if( t_list_connsend[i].pack_tol%AREA_SEND_NUM){
+            debug_printf("area_tol %d\n",area_tmp);
+            t_list_connsend[i].pack_tol = area_tmp/AREA_SEND_NUM;
+            if(area_tmp%AREA_SEND_NUM){
                 t_list_connsend[i].pack_tol++;
             }
             //初始化分区列表发送信息
             t_list_connsend[i].list_info.arealist.cmd = cmd;
             t_list_connsend[i].list_info.arealist.area_inc = 0;
             break;
+            }
         //---------------------------------------------------
         // 任务列表
         case TASK_LIST_SENDING:
             t_list_connsend[i].list_info.tasklist.task_p = timetask_list.all_timetask_head;
+            t_list_connsend[i].list_info.tasklist.cmd = TASK_CHECK_CMD;
             break;
         // 任务详细信息列表
         case TASK_DTINFO_SENDING:
@@ -351,7 +369,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state){
                     total_user++;
                 }
             }
-            t_list_connsend[i].pack_tol = total_user/10;
+            t_list_connsend[i].pack_tol = total_user/MAX_SEND_ACCOUNT_NUM_FORPACK;
             if(total_user%MAX_SEND_ACCOUNT_NUM_FORPACK)
                 t_list_connsend[i].pack_tol++;
             break;

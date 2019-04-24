@@ -16,7 +16,7 @@ void tcp_xtcp_recive_decode(uint16_t data_len);
 // 发送完成及数据连发处理
 void xtcp_sending_decoder();
 // 列表发送初始化
-uint8_t list_sending_init(uint16_t cmd,uint8_t list_state);
+uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uint8_t could_s);
 // 列表发送超时管理
 void list_sending_overtime(); //10hz
 //--------------------------------------

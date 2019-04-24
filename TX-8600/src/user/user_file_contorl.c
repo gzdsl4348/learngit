@@ -18,7 +18,7 @@ extern uint8_t f_name[];
 // 音乐库 文件夹名称列表获取                MUSIC_PATCH_CHK_CMD     0xB800
 //====================================================================================================
 void music_patch_list_chk_recive(){
-    uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING);
+    uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     //
     user_sending_len = music_patchlist_chk_build(list_num);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
@@ -34,7 +34,7 @@ void music_patch_list_send_decode(uint8_t list_num){
 // 音乐库 详细音乐名称列表获取   MUSIC_LIB_CHK_CMD                 0xB801
 //====================================================================================================
 void music_music_list_chk_recive(){
-    uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING);
+    uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num==LIST_SEND_INIT)
         return;
     //获取文件夹列表

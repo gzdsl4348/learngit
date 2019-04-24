@@ -110,7 +110,7 @@ void account_login_recive(){
 //================================================================================
 void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
     //
-    uint8_t list_num = list_sending_init(ACCOUNT_USER_LIST_CMD,AC_LIST_SENDING);
+    uint8_t list_num = list_sending_init(ACCOUNT_USER_LIST_CMD,AC_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT){
         return;
     }

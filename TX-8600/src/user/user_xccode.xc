@@ -209,7 +209,9 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
         #endif 
         if(colud_f){
              //ÔÆ°üÍ·    
-            debug_printf("could cmd send %2x%2x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
+            debug_printf("could cmd send %2x%2x id %x %x %x %x %x %x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE],
+                                                       xtcp_tx_buf[POL_ID_BASE],xtcp_tx_buf[POL_ID_BASE+1],xtcp_tx_buf[POL_ID_BASE+2],
+                                                       xtcp_tx_buf[POL_ID_BASE+3],xtcp_tx_buf[POL_ID_BASE+4],xtcp_tx_buf[POL_ID_BASE+5]);
             user_could_send(0);
         }
         else{
