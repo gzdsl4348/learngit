@@ -1301,7 +1301,7 @@ void uip_process(u8_t flag) {
 
 	/* TCP input processing. */
 	tcp_input: UIP_STAT(++uip_stat.tcp.recv);
-    debug_printf("tcp input\n");
+    //debug_printf("tcp input\n");
 	/* Start of TCP input header processing code. */
 
 	if (uip_tcpchksum() != 0xffff) { /* Compute and check the TCP
@@ -1316,7 +1316,7 @@ void uip_process(u8_t flag) {
 		if (uip_connr->tcpstateflags != UIP_CLOSED && BUF->destport
 				== uip_connr->lport && BUF->srcport == uip_connr->rport
 				&& uip_ipaddr_cmp(BUF->srcipaddr, uip_connr->ripaddr)) {
-			debug_printf("tcp found conn\n");
+			//debug_printf("tcp found conn\n");
 			goto found;
 		}
 	}
@@ -1333,7 +1333,7 @@ void uip_process(u8_t flag) {
 	/* Next, check listening connections. */
 	for (c = 0; c < UIP_LISTENPORTS; ++c) {
 		if (tmp16 == uip_listenports[c]){
-            debug_printf("tcp found listen\n");
+            //debug_printf("tcp found listen\n");
 			goto found_listen;
         }
 	}

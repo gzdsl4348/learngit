@@ -21,15 +21,18 @@ void arealist_request_rec(){
     if(list_num == LIST_SEND_INIT)
         return;
     //
-    user_sending_len = area_list_send_build(t_list_connsend[list_num].list_info.arealist.cmd,list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = area_list_send_build(t_list_connsend[list_num].list_info.arealist.cmd,list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
 }
 //---------------------------------------------
 // 分区列表连发处理
 //---------------------------------------------
 void arealist_sending_decode(uint8_t list_num){
     user_sending_len = area_list_send_build(t_list_connsend[list_num].list_info.arealist.cmd,list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
 //========================================================================================
@@ -174,14 +177,17 @@ void divlist_request_recive(){
     if(list_num==LIST_SEND_INIT)
         return;
     //
-    user_sending_len = div_list_resend_build(DIVLIST_REQUEST_CMD,&t_list_connsend[list_num].list_info.divlist.div_list_p,DIV_SEND_NUM,list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = div_list_resend_build(DIVLIST_REQUEST_CMD,&t_list_connsend[list_num].list_info.divlist.div_list_p,DIV_SEND_NUM,list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
 }
 
 void div_sending_decode(uint8_t list_num){
     user_sending_len = div_list_resend_build(t_list_connsend[list_num].list_info.divlist.cmd,
                                              &t_list_connsend[list_num].list_info.divlist.div_list_p,DIV_SEND_NUM,list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
 
@@ -572,7 +578,7 @@ void sysset_divfound_recive(){
 void divfound_over_timeinc(){
     if(g_sys_val.divsreach_f){
         g_sys_val.divsreach_tim_inc++;
-        if(g_sys_val.divsreach_tim_inc>=30){ //3秒
+        if(g_sys_val.divsreach_tim_inc>=30){ //3
             //查找是否有空列表
             uint8_t list_num = list_sending_init(SYSSET_DIVFOUNT_CMD,DIVSRC_LIST_SENDING,g_sys_val.contorl_id,g_sys_val.divsreach_could_f);
             if(list_num==LIST_SEND_INIT)
@@ -584,10 +590,12 @@ void divfound_over_timeinc(){
             t_list_connsend[list_num].conn = g_sys_val.divsearch_conn;
             t_list_connsend[list_num].list_info.divsrc_list.div_inc = 0;
             //
-            user_sending_len = divsrc_list_build(list_num);
-            debug_printf("srclis len %d\n",user_sending_len);
-            user_xtcp_send(g_sys_val.divsearch_conn,t_list_connsend[list_num].could_s);
-        }
+        	if(g_sys_val.list_sending_f==0){
+				g_sys_val.list_sending_f = 1;
+	            user_sending_len = divsrc_list_build(list_num);
+	            user_xtcp_send(g_sys_val.divsearch_conn,t_list_connsend[list_num].could_s);
+        	}
+    	}
     }
 }
 //---------------------------------------------
@@ -595,7 +603,7 @@ void divfound_over_timeinc(){
 //---------------------------------------------
 void divsrc_sending_decode(uint8_t list_num){
     user_sending_len = divsrc_list_build(AREA_GETREQUEST_CMD);
-    user_xtcp_send(g_sys_val.divsearch_conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
 //=====================================================================================================

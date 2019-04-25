@@ -255,6 +255,9 @@ typedef struct g_sys_val_t{
     uint8_t tcp_resend_cnt;
     uint16_t tx_fifo_len[MAX_TXBUFF_FIFOSIZE];
     uint16_t rx_fifo_len[MAX_RXBUFF_FIFOSIZE];
+	//
+	uint8_t list_sending_cnt;
+	uint8_t list_sending_f;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

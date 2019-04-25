@@ -387,8 +387,11 @@ void task_check_recive(){
     t_list_connsend[list_num].list_info.tasklist.solu_en=0; //查找所有任务
     t_list_connsend[list_num].list_info.tasklist.solu_id=0;
     //
-    user_sending_len = task_list_ack_build(TASK_CHECK_CMD,0,0,list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = task_list_ack_build(TASK_CHECK_CMD,0,0,list_num);
+	    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+	}
 }
 //
 //--------------------------------------------
@@ -398,7 +401,7 @@ void tasklist_sending_decode(uint8_t list_num){
                                            t_list_connsend[list_num].list_info.tasklist.solu_en,
                                            t_list_connsend[list_num].list_info.tasklist.solu_id,
                                            list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
     //debug_printf("tasklist_sending\n");
 }
 
@@ -414,10 +417,13 @@ void task_dtinfo_check_recive(){
     if(id>MAX_HOST_TASK)
         return;
     //
-    timer_task_read(&tmp_union.task_allinfo_tmp,id);
-    //
-    user_sending_len = task_dtinfo_chk_build(list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    timer_task_read(&tmp_union.task_allinfo_tmp,id);
+	    //
+	    user_sending_len = task_dtinfo_chk_build(list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
     debug_printf("dtchk task %d\n",id);
 }
 
@@ -426,7 +432,7 @@ void task_dtinfo_check_recive(){
 void task_dtinfo_decode(uint8_t list_num){
     timer_task_read(&tmp_union.task_allinfo_tmp,t_list_connsend[list_num].list_info.task_dtinfo.task_id);
     user_sending_len = task_dtinfo_chk_build(list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
     //debug_printf("task dtinfo send\n");
 }
 
@@ -1245,14 +1251,17 @@ void rttask_list_check_recive(){
     if(list_num==LIST_SEND_INIT)
         return;
     //
-    user_sending_len = rttask_list_chk_build(list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = rttask_list_chk_build(list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
     //debug_printf("rttask list check\n");
 }
 
 void rttask_list_sending_decode(uint8_t list_num){
     user_sending_len = rttask_list_chk_build(list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
     //debug_printf("rttask list sending\n");
 }
 
@@ -1690,7 +1699,7 @@ void timer_rttask_run_process(){
 // B312 任务面板数量显示 B312
 //====================================================================================================
 void task_pageshow_recive(){
-    user_sending_len = taskview_page_build();
+    user_sending_len = taskview_page_build(TASK_PAGESHOW_B312_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 

@@ -88,6 +88,10 @@ void user_xtcp_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
 
 void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
 
+void user_messend_buff_get(uint8_t rptr,uint8_t buff[]);
+
+void user_messend_buff_put(uint8_t wptr,uint8_t buff[]);
+
 
 void user_xtcp_send_could();
 

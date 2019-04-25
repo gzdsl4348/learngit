@@ -433,4 +433,16 @@ void user_xtcp_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f){
     }
 }
 
+void user_messend_buff_get(uint8_t rptr,uint8_t buff[]){
+    unsafe{
+        i_user_flash->if_messend_buff_get(rptr, buff);
+    }
+}
+
+void user_messend_buff_put(uint8_t wptr,uint8_t buff[]){
+    unsafe{
+        i_user_flash->if_messend_buff_put(wptr, buff);
+    }
+}
+
 

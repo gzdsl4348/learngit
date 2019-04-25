@@ -142,7 +142,7 @@ uint16_t cld_timesysnc_request_build();
 uint16_t cld_appregsied_request_build();
 
 // B312
-uint16_t taskview_page_build();
+uint16_t taskview_page_build(uint16_t cmd);
 
 
 #if defined(__cplusplus) || defined(__XC__)

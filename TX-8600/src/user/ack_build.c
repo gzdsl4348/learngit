@@ -190,7 +190,7 @@ uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     //----------------------------------------------------------------------------
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(div_info_base,cmd,t_list_connsend[list_num].could_id);
 }
@@ -226,7 +226,7 @@ uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num){
     t_list_connsend[list_num].pack_inc++;
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(area_dat_base,cmd,t_list_connsend[list_num].could_id);
 }
@@ -392,7 +392,7 @@ uint16_t account_list_ack_build(uint8_t list_num){
     t_list_connsend[list_num].pack_inc++;
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     
     return build_endpage_decode(dat_base,ACCOUNT_USER_LIST_CMD,t_list_connsend[list_num].could_id);
@@ -487,7 +487,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     //-----------------------------------------------------
     xtcp_tx_buf[TASK_CK_TOLPACK] = timetask_list.task_total/MAX_TASK_ONCESEND;
     
-    if(timetask_list.task_total%MAX_TASK_ONCESEND)
+    if(timetask_list.task_total%MAX_TASK_ONCESEND || xtcp_tx_buf[TASK_CK_TOLPACK]==0)
         xtcp_tx_buf[TASK_CK_TOLPACK]++;
     debug_printf("task tol %d tol %d\n",timetask_list.task_total,xtcp_tx_buf[TASK_CK_TOLPACK]);
 
@@ -544,7 +544,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     t_list_connsend[list_num].pack_inc++;
     debug_printf("tol %d inc %d\n",xtcp_tx_buf[TASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc>=xtcp_tx_buf[TASK_CK_TOLPACK]){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     //
     return build_endpage_decode(data_base,cmd,t_list_connsend[list_num].could_id);
@@ -560,8 +560,8 @@ uint16_t task_dtinfo_chk_build(uint8_t list_num){
     //-----------------------------------------------------
     xtcp_tx_buf[TASK_DTG_ACK_ID] = tmp_union.task_allinfo_tmp.task_coninfo.task_id;
     xtcp_tx_buf[TASK_DTG_ACK_ID+1] = tmp_union.task_allinfo_tmp.task_coninfo.task_id>>8;
-    xtcp_tx_buf[TASK_DTG_TOLPACK] = tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum/MAX_SEND_MUSIC;
-    if(tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum%MAX_SEND_MUSIC){
+    xtcp_tx_buf[TASK_DTG_TOLPACK] = tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum/MAX_SEND_MUSIC+1; //增加一个设备包数
+    if(tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum%MAX_SEND_MUSIC || xtcp_tx_buf[TASK_DTG_TOLPACK]==0){
         xtcp_tx_buf[TASK_DTG_TOLPACK]++;
     }
     xtcp_tx_buf[TASK_DTG_PACK_NUM] = t_list_connsend[list_num].pack_inc; 
@@ -598,7 +598,7 @@ uint16_t task_dtinfo_chk_build(uint8_t list_num){
     }
     t_list_connsend[list_num].pack_inc++;
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[TASK_DTG_TOLPACK]){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(data_base,TASK_DTINFO_CK_CMD,t_list_connsend[list_num].could_id);
 }
@@ -651,7 +651,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     //-----------------------------------------------------
     // 获得总包数
     xtcp_tx_buf[RTTASK_CK_TOLPACK] = rttask_lsit.rttask_tol/MAX_RTTASK_SEND;
-    if(rttask_lsit.rttask_tol%MAX_RTTASK_SEND){
+    if(rttask_lsit.rttask_tol%MAX_RTTASK_SEND || xtcp_tx_buf[RTTASK_CK_TOLPACK]==0){
         xtcp_tx_buf[RTTASK_CK_TOLPACK]++;
     }
     // 当前包序号
@@ -707,8 +707,9 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     }
     xtcp_tx_buf[RTTASK_CK_TASKTOL] = i;
     t_list_connsend[list_num].pack_inc++;
+	debug_printf("tol %d inc %d\n", xtcp_tx_buf[RTTASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[RTTASK_CK_TOLPACK]){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(data_base,RTTASK_CHECK_CMD,t_list_connsend[list_num].could_id);
 }
@@ -923,8 +924,9 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
     }
     //-----------------------------------------------------
     xtcp_tx_buf[MUS_PTHCHK_PACKTOL] = *patch_tol/MAX_PATCHNUM_SEND;
-    if(*patch_tol%MAX_PATCHNUM_SEND)
+    if(*patch_tol%MAX_PATCHNUM_SEND || xtcp_tx_buf[MUS_PTHCHK_PACKTOL]==0)
         xtcp_tx_buf[MUS_PTHCHK_PACKTOL]++;
+	//
     xtcp_tx_buf[MUS_PTHCHK_CURRENTPACK] = t_list_connsend[list_num].pack_inc;
     //
     data_base = MUS_PTHCHK_DATBASE;
@@ -945,7 +947,7 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
 
     t_list_connsend[list_num].pack_inc++;
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[MUS_PTHCHK_PACKTOL]){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(data_base,MUSIC_PATCH_CHK_CMD,t_list_connsend[list_num].could_id);
 }
@@ -993,7 +995,7 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     t_list_connsend[list_num].pack_inc++;
     debug_printf("tol %d inc %d\n",xtcp_tx_buf[MUS_LIBCHK_PACKTOL],t_list_connsend[list_num].pack_inc);
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[MUS_LIBCHK_PACKTOL]){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(data_base,MUSIC_LIB_CHK_CMD,t_list_connsend[list_num].could_id);
 }
@@ -1250,7 +1252,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
     uint8_t i;
     uint16_t dat_base;
     t_list_connsend[list_num].pack_tol = g_sys_val.search_div_tol/10;
-    if(g_sys_val.search_div_tol%10)
+    if(g_sys_val.search_div_tol%10 || t_list_connsend[list_num].pack_tol==0)
         t_list_connsend[list_num].pack_tol++;
     //
     xtcp_tx_buf[DIVSRC_LIST_TOLPACK] = t_list_connsend[list_num].pack_tol;
@@ -1276,7 +1278,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
     //
     t_list_connsend[list_num].pack_inc++;
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
-        t_list_connsend[list_num].conn_state = LIST_SEND_INIT;
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
     return build_endpage_decode(dat_base,SYSSET_DIVFOUNT_CMD,t_list_connsend[list_num].could_id);
 }
@@ -1344,7 +1346,7 @@ uint16_t cld_appregsied_request_build(){
 //===============================================================================
 // 页面查看 B312 
 //================================================================================
-uint16_t taskview_page_build(){
+uint16_t taskview_page_build(uint16_t cmd){
     uint16_t tmp_num;
     div_node_t *div_info_p = div_list.div_head_p;
     rttask_info_t *rttask_info_p = rttask_lsit.all_head_p;
@@ -1377,14 +1379,14 @@ uint16_t taskview_page_build(){
     //----------------------------------------------------------------------
     tmp_num=0;
     while(div_info_p!=null){
-        if(strcmp(c_tx_8623,div_info_p->div_info.name)==0){
+        if(strcmp(c_tx_8623,div_info_p->div_info.name)==0 && div_info_p->div_info.div_state){
             tmp_num++;
         }
         div_info_p = div_info_p->next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+3] = tmp_num; //报警设备总数
     //---------------------------------------------------------------------
-    return build_endpage_decode(POL_DAT_BASE+4,TASK_PAGESHOW_B312_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+4,cmd,&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 

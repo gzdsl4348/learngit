@@ -20,14 +20,16 @@ extern uint8_t f_name[];
 void music_patch_list_chk_recive(){
     uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     //
-    user_sending_len = music_patchlist_chk_build(list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-    
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = music_patchlist_chk_build(list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
 }
 
 void music_patch_list_send_decode(uint8_t list_num){
     user_sending_len = music_patchlist_chk_build(list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
 //====================================================================================================
@@ -35,6 +37,7 @@ void music_patch_list_send_decode(uint8_t list_num){
 //====================================================================================================
 void music_music_list_chk_recive(){
     uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+	//
     if(list_num==LIST_SEND_INIT)
         return;
     //获取文件夹列表
@@ -66,21 +69,29 @@ void music_music_list_chk_recive(){
         if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],dir_info[i].name,PATCH_NAME_NUM)==1){
             t_list_connsend[list_num].list_info.musiclist.sector_index = dir_info[i].sector;
             t_list_connsend[list_num].list_info.musiclist.music_inc = 0;
+			t_list_connsend[list_num].list_info.musiclist.music_state = 1;
             //
-            user_sending_len = music_namelist_chk_build(1,list_num);
-            user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        	if(g_sys_val.list_sending_f==0){
+				g_sys_val.list_sending_f = 1;
+	            user_sending_len = music_namelist_chk_build(t_list_connsend[list_num].list_info.musiclist.music_state,list_num);
+	            user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        	}
             return;
         }
     }
-    user_sending_len = music_namelist_chk_build(0,list_num);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	t_list_connsend[list_num].list_info.musiclist.music_state = 0;
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_sending_len = music_namelist_chk_build(t_list_connsend[list_num].list_info.musiclist.music_state,list_num);
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
 }
 
 //音乐名称连发
 void music_music_list_send_decode(uint8_t list_num){
     debug_printf("music send\n");
-    user_sending_len = music_namelist_chk_build(1,list_num);
-    user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+    user_sending_len = music_namelist_chk_build(t_list_connsend[list_num].list_info.musiclist.music_state,list_num);
+    user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
 //====================================================================================================

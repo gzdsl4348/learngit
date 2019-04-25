@@ -17,7 +17,7 @@ extern "C" {
 
 #define COULD_TCP_EN     1
 
-#define NO_NEED_REGISTER 1
+#define NO_NEED_REGISTER 0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -93,7 +93,7 @@ extern "C" {
 // 
 #define MAX_SDCARD_MUSIC_NUM        100
 //
-#define MES_STACK_NUM       3   //消息更新 堆栈数
+#define MES_STACK_NUM       10   //消息更新 堆栈数
 
 #define MAX_SEND_ACCOUNT_NUM_FORPACK    10
 //
@@ -469,7 +469,8 @@ enum CONN_STATE_E{
     MUSICNAME_LIST_SENDING=0x06,
     AC_LIST_SENDING=0x07,
     DIVSRC_LIST_SENDING=0x08,
-    
+
+	LIST_SEND_END=0xFE,
     LIST_SEND_INIT=0xFF,
 };
 //-------------------------------------------
@@ -509,6 +510,7 @@ typedef struct patchlist_sending_t{
 typedef struct musiclist_sending_t{
     uint8_t  music_inc;
     uint8_t  sector_index;
+	uint8_t  music_state;
 }musiclist_sending_t;
 
 typedef struct account_sending_t{
@@ -593,7 +595,7 @@ typedef struct messend_conn_t{
 
 typedef struct mes_send_list_t{
     messend_conn_t messend_conn[MAX_ACCOUNT_CONNET];
-    uint8_t tx_buff[MES_STACK_NUM][1472];
+    //uint8_t tx_buff[MES_STACK_NUM][1472];
     uint8_t send_inc;
     uint16_t len[MES_STACK_NUM];
     uint8_t tim_inc;

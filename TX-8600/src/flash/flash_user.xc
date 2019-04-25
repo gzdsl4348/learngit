@@ -390,6 +390,19 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff,pw_buff,1472);
             break;
+		// 消息更新 写入
+	    case if_fl_manage.if_messend_buff_put(uint8_t wptr,uint8_t buff[]):
+            memcpy(tmp_buff, buff, 1472);
+            sdram_write(c_sdram, sdram_state, USER_MESSEND_BUFF_BASE+wptr*1472/4, (1472/4), pw_buff);
+            sdram_complete(c_sdram, sdram_state);
+			break;
+		// 消息读取 写入
+		case if_fl_manage.if_messend_buff_get(uint8_t rptr,uint8_t buff[]):
+			sdram_read(c_sdram, sdram_state, USER_MESSEND_BUFF_BASE+rptr*1472/4, (1472/4), pw_buff);
+			sdram_complete(c_sdram, sdram_state);
+			memcpy(buff,pw_buff,1472);
+			break;
+		// wifi串口
         case if_fl_manage.uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
             switch(mode){
                 case 0:

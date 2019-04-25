@@ -886,7 +886,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_SENT_DATA:
                         //-------------------------------------------------
-                        // 优先堆栈内发送
+                        debug_printf("send event\n");
+                        //列表发送
+						xtcp_sending_decoder();
+						//
                         if(conn.id == g_sys_val.could_conn.id){
                             g_sys_val.could_send_cnt = 0;
                             if(xtcp_sendend_decode()){
@@ -894,8 +897,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             }
                         }
                         //-------------------------------------------------
-                        //列表发送
-						xtcp_sending_decoder();
+						// 消息推送
                         mes_send_decode();
 					  	break;
 					case XTCP_TIMED_OUT:    //tcp only

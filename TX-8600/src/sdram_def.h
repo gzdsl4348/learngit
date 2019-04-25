@@ -20,11 +20,11 @@
  */
 
 
-#define SDRAM_FLASH_SECTOR_MAX_NUM  ((3*1024)/4)     //3MB
+#define SDRAM_FLASH_SECTOR_MAX_NUM  ((3*1024)/4)     // 3MB
 
 #define SDRAM_GBK_UNICODE_TBL_START (0)              //0MB 共172KB
 
-#define SDRAM_DATA_BACKUP_START     (3*1024*1024/4)  //3MB, 共3MB
+#define SDRAM_DATA_BACKUP_START     (3*1024*1024/4)  // 3MB, 共3MB
 
 #define SDRAM_FILE_LIST_START       (6*1024*1024/4)  //6MB, 共512KB
 
@@ -39,6 +39,7 @@
 // 20K 存放批量操作音乐文件
 // 10K 存放设备搜索信息
 // 60K 存放xtcp tx rx fifo
+// 20K 存放消息更新buff
 
 // 批量处理音乐buff
 #define USER_MUSICNAME_TMP_BASE     (USER_FILE_BAT_TMPBUF_BASE) //20K
@@ -48,5 +49,7 @@
 #define USER_XTCP_TXFIFO_BASE       (USER_DIV_SEARCH_BASE+(30*1024/4))  //30K
 // RX发送FIFO
 #define USER_XTCP_RXFIFO_BASE       (USER_XTCP_TXFIFO_BASE+(30*1024/4)) //30K
+// mes 发送buff
+#define USER_MESSEND_BUFF_BASE		(USER_XTCP_RXFIFO_BASE+(20*1024/4))	//20K
 
 #endif

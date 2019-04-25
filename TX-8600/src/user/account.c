@@ -116,13 +116,18 @@ void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
     }
     //-----------------------------------------------------------------
     t_list_connsend[list_num].list_info.ac_list.could_send_en = could_cmd;
-    user_sending_len = account_list_ack_build(list_num);
+	if(g_sys_val.list_sending_f==0){
+	    user_sending_len = account_list_ack_build(list_num);
+	}
 }
 
 
 void account_userlist_recive(){
     account_list_send(&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE],0);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+	}
 }
 
 //---------------------------------------------
@@ -137,7 +142,7 @@ void ac_list_sending_decode(uint8_t list_num){
     }
     //其他转发
     else{
-        user_xtcp_send(conn,t_list_connsend[list_num].could_s);
+        user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
     }
 }
 
@@ -399,7 +404,10 @@ void account_list_updat(){
     if(g_sys_val.could_conn.id==0)
         return;
     account_list_send(&xtcp_rx_buf[POL_ID_BASE],1,1);
-    user_could_send(1);  
+	if(g_sys_val.list_sending_f==0){
+		g_sys_val.list_sending_f = 1;
+	    user_could_send(1);  
+	}
 }
 
 //===============================================================================

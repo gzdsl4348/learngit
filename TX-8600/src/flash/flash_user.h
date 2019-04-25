@@ -76,6 +76,10 @@ typedef interface fl_manage_if{
     void xtcp_buff_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
 
     void xtcp_buff_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f);
+
+	void if_messend_buff_put(uint8_t wptr,uint8_t buff[]);
+
+	void if_messend_buff_get(uint8_t rptr,uint8_t buff[]);
 }fl_manage_if;
 
 //
