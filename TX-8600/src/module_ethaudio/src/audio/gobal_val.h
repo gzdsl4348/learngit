@@ -39,7 +39,7 @@ typedef struct g_val_t{
     eth_audio_dev_t audio_devlist[MAX_SENDCHAN_NUM];
     uint32_t align_reserved;
 #else
-	audio_txlist_t t_audio_txlist[NUM_MEDIA_INPUTS];	//2byte align
+	audio_txlist_t t_audio_txlist[NUM_MEDIA_INPUTS];	// byte align
 #endif
 	uint8_t audio_format;
 	uint8_t audio_type[NUM_MEDIA_INPUTS];
@@ -56,6 +56,8 @@ typedef struct g_val_t{
 	uint8_t tx_flag;
 #endif    
     uint32_t sample_rate[NUM_MEDIA_INPUTS];
+
+	unsigned audio_tx_cnt;
 
 #if 0
     unsigned send_text_en[NUM_MEDIA_INPUTS];

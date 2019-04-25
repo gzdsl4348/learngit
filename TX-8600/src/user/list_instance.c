@@ -6,6 +6,7 @@
 #include "task_decode.h"
 #include "user_file_contorl.h"
 #include "list_contorl.h"
+#include "sys_text_serve.h"
 
 //================================================================================
 // fun list decode 
@@ -70,6 +71,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {SYSSET_DIVFOUNT_CMD,sysset_divfound_recive},
                              {SYSSET_DIV_HOSTSET_CMD,divresearch_hostset_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
+							 {TEXT_TXPAGE_GET_CMD,text_get_txpage_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 

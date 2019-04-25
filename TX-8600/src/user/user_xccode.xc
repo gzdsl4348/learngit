@@ -445,4 +445,11 @@ void user_messend_buff_put(uint8_t wptr,uint8_t buff[]){
     }
 }
 
+void user_get_txpage_cnt(unsigned *txpage_cnt){
+	unsafe{
+		unsigned tmp;
+		i_ethaud_cfg->chk_txpage_cnt(tmp);
+		*txpage_cnt = tmp;
+	}
+}
 

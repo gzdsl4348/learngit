@@ -280,6 +280,10 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                 memcpy(g_static_route.dst_mac, dst_mac, 6);
                 g_static_route.flag = 1;
                 break;
+			case i_ethaud_cfg[uint8_t a].chk_txpage_cnt(unsigned &txch_cnt):
+				txch_cnt = g_t_val->audio_tx_cnt;
+				g_t_val->audio_tx_cnt=0;
+				break;
 #if 0
             case i_ethaud_cfg[unsigned a].send_text_en(uint8_t audio_txen[NUM_MEDIA_INPUTS],unsigned timestamp[NUM_MEDIA_INPUTS],
                                                                           unsigned max_send_page[NUM_MEDIA_INPUTS],

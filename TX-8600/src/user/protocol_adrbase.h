@@ -161,12 +161,14 @@
 
 #define APP_REGISTER_CONTORL    0xB90D
 
+// 内部测试指令
+#define TEXT_TXPAGE_GET_CMD		0xC001
 
 //---------------------------------------------------------------------
 // 云包头
-#define CLH_TYPE_BASE           0                                   //4 云包头类型
-#define CLH_LEN_BASE            (CLH_TYPE_BASE+4)                   //2 云包头长度
-#define CLH_DESIP_BASE          (CLH_LEN_BASE+2)                    //4 目标IP
+#define CLH_TYPE_BASE           0                                   // 4 云包头类型
+#define CLH_LEN_BASE            (CLH_TYPE_BASE+4)                   // 2 云包头长度
+#define CLH_DESIP_BASE          (CLH_LEN_BASE+2)                    // 4 目标IP
 #define CLH_HOSTMAC_BASE        (CLH_DESIP_BASE+4)                  //6 主机MAC
 #define CLH_CONTORL_ID_BASE     (CLH_HOSTMAC_BASE+6)                //6 控制ID
 #define CLH_TRANTYPE_BASE       (CLH_CONTORL_ID_BASE+6)             //1 透传类型
@@ -190,10 +192,10 @@
 //====================================================================================================
 // 云服务心跳包
 //====================================================================================================
-#define CLD_HEART_IP        (POL_DAT_BASE)      //4主机本地IP
+#define CLD_HEART_IP        (POL_DAT_BASE)      // 4主机本地IP
 #define CLD_HEART_MAC       (CLD_HEART_IP+4)    //6主机MAC
 #define CLD_HEART_MASCHCODE (CLD_HEART_MAC+6)    //6主机MAC
-#define CLD_HEART_VER       (CLD_HEART_MASCHCODE+10)   //2主机硬件版本
+#define CLD_HEART_VER       (CLD_HEART_MASCHCODE+10)   // 2主机硬件版本
 #define CLD_HEART_DIVTYPE   (CLD_HEART_VER+2)   //32主机型号
 #define CLD_SYSNAME_BASE    (CLD_HEART_DIVTYPE+DIV_TYPE_NUM)   //32主机型号
 
@@ -209,8 +211,8 @@
 #define SOLU_CK_ID          (0)                 //1 方案ID
 #define SOLU_CK_STATE       (SOLU_CK_ID+1)      //1 方案状态
 #define SOLU_CK_NAME        (SOLU_CK_STATE+1)   //32 方案名称
-#define SOLU_CK_BEGDATE     (SOLU_CK_NAME+DIV_NAME_NUM)  //3 方案开始日期
-#define SOLU_CK_ENDDATE     (SOLU_CK_BEGDATE+3)  //3 方案结束日期
+#define SOLU_CK_BEGDATE     (SOLU_CK_NAME+DIV_NAME_NUM)  // 3 方案开始日期
+#define SOLU_CK_ENDDATE     (SOLU_CK_BEGDATE+3)  // 3 方案结束日期
 #define SOLU_CK_PRIO        (SOLU_CK_ENDDATE+3)
 #define SOLU_CK_TASKNUM     (SOLU_CK_PRIO+1)
 
@@ -255,7 +257,7 @@
 
 #define TASK_CK_DAT_BASE    (TASK_CK_TASK_TOL+1)
 #define TASK_CK_SOLU_ID     (0)                         //1 方案编号
-#define TASK_CK_TASK_ID     (TASK_CK_SOLU_ID+1)         //2 任务编号
+#define TASK_CK_TASK_ID     (TASK_CK_SOLU_ID+1)         // 2 任务编号
 #define TASK_CK_TASK_NAME   (TASK_CK_TASK_ID+2)         //22 任务名称
 #define TASK_CK_TASK_STATE  (TASK_CK_TASK_NAME+DIV_NAME_NUM)    //1 任务状态
 #define TASK_CK_TASK_PRIO   (TASK_CK_TASK_STATE+1)      //1 任务优先级
@@ -263,8 +265,8 @@
 #define TASK_CK_REPE_MODE   (TASK_CK_TASK_VOL+1)        //1 重复模式
 #define TASK_CK_REPE_WEEK   (TASK_CK_REPE_MODE+1)       //1 按周重复
 #define TASK_CK_REPE_DATE   (TASK_CK_REPE_WEEK+1)      //30 按日期重复
-#define TASK_CK_BEG_TIME    (TASK_CK_REPE_DATE+3*MAX_TASK_DATE_NUM) //3 任务开始时间
-#define TASK_CK_DURA_TIME   (TASK_CK_BEG_TIME+3)        //3 任务持续时间
+#define TASK_CK_BEG_TIME    (TASK_CK_REPE_DATE+3*MAX_TASK_DATE_NUM) // 3 任务开始时间
+#define TASK_CK_DURA_TIME   (TASK_CK_BEG_TIME+3)        // 3 任务持续时间
 #define TASK_CK_PLAY_MODE   (TASK_CK_DURA_TIME+3)       //1 任务播放模式
 #define TASK_CK_PLAY_TOL    (TASK_CK_PLAY_MODE+1)       //1 任务播放的总曲目
 #define TASK_CK_TEXTPLAY_S  (TASK_CK_PLAY_TOL+1)        //1 任务测试播放状态
@@ -277,7 +279,7 @@
 // SEND 
 #define TASK_SE_CONFIG      (POL_DAT_BASE)              //1 任务操作符
 #define TASK_SE_SOLU_ID     (TASK_SE_CONFIG+1)          //1 方案编号
-#define TASK_SE_TASK_ID     (TASK_SE_SOLU_ID+1)         //2 任务编号
+#define TASK_SE_TASK_ID     (TASK_SE_SOLU_ID+1)         // 2 任务编号
 #define TASK_SE_TASK_NAME   (TASK_SE_TASK_ID+2)         //22 任务名称
 #define TASK_SE_TASK_STATE  (TASK_SE_TASK_NAME+DIV_NAME_NUM)    //1 任务状态
 #define TASK_SE_TASK_PRIO   (TASK_SE_TASK_STATE+1)      //1 任务优先级
@@ -285,8 +287,8 @@
 #define TASK_SE_REPE_MODE   (TASK_SE_TASK_VOL+1)        //1 重复模式
 #define TASK_SE_REPE_WEEK   (TASK_SE_REPE_MODE+1)       //1 按周重复
 #define TASK_SE_REPE_DATE   (TASK_SE_REPE_WEEK+1)      //30 按日期重复
-#define TASK_SE_BEG_TIME    (TASK_SE_REPE_DATE+3*MAX_TASK_DATE_NUM) //3 任务开始时间
-#define TASK_SE_DURA_TIME   (TASK_SE_BEG_TIME+3)        //3 任务持续时间
+#define TASK_SE_BEG_TIME    (TASK_SE_REPE_DATE+3*MAX_TASK_DATE_NUM) // 3 任务开始时间
+#define TASK_SE_DURA_TIME   (TASK_SE_BEG_TIME+3)        // 3 任务持续时间
 #define TASK_SE_PLAY_MODE   (TASK_SE_DURA_TIME+3)       //1 任务播放模式
 #define TASK_SE_PLAY_TOL    (TASK_SE_PLAY_MODE+1)       //1 任务播放的总曲目
 #define TASK_SE_PLAY_STATE  (TASK_SE_PLAY_TOL+1)       //1 任务播放的状态
@@ -954,8 +956,17 @@
 #define SYSSET_IPSET_IP_MODE                (SYSSET_IPSET_HOSTIP+4)    //1
 #define SYSSET_IPSET_IP                     (SYSSET_IPSET_IP_MODE+1)   //4
 #define SYSSET_IPSET_MASK                   (SYSSET_IPSET_IP+4)   //4
-#define SYSSET_IPSET_GATE                   (SYSSET_IPSET_MASK+4)   //4
+#define SYSSET_IPSET_GATE                   (SYSSET_IPSET_MASK+4) 
+//4
+//====================================================================================================
+// 收发包数量查询     C001
+//====================================================================================================
+#define TEXT_TXCNT_STATE   		            (POL_DAT_BASE)	// 	1 
+#define TEXT_TXCNT_MAC						(TEXT_TXCNT_STATE+1) 	//	6
+#define TEXT_TXCNT_FORTX_CNT				(TEXT_TXCNT_MAC+6)	// 4			
+#define TEXT_TXCNT_FORRX_CNT				(TEXT_TXCNT_FORTX_CNT+4) // 4*6
 
+#define TEXT_TXCNT_DATEND					(TEXT_TXCNT_FORRX_CNT+24)
 
 #endif //__PROTOCOL_ADRBASE_H
 

@@ -221,7 +221,7 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
 void xtcp_sending_decoder(){
     //-------------------------------------------------------------------------------------------------------------------------
     // 上一个连接的列表数据包发送已完成
-    debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
+    //debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
     if(t_list_connsend[g_sys_val.list_sending_cnt].conn.id==conn.id && t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
         debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
 		g_sys_val.list_sending_f=0;

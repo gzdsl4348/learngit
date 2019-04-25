@@ -120,6 +120,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                               g_t_val->audio_devlist[i].mac,
                                               g_t_val->audio_devlist[i].media_list[0].area_contorl);
                             // Send Packet
+                            g_t_val->audio_tx_cnt++;
                             if(!isnull(c_tx_hp))
                                 ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
                             else if(!isnull(i_eth_tx_lp))
@@ -132,6 +133,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                               g_t_val->t_audio_txlist[ch].t_des_info[i].mac,
                                               g_t_val->t_audio_txlist[ch].t_des_info[i].area_contorl);
                             // Send Packet
+                            g_t_val->audio_tx_cnt++;
                             if(!isnull(c_tx_hp))
                                 ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
                             else if(!isnull(i_eth_tx_lp))

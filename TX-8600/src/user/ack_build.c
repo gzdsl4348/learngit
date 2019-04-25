@@ -1351,7 +1351,7 @@ uint16_t taskview_page_build(uint16_t cmd){
     div_node_t *div_info_p = div_list.div_head_p;
     rttask_info_t *rttask_info_p = rttask_lsit.all_head_p;
     timetask_t *timetask_p = timetask_list.all_timetask_head;
-    char c_tx_8623[]={'T',0,'X',0,'-',0,'8',0,'6',0,'2',0,'3','0'};
+    char c_tx_8623[]={'T',0,'X',0,'-',0,'8',0,'6',0,'2',0,'3',0};
     //----------------------------------------------------------------------
     tmp_num = 0;
     while(rttask_info_p!=null){
@@ -1359,6 +1359,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         rttask_info_p = rttask_info_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE] = tmp_num; //即时任务总数
+    debug_printf("rttask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     while(timetask_p!=null){
@@ -1368,6 +1369,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         timetask_p = timetask_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+1] = tmp_num; //定时任务总数
+    debug_printf("timetask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
@@ -1376,17 +1378,43 @@ uint16_t taskview_page_build(uint16_t cmd){
         }
     }
     xtcp_tx_buf[POL_DAT_BASE+2] = tmp_num; //方案总数
+    debug_printf("solu num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num=0;
     while(div_info_p!=null){
-        if(strcmp(c_tx_8623,div_info_p->div_info.name)==0 && div_info_p->div_info.div_state){
+		#if 0
+		for(uint8_t i=0;i<14;i++){
+			debug_printf("%x ",c_tx_8623[i]);
+		}
+		debug_printf("\n");
+
+		for(uint8_t i=0;i<14;i++){
+			debug_printf("%x ",div_info_p->div_info.div_type[i]);
+		}
+		debug_printf("\n");
+		#endif
+        if(charncmp(c_tx_8623,div_info_p->div_info.div_type,14) && div_info_p->div_info.div_state){
             tmp_num++;
         }
         div_info_p = div_info_p->next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+3] = tmp_num; //报警设备总数
+    debug_printf("firediv num %d\n",tmp_num);
     //---------------------------------------------------------------------
     return build_endpage_decode(POL_DAT_BASE+4,cmd,&xtcp_rx_buf[POL_ID_BASE]);
 }
 
+//===============================================================================
+// 查看收发包数量 C001
+//================================================================================
+uint16_t chk_txpage_cnt_build(){
+	unsigned tmp_cnt;
+	user_get_txpage_cnt(&tmp_cnt);
+	xtcp_tx_buf[TEXT_TXCNT_STATE] = 1; //应答
+	memcpy(&xtcp_tx_buf[TEXT_TXCNT_MAC],host_info.mac,6);
+	memcpy(&xtcp_tx_buf[TEXT_TXCNT_FORTX_CNT],&tmp_cnt,4);
+	memset(&xtcp_tx_buf[TEXT_TXCNT_FORRX_CNT],0x00,24);
+	
+	return build_endpage_decode(TEXT_TXCNT_DATEND,TEXT_TXPAGE_GET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
 

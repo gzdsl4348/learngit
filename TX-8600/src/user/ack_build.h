@@ -144,6 +144,9 @@ uint16_t cld_appregsied_request_build();
 // B312
 uint16_t taskview_page_build(uint16_t cmd);
 
+// 查看收发包数量 C001
+uint16_t chk_txpage_cnt_build();
+
 
 #if defined(__cplusplus) || defined(__XC__)
 }

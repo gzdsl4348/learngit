@@ -92,9 +92,9 @@ void user_messend_buff_get(uint8_t rptr,uint8_t buff[]);
 
 void user_messend_buff_put(uint8_t wptr,uint8_t buff[]);
 
-
 void user_xtcp_send_could();
 
+void user_get_txpage_cnt(unsigned *txpage_cnt);
 
 #endif //__USER_XCCODE_H_
 
