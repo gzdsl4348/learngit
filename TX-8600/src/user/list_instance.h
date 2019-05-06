@@ -34,6 +34,8 @@ extern "C" {
 // This PORT For Eth Data Communication Port
 #define ETH_COMMUN_PORT	        8805
 #define TCP_COULD_PROT          7003
+#define ETH_DEBUG_PROT			8806
+
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
 // 最大UDP连接数
@@ -82,7 +84,7 @@ extern "C" {
 #define MAX_MUSIC_CH        NUM_MEDIA_INPUTS    //48路音频
 
 // 发送数据堆栈
-#define MAX_TXBUFF_FIFOSIZE   16
+#define MAX_TXBUFF_FIFOSIZE   64
 // 接收数据堆栈
 #define MAX_RXBUFF_FIFOSIZE   16
 
@@ -96,6 +98,8 @@ extern "C" {
 #define MES_STACK_NUM       10   //消息更新 堆栈数
 
 #define MAX_SEND_ACCOUNT_NUM_FORPACK    10
+
+#define MAX_TASK_ONCESEND   10
 //
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
@@ -106,6 +110,7 @@ extern char all_tx_buf[TX_BUFFER_SIZE];
 extern uint16_t user_sending_len;
 
 extern xtcp_connection_t conn;
+
 
 //=================================================================
 // 日期信息
@@ -491,6 +496,7 @@ typedef struct tasklist_sending_t{
     uint8_t  solu_id;
     uint8_t  solu_en;
     uint16_t cmd;
+    uint8_t  task_tol;
 }tasklist_sending_t;
 // 任务详细信息
 typedef struct task_dtinfo_sending_t{
@@ -511,6 +517,7 @@ typedef struct musiclist_sending_t{
     uint8_t  music_inc;
     uint8_t  sector_index;
 	uint8_t  music_state;
+    uint8_t  music_patch_name[PATCH_NAME_NUM];
 }musiclist_sending_t;
 
 typedef struct account_sending_t{

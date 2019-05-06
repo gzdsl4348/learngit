@@ -7,6 +7,7 @@
 #include <print.h>
 #include <string.h>
 #include <ctype.h>
+#include "user_xccode.h"
 
 #undef debug_printf
 
@@ -21,7 +22,7 @@ static void reverse_array(char buf[], unsigned size)
     buf[end] = tmp;
   }
 }
-
+    
 static int itoa(unsigned n, char *buf, unsigned base, int fill)
 {
   static const char digits[] = "0123456789ABCDEF";
@@ -136,7 +137,17 @@ void debug_printf(char * fmt, ...)
   }
   _write(FD_STDOUT, buf, p - buf);
   va_end(args);
+  
 
+  #if 0
+  char *tmp=buf;
+  for(unsigned i=0;i<(p-buf);i++){
+	printf("%c",*tmp);
+	tmp++;
+  }
+  printf("\n");
+  #endif
+  
   return;
 }
 

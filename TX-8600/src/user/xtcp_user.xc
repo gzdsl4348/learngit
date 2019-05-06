@@ -826,6 +826,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 g_sys_val.could_conn = conn;
                                 disp_couldstate(1);
                                 register_could_chk();
+								cld_timesysnc_request();
                             }
                             else{
                                 i_xtcp.close(conn);
@@ -886,7 +887,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_SENT_DATA:
                         //-------------------------------------------------
-                        debug_printf("send event\n");
+						if(conn.id==g_sys_val.could_conn.id)
+							debug_printf("send event tcp\n");
+						else
+							debug_printf("send event udp\n");
                         //列表发送
 						xtcp_sending_decoder();
 						//
@@ -898,7 +902,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         }
                         //-------------------------------------------------
 						// 消息推送
-                        mes_send_decode();
+						if(g_sys_val.tcp_sending==0)
+	                        mes_send_decode();
 					  	break;
 					case XTCP_TIMED_OUT:    //tcp only
     					//user_xtcp_connect_tcp(g_sys_val.could_ip);

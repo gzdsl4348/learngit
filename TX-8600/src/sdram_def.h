@@ -38,7 +38,7 @@
 
 // 20K 存放批量操作音乐文件
 // 10K 存放设备搜索信息
-// 60K 存放xtcp tx rx fifo
+// 130K 存放xtcp tx rx fifo
 // 20K 存放消息更新buff
 
 // 批量处理音乐buff
@@ -46,7 +46,7 @@
 // 设备搜索临时buff
 #define USER_DIV_SEARCH_BASE        (USER_MUSICNAME_TMP_BASE+(20*1024/4)) //10K
 // TX发送FIFO 
-#define USER_XTCP_TXFIFO_BASE       (USER_DIV_SEARCH_BASE+(30*1024/4))  //30K
+#define USER_XTCP_TXFIFO_BASE       (USER_DIV_SEARCH_BASE+(100*1024/4))  //100K
 // RX发送FIFO
 #define USER_XTCP_RXFIFO_BASE       (USER_XTCP_TXFIFO_BASE+(30*1024/4)) //30K
 // mes 发送buff

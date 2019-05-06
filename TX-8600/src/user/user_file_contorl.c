@@ -143,6 +143,7 @@ void music_patchname_config_recive(){
         g_sys_val.file_conn_tmp = conn;
         g_sys_val.file_ack_cmd = MUSIC_PATCHNAME_CON_CMD;
         g_sys_val.file_contorl_couldf = xtcp_rx_buf[POL_COULD_S_BASE];
+        memcpy(g_sys_val.file_contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
         user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
@@ -315,6 +316,7 @@ void music_bat_contorl_recive(){
     }
     // 单次配一个批量任务
     if((g_sys_val.file_bat_contorl_s)||((g_sys_val.file_bat_conn.id!=null)&&(conn.id!=g_sys_val.file_bat_conn.id))){
+		debug_printf("file bat busy\n");
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],01,MUSIC_BAT_CONTORL_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
         return;
@@ -482,6 +484,7 @@ void file_bat_contorl_event(uint8_t error_code){
         file_patch_get(g_sys_val.file_bat_despatch,music_tmp,g_sys_val.fdes);
         //--------------------------------------------------------------------------------
         // DEBUG 打印
+        #if 0
         debug_printf("src file :");
         for(uint8_t i=0;i<(PATCH_NAME_NUM+MUSIC_NAME_NUM)/2;i++){
             debug_printf("%x ",g_sys_val.fsrc[i]);
@@ -495,6 +498,7 @@ void file_bat_contorl_event(uint8_t error_code){
                 break;
         }
         debug_printf("\n");
+		#endif
         //----------------------------------------------------------------------------
         // 复制
         if(g_sys_val.file_bat_contorl==0){

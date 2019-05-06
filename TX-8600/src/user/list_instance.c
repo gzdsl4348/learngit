@@ -72,9 +72,10 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {SYSSET_DIV_HOSTSET_CMD,divresearch_hostset_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
 							 {TEXT_TXPAGE_GET_CMD,text_get_txpage_recive},
+							 {ETH_CONTOL_DEBUG_CMD,eth_debug_contorl_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
-
+	
 // 多包列表发送函数
 sending_fun_lis_t sending_fun_lis[]={div_sending_decode,         //设备列表
                                      arealist_sending_decode,    //分区列表

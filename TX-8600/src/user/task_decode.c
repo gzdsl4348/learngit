@@ -186,6 +186,11 @@ void timer_taskmusic_check(){
             if(timetask_now.task_musicplay[i].time_inc>=timetask_now.task_musicplay[i].dura_time){
                 task_music_config_stop(i);
                 user_disptask_refresh();
+                                    
+                // 任务信息更新
+            	g_sys_val.task_config_s = 2; //任务编辑
+            	g_sys_val.task_con_id = timetask_now.task_musicplay[i].task_id;
+                mes_send_taskinfo(&tmp_union.task_allinfo_tmp);
             }
         }
     }
@@ -265,6 +270,12 @@ void task_10hz_mutich_play(){
                     debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
                     //task_music_config_play(i,g_sys_val.music_task_id[j]);
                     task_music_config_play(i,g_sys_val.music_task_id[j]);
+                    
+                    // 任务信息更新
+                	g_sys_val.task_config_s = 2; //任务编辑
+                	g_sys_val.task_con_id = g_sys_val.music_task_id[j];
+                    mes_send_taskinfo(&tmp_union.task_allinfo_tmp);
+                    //--------------------------------------------------------------------------------
                     break;
                 }
             }
@@ -386,6 +397,10 @@ void task_check_recive(){
     // 特殊处理
     t_list_connsend[list_num].list_info.tasklist.solu_en=0; //查找所有任务
     t_list_connsend[list_num].list_info.tasklist.solu_id=0;
+    //
+    t_list_connsend[list_num].list_info.tasklist.task_tol = timetask_list.task_total/MAX_TASK_ONCESEND;
+    if(timetask_list.task_total%MAX_TASK_ONCESEND || t_list_connsend[list_num].list_info.tasklist.task_tol==0)
+        t_list_connsend[list_num].list_info.tasklist.task_tol++;
     //
 	if(g_sys_val.list_sending_f==0){
 		g_sys_val.list_sending_f = 1;
@@ -513,11 +528,13 @@ void solution_config_recive(){
             task_p = task_p->all_next_p;
         }
     }
+    timetask_t *task_p;
+    timetask_t *task_end_p;
     //克隆方案
     if(xtcp_rx_buf[SOLU_CFG_SOLU_CONTORL]==3){
         //所有任务里找出当前方案任务
-        timetask_t *task_p = timetask_list.all_timetask_head;
-        timetask_t *task_end_p = timetask_list.all_timetask_end;
+        task_p = timetask_list.all_timetask_head;
+        task_end_p = timetask_list.all_timetask_end;
         while((task_p!=null)){
             // 判断克隆任务
             if(task_p->solu_id == xtcp_rx_buf[SOLU_CFG_SOLU_ID]){
@@ -558,7 +575,19 @@ void solution_config_recive(){
         memcpy(&solution_list.solu_info[id].begin_date,&xtcp_rx_buf[SOLU_CFG_SOLU_BEGDATE],3);
         memcpy(&solution_list.solu_info[id].end_date,&xtcp_rx_buf[SOLU_CFG_SOLU_ENDDATE],3);
     } 
+    // 配置方案优先级
     solution_list.solu_info[id].prio = xtcp_rx_buf[SOLU_CFG_SOLU_PRIO]; 
+    // 改变任务优先级
+    
+    task_p = timetask_list.all_timetask_head;
+    while(task_p!=null){
+        if(task_p->solu_id == id){
+            timer_task_read(&tmp_union.task_allinfo_tmp,task_p->id);
+            tmp_union.task_allinfo_tmp.task_coninfo.task_prio = solution_list.solu_info[id].prio;
+            timer_task_write(&tmp_union.task_allinfo_tmp,task_p->id);
+        }
+        task_p = task_p->all_next_p;
+    }
 
     // 配置方案使能
     if(xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT]&1){ 
@@ -915,7 +944,7 @@ void task_dtinfo_config_recive(){
             //---------------------------------------------------------------------------------
             // 信息更新
             if(g_sys_val.task_con_state == 0){
-                mes_send_taskinfo();
+                mes_send_taskinfo(&g_sys_val.tmp_union.task_allinfo_tmp);
             }
             //--------------------------------------------------------------------------------
             debug_printf("task dtinfo config over\n");
@@ -1085,7 +1114,7 @@ void task_en_recive(){
         debug_printf("\n\ntask updata\n\n");
 		g_sys_val.task_config_s = 2; //任务编辑
 		g_sys_val.task_con_id = id;
-        mes_send_taskinfo();
+        mes_send_taskinfo(&tmp_union.task_allinfo_tmp);
     }
     //--------------------------------------------------------------------------------
 }
@@ -1097,16 +1126,20 @@ void task_playtext_recive(){
     uint16_t id = (xtcp_rx_buf[TASK_PLAY_ID+1]<<8)|xtcp_rx_buf[TASK_PLAY_ID];
     if(xtcp_rx_buf[TASK_PLAY_CONTORL]){// 1 停止
         for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-            debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
+            //debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
             if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==id)){
                 debug_printf("text stop %d\n",id);
                 task_music_config_stop(i);
+                // 任务信息更新
+            	g_sys_val.task_config_s = 2; //任务编辑
+            	g_sys_val.task_con_id = id;
+                mes_send_taskinfo(&tmp_union.task_allinfo_tmp);
                 goto play_text_sucess;
             }
         }
         goto play_text_fail;
     }
-    debug_printf("play\n");
+    debug_printf("play id %d\n",id);
     // 读取任务
     timer_task_read(&tmp_union.task_allinfo_tmp,id);
     // 判断是否空任务
@@ -1129,6 +1162,9 @@ void task_playtext_recive(){
     play_text_sucess:
     user_sending_len =  id_ack_build(id,1,TASK_PLAYTEXT_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+
+    //---------------------------------------------------------------------------------
+	
     return;
     play_text_fail:
     user_sending_len =  id_ack_build(id,0,TASK_PLAYTEXT_CMD);
@@ -1723,6 +1759,21 @@ void tasklist_forsolu_chk_recive(){
     //
     t_list_connsend[list_num].list_info.tasklist.solu_en=1;
     t_list_connsend[list_num].list_info.tasklist.solu_id=xtcp_rx_buf[POL_DAT_BASE];
+    //
+    uint16_t task_tol=0;
+    timetask_t *task_p = timetask_list.all_timetask_head;
+    debug_printf("solu id chl%d\n",xtcp_rx_buf[POL_DAT_BASE]);
+    while(task_p!=null){
+        if(task_p->solu_id==xtcp_rx_buf[POL_DAT_BASE]){
+            task_tol++;
+        }
+        task_p = task_p->all_next_p;
+    }
+    debug_printf("task num %d\n",task_tol);
+    t_list_connsend[list_num].list_info.tasklist.task_tol = task_tol/MAX_TASK_ONCESEND;
+    if(task_tol%MAX_TASK_ONCESEND || t_list_connsend[list_num].list_info.tasklist.task_tol==0)
+        t_list_connsend[list_num].list_info.tasklist.task_tol++;
+    //
     user_sending_len = task_list_ack_build(t_list_connsend[list_num].list_info.tasklist.cmd,1,t_list_connsend[list_num].list_info.tasklist.solu_id,list_num);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }

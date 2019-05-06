@@ -10,6 +10,9 @@
 #include "checksum.h"
 #include "debug_print.h"
 //
+
+#define DEBUG_LIST_EN 01
+
 //===========================================================================
 // rece xtcp data  指令接收处理线程
 //===========================================================================
@@ -20,7 +23,8 @@ void conn_decoder(){
         ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB905&&
         ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB90C&&
         (conn.remote_addr[3]!=214)){                        
-        debug_printf("rec ip %d,%d,%d,%d %x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]);
+        debug_printf("rec ip %d,%d,%d,%d %x ID %x,%x,%x,%x,%x,%x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2],
+					   xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_ID_BASE+1],xtcp_rx_buf[POL_ID_BASE+2],xtcp_rx_buf[POL_ID_BASE+3],xtcp_rx_buf[POL_ID_BASE+4],xtcp_rx_buf[POL_ID_BASE+5]);
     }
     #endif
     if(((uint16_t *)xtcp_rx_buf)[0]!=0x55AA)
@@ -223,11 +227,11 @@ void xtcp_sending_decoder(){
     // 上一个连接的列表数据包发送已完成
     //debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
     if(t_list_connsend[g_sys_val.list_sending_cnt].conn.id==conn.id && t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
-        debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
+        //debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
 		g_sys_val.list_sending_f=0;
 		if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state == LIST_SEND_END){
 			t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
-			debug_printf("list send end\n");
+			//debug_printf("list send end\n");
 		}
         // 发送超时清零
         t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt=0;
@@ -240,7 +244,7 @@ void xtcp_sending_decoder(){
             //找到下一个有效连接
             if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
 				g_sys_val.list_sending_f=1;
-				debug_printf("send next list %d conn id %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id);
+				//debug_printf("send next list %d conn id %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id);
                 sending_fun_lis[t_list_connsend[g_sys_val.list_sending_cnt].conn_state].sending_fun(g_sys_val.list_sending_cnt);
                 break;
             }
@@ -276,9 +280,11 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
         if(t_list_connsend[i].conn_state!=LIST_SEND_INIT){
             //查是否重复
             if(conn.id==t_list_connsend[i].conn.id && charncmp(t_list_connsend[i].could_id,could_id,6)){
+                #if DEBUG_LIST_EN 
 				debug_printf("list repet conn %d id%x,%x,%x,%x,%x,%x\n",conn.id ,t_list_connsend[i].could_id[0],t_list_connsend[i].could_id[1],t_list_connsend[i].could_id[2],
 																t_list_connsend[i].could_id[3],t_list_connsend[i].could_id[4],t_list_connsend[i].could_id[5]);
-				// 覆盖发送状态
+                #endif
+                // 覆盖发送状态
                 break;
             }
         }
@@ -324,7 +330,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
         // 分区列表
         case AREA_LIST_SENDING:{
             // 获取分区总数
-            uint8_t area_tmp;
+            uint8_t area_tmp=0;
             for(uint8_t i=0;i<MAX_AREA_NUM;i++){
                 if(area_info[i].area_sn!=0xFFFF)
                     area_tmp++;
@@ -344,7 +350,8 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
         // 任务列表
         case TASK_LIST_SENDING:
             t_list_connsend[i].list_info.tasklist.task_p = timetask_list.all_timetask_head;
-            t_list_connsend[i].list_info.tasklist.cmd = TASK_CHECK_CMD;
+            t_list_connsend[i].list_info.tasklist.cmd = cmd;
+            //
             break;
         // 任务详细信息列表
         case TASK_DTINFO_SENDING:
@@ -361,6 +368,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
             break;
         // 音乐文件名列表    
         case MUSICNAME_LIST_SENDING:
+            memcpy(t_list_connsend[i].list_info.musiclist.music_patch_name,&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],PATCH_NAME_NUM);
             break;
         // 账号列表
         case AC_LIST_SENDING:

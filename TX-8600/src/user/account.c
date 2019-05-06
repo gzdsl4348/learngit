@@ -462,13 +462,13 @@ uint8_t sysonline_recive(){
     return state;
 }
 
-// 系统/账户在线查询
+// 系统/账户在线查询 B905
 void account_sysonline_recive(){
     user_sending_len = sysonline_chk_build(sysonline_recive());
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
-// 手机在线保持
+// 手机在线保持  B90C
 void app_sysonline_recive(){
     //debug_printf("rec app online\n");
     sysonline_recive();

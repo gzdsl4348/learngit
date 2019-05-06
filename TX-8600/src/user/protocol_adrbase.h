@@ -164,6 +164,8 @@
 // 内部测试指令
 #define TEXT_TXPAGE_GET_CMD		0xC001
 
+#define ETH_CONTOL_DEBUG_CMD    0xC002
+
 //---------------------------------------------------------------------
 // 云包头
 #define CLH_TYPE_BASE           0                                   // 4 云包头类型

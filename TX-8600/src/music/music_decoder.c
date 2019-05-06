@@ -591,6 +591,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                     else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
                     {
                         p_dev->decoder_status = MUSIC_DECODER_ERROR2;  
+                        debug_printf("MP3 MUSIC_DECODER_ERROR2\n");
                     }
                     else
                     {

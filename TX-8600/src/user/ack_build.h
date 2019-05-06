@@ -12,6 +12,8 @@ void could_list_init();
 
 uint16_t build_endpage_decode(uint16_t len,uint16_t cmd,uint8_t id[]);
 
+void build_endpage_forid(uint16_t len,uint8_t id[]);
+
 // 上线应答发送
 uint16_t online_request_ack_build(uint8_t online_state,uint8_t mode);
 

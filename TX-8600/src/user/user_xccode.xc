@@ -174,12 +174,7 @@ void user_could_send(uint8_t pol_type){
     all_tx_buf[CLH_LEN_BASE+1] = (user_sending_len-6)>>8;
     memcpy(&all_tx_buf[CLH_DESIP_BASE],host_info.ipconfig.ipaddr,4);
     memcpy(&all_tx_buf[CLH_HOSTMAC_BASE],host_info.mac,6);
-    all_tx_buf[CLH_CONTORL_ID_BASE] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE];
-    all_tx_buf[CLH_CONTORL_ID_BASE+1] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE+1];
-    all_tx_buf[CLH_CONTORL_ID_BASE+2] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE+2];
-    all_tx_buf[CLH_CONTORL_ID_BASE+3] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE+3];
-    all_tx_buf[CLH_CONTORL_ID_BASE+4] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE+4];
-    all_tx_buf[CLH_CONTORL_ID_BASE+5] = all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE+5];
+    memcpy(&all_tx_buf[CLH_CONTORL_ID_BASE],&all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE],6);
     all_tx_buf[CLH_TRANTYPE_BASE] = pol_type;
     all_tx_buf[CLH_DIVTYPE_BASE] = 0;   //主机类型
     //
@@ -452,4 +447,33 @@ void user_get_txpage_cnt(unsigned *txpage_cnt){
 		*txpage_cnt = tmp;
 	}
 }
+
+void debug_conn_connect(uint8_t ip[]){
+	xtcp_ipaddr_t ipaddr;
+	memcpy(&ipaddr,ip,4);
+	unsafe{
+	if(g_sys_val.debug_conn.id!=0){
+		user_udpconn_close(g_sys_val.debug_conn);
+	}
+	if(user_xtcp_connect_udp(ETH_DEBUG_PROT,ipaddr,&g_sys_val.debug_conn)==0){
+		g_sys_val.eth_debug_f =1;
+	}
+	}//unsafe
+}
+
+void debug_conn_colse(){
+	unsafe{
+	if(g_sys_val.debug_conn.id!=0){
+		user_udpconn_close(g_sys_val.debug_conn);
+	}
+	g_sys_val.eth_debug_f = 0;
+	}
+}
+
+void user_xtcp_debugudpsend(uint8_t buf[],unsigned len){
+	unsafe{
+		i_user_xtcp->send_udp(g_sys_val.debug_conn,buf,len);
+	}
+}
+
 

@@ -96,5 +96,11 @@ void user_xtcp_send_could();
 
 void user_get_txpage_cnt(unsigned *txpage_cnt);
 
+void debug_conn_connect(uint8_t ip[]);
+
+void debug_conn_colse();
+
+void user_xtcp_debugudpsend(uint8_t buf[],unsigned len);
+
 #endif //__USER_XCCODE_H_
 

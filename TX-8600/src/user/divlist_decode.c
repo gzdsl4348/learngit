@@ -11,7 +11,7 @@
 #include "task_decode.h"
 #include "conn_process.h"
 
-uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
+uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 
 //---------------------------------------------------------------------------
 // 分区列表发送
@@ -342,12 +342,14 @@ void div_heart_recive(){
     #endif 
     //--------------------------
     static uint8_t tmp=0;
+	// 设备上线
     if((div_info_p->div_info.div_onlineok)&&(div_info_p->div_info.div_state == 0)&&(xtcp_rx_buf[HEART_STATE_B]!=0)){
         debug_printf("\ndivlist ud online\n\n");
         div_info_p->div_info.div_state = ONLINE;
         //设备上线 异常即时任务恢复
-        if(rttask_run_state_set(01,div_info_p->div_info.mac)){
-            state = RTTASKERROR_INFO_REFRESH;
+        uint16_t task_id = rttask_run_state_set(01,div_info_p->div_info.mac);
+        if(task_id!=0xFFFF){
+			mes_send_rttaskinfo(task_id,02);
         }
         need_send = 1;
     }
@@ -452,7 +454,7 @@ void div_online_recive()
 //=====================================================================================================
 // 即时任务 查找 与置为异常或正常状态  1 正常 2异常
 //=====================================================================================================
-uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
+uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
     //即时任务状态异常
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
     while(tmp_p!=null){
@@ -461,14 +463,12 @@ uint8_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
         if(charncmp(tmp_union.rttask_dtinfo.src_mas,mac,6)){
             //有运行中任务 任务置为异常状态
             tmp_p->run_state = state;
-            return 1;
+            return tmp_p->rttask_id;
         }
         tmp_p = tmp_p->run_next_p;
     }
-    return 0;
+    return 0xFFFF;
 }
-
-
 
 //=====================================================================================================
 // 设备掉线       心跳掉线超时检测
@@ -486,11 +486,18 @@ void div_heart_overtime_close(){
                 div_node_tmp->div_info.div_onlineok = OFFLINE;
                 uint8_t state = DIVLIS_INFO_REFRESH;
                 //----------------------------------------------------------------------------------
+                uint16_t task_id = rttask_run_state_set(02,div_node_tmp->div_info.mac);
+				if(task_id!=0xFFFF){
+					mes_send_rttaskinfo(task_id,02);
+				}
+				#if 0
                 if(rttask_run_state_set(02,div_node_tmp->div_info.mac)){
                     state = RTTASKERROR_INFO_REFRESH;
                     mes_send_listinfo(state,0);
                 }
-                mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
+				#endif 
+				//
+				mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
                 //---------------------------------------------------------------------------------------                    
                 //
                 divlist_fl_write(); //保存列表信息 设备状态随后改变

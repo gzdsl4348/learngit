@@ -35,6 +35,14 @@ uint16_t build_endpage_decode(uint16_t len,uint16_t cmd,uint8_t id[]){
     len+=4;
     return len;
 }
+
+void build_endpage_forid(uint16_t len,uint8_t id[]){
+	memcpy(&xtcp_tx_buf[POL_ID_BASE],id,6);
+    uint16_t sum;
+    sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(len-6));
+    xtcp_tx_buf[len-4] = sum;
+    xtcp_tx_buf[len-3] = sum>>8;
+}
 //========================================================================================
 // extra info build ack 
 //========================================================================================
@@ -480,17 +488,11 @@ uint16_t solution_config_build(uint16_t id,uint8_t state,uint8_t config){
 //==========================================================================================
 // 任务列表查看
 //==========================================================================================
-#define MAX_TASK_ONCESEND   10
 uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8_t list_num){
     uint8_t i;
     task_coninfo_t * tmp_p;
     //-----------------------------------------------------
-    xtcp_tx_buf[TASK_CK_TOLPACK] = timetask_list.task_total/MAX_TASK_ONCESEND;
-    
-    if(timetask_list.task_total%MAX_TASK_ONCESEND || xtcp_tx_buf[TASK_CK_TOLPACK]==0)
-        xtcp_tx_buf[TASK_CK_TOLPACK]++;
-    debug_printf("task tol %d tol %d\n",timetask_list.task_total,xtcp_tx_buf[TASK_CK_TOLPACK]);
-
+    xtcp_tx_buf[TASK_CK_TOLPACK] = t_list_connsend[list_num].list_info.tasklist.task_tol;
     
     xtcp_tx_buf[TASK_CK_PACK_NUM] = t_list_connsend[list_num].pack_inc;
     //
@@ -499,7 +501,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     i=0;
     while(t_list_connsend[list_num].list_info.tasklist.task_p!=null){
         // 是否查找指定方案
-        if(sulo_en && sulo_num!=tmp_p->solution_sn){
+        if(sulo_en && sulo_num!=t_list_connsend[list_num].list_info.tasklist.task_p->solu_id){
             t_list_connsend[list_num].list_info.tasklist.task_p = t_list_connsend[list_num].list_info.tasklist.task_p->all_next_p;
             continue;
         }
@@ -532,7 +534,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
         for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
             if((timetask_now.ch_state[j]!=0xFF)&&(timetask_now.task_musicplay[j].task_id==tmp_p->task_id)){
                 xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S] = 1;
-                //debug_printf("\n\nhave task id %d\n\n",tmp_p->task_id);
+                debug_printf("have task id %d\n\n",tmp_p->task_id);
             }
         }
         //debug_printf("\n task s: %d \n",xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S]);
@@ -980,7 +982,7 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
         xtcp_tx_buf[MUS_LIBCHK_PACKTOL]=1;
     }
     //----------------------------------------------------------------
-    memcpy(&xtcp_tx_buf[MUS_LIBCHK_PATCHNAME],&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],PATCH_NAME_NUM);
+    memcpy(&xtcp_tx_buf[MUS_LIBCHK_PATCHNAME],t_list_connsend[list_num].list_info.musiclist.music_patch_name,PATCH_NAME_NUM);
     //
     data_base = MUS_LIBCHK_DATBASE;
     for(i=0;(i<MAX_MUSICNUM_SEND)&&(t_list_connsend[list_num].list_info.musiclist.music_inc<*music_tol);i++){
@@ -1137,7 +1139,7 @@ uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
     xtcp_tx_buf[RTTASK_CFG_TASKPRIO] = tmp_union.rttask_dtinfo.prio;
     xtcp_tx_buf[RTTASK_CFG_TASKVOL] = tmp_union.rttask_dtinfo.task_vol;
     // 持续时间
-        // 任务持续时间
+    // 任务持续时间
     if(tmp_union.rttask_dtinfo.dura_time==0xFFFFFFFF){
         xtcp_tx_buf[RTTASK_CFG_DURATIME] = 0xFF;
         xtcp_tx_buf[RTTASK_CFG_DURATIME+1] = 0xFF;

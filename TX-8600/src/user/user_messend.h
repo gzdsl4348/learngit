@@ -29,7 +29,7 @@ void mes_send_listinfo(uint8_t type,uint8_t need_send);
 void mes_send_acinfo(uint16_t id);
 
 // 任务更新通知
-void mes_send_taskinfo();
+void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info);
 
 // 即时任务更新通知
 void mes_send_rttaskinfo(uint16_t id,uint8_t contorl);

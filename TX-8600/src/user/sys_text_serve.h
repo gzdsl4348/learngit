@@ -6,6 +6,7 @@
 
 void text_get_txpage_recive();
 
+void eth_debug_contorl_recive();
 
 #endif //SYS_TEXT_SERVE_H
 
