@@ -40,6 +40,9 @@ void mes_send_suloinfo(uint16_t id);
 // 发送超时
 void mes_send_overtime();
 
+// 任务页面更新通知
+void taskview_page_messend();
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

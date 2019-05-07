@@ -210,6 +210,7 @@ void music_decoder_mgr_init()
 int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_offset)
 {
     int res = 0;
+    int mp3_tag_offset = 0;
     unsigned char tag[10];
     music_decoderdev_t * p_dev = NULL;
 
@@ -239,9 +240,14 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     }
 
     res = f_read(&p_dev->file, tag, 10, &br);
-	f_offset += get_mp3_datastart(tag, 10);
+    mp3_tag_offset = get_mp3_datastart(tag, 10);
+    if(mp3_tag_offset)
+    {
+        f_offset += (mp3_tag_offset+10);
+    }
+	
 
-    res = f_lseek(&p_dev->file, f_offset+10);
+    res = f_lseek(&p_dev->file, f_offset);
     if(res != FR_OK)
     {
         return res;

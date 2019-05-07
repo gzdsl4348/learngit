@@ -615,6 +615,7 @@ solution_config_end:
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     if(state==0){
         mes_send_suloinfo(id);
+        taskview_page_messend();
     }
     create_todaytask_list(g_sys_val.time_info);
 }
@@ -746,6 +747,8 @@ void task_dtinfo_config_recive(){
     //    goto dtinfo_send_end;
     //debug_printf("B407 ID : %d,pack tol %d inc %d\n",((xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID]),xtcp_rx_buf[TASK_DTCFG_TOLPACK],xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
     // 单次配一个任务
+    debug_printf("rec pack inc %d\n",xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
+    
     if((g_sys_val.task_recid==0xFFFF)&&(xtcp_rx_buf[TASK_DTCFG_PACKNUM]==0)){
         g_sys_val.task_recid = (xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID];
         g_sys_val.task_con_id = g_sys_val.task_recid;
@@ -1076,6 +1079,7 @@ void task_bat_config_recive(){
     user_sending_len = onebyte_ack_build(state,TASK_BAT_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
     mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
+    taskview_page_messend();
 }
 
 //====================================================================================================
@@ -1448,6 +1452,8 @@ void rttask_config_recive(){
     // 推送消息
     if(state){
         mes_send_rttaskinfo(id,xtcp_rx_buf[RTTASK_CFG_CONTORL]);
+        // 任务页面更新通知
+        taskview_page_messend();
     }
 }
 //====================================================================================================

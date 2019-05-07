@@ -669,7 +669,7 @@ static void find_path(TCHAR *dst, const TCHAR *src, int level)
         while(*src!=0 && *src!='/' && *src!='\\') *d++ = *src++;
         *d = 0;
         level--;
-		src++;
+		if(*src!=0) src++;
     }while(level>0);
 }
 /*
