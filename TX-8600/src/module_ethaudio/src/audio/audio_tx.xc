@@ -49,6 +49,9 @@ void audio_tx(  client music_decoder_output_if if_mdo,
     if((isnull(i_eth_rx_lp)||isnull(i_eth_tx_lp))&&(isnull(c_rx_hp)||isnull(c_tx_hp))) {
         fail("Using high priority channels or low priority channels");
     }    
+	//
+	uint8_t sample_error_f[NUM_MEDIA_INPUTS];			
+	memset(sample_error_f,NUM_MEDIA_INPUTS,0);
 	//-----------------------------------------------------------------------------
 	// time init
     uint16_t iptmp,udptmp;
@@ -71,12 +74,12 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                 break;            
 	        default:
 	            sys_timer :> audio_timer_tick;
-                
                 for(uint8_t i=0; i<sizeof(g_mp3_frame_send_info)/sizeof(mp3_frame_send_info_t); i++)
                 {
                     if(timeafter(g_mp3_frame_send_info[i].timer_tick+g_mp3_frame_send_info[i].per_frame_tick, audio_timer_tick)) continue;
                     g_mp3_frame_send_info[i].timer_tick += g_mp3_frame_send_info[i].per_frame_tick;
                     
+					memset(sample_error_f,NUM_MEDIA_INPUTS,0);
                     for(uint8_t ch=0; ch<NUM_MEDIA_INPUTS; ch++)
                     {
                         static uint32_t cnt = 0;
@@ -85,11 +88,20 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                         // 通道是否使能
                         if(g_t_val->audio_txen[ch]==0) continue;
                         // 通道采样率是否符合
-                        if(g_t_val->sample_rate[ch] != g_mp3_frame_send_info[i].sample_rate) continue;
-                        sys_timer :> t1;
-                        uint32_t num, sr, len;
+                        if(g_t_val->sample_rate[ch] != g_mp3_frame_send_info[i].sample_rate){
+							if((g_t_val->sample_rate[ch]==48000 || g_t_val->sample_rate[ch]==44100)==0){
+								//if(ch==0)
+									debug_printf("sample error ch%d\n",ch);
+								sample_error_f[ch]++;
+								continue;
+							}
+							continue;
+						}
+						
+                        //sys_timer :> t1;
+						uint32_t num, sr, len;
                         if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr);
-                        sys_timer :> t2;
+                        //sys_timer :> t2;
                         // 无数据
                         if(len==0) continue;
                         
@@ -147,6 +159,23 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                             debug_printf("mp3_frame_send[%d]:%d %d %d\n", cnt, t2-t1, t3-t2, t4-t3);
                         }
                     }
+			        for(uint8_t ch=0; ch<NUM_MEDIA_INPUTS; ch++){
+						if(sample_error_f[ch]>=2){
+							
+							uint32_t num, sr, len;
+	                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr);
+							if(len!=0)
+								debug_printf("error get frame ch%d l %d\n",ch,len);
+	                        //sys_timer :> t2;
+	                        // 无数据
+							sample_error_f[ch]=0;;
+	                        if(len==0) continue;
+                        
+	                        // 切换采样率
+	                        if(sr != g_t_val->sample_rate[ch]) g_t_val->sample_rate[ch] = sr;
+							
+						}
+					}
                 }
 				break;
 		}//select

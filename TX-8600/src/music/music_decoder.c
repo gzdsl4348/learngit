@@ -256,6 +256,8 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     debug_printf("music_decode_start [%d] succeed\n", ch);
     
     p_dev->decoder_status = MUSIC_DECODER_START;
+
+    debug_printf("\nmusic start fun\n\n");
     
     return FR_OK;
 }

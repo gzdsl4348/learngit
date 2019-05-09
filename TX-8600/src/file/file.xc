@@ -61,6 +61,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 fopr.event = FOE_MUSIC_START;
                 
                 decoder_status[ch].status = MUSIC_DECODER_START;
+				debug_printf("\nmusic start if\n\n");
                 
                 need2action = 1;
                 break;
