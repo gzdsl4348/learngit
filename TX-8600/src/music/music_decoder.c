@@ -256,8 +256,6 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     debug_printf("music_decode_start [%d] succeed\n", ch);
     
     p_dev->decoder_status = MUSIC_DECODER_START;
-
-    debug_printf("\nmusic start fun\n\n");
     
     return FR_OK;
 }
@@ -416,7 +414,7 @@ uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, 
     {  
 #if 1
         if(gt_mmdm.ch_dev[ch].decoder_status == MUSIC_DECODER_START)
-            debug_printf("get_mp3_frame empty [%d]\n", ch);
+            debug_printf("fun get_mp3_frame empty [%d]\n", ch);
 #endif
         return 0;
     }
@@ -627,6 +625,11 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                         memcpy(p_dev->mp3_frame, readptr, p_dev->mp3_frame_size);
                         p_dev->mp3_frame_num++;
                         p_dev->mp3_frame_full = 1;
+                    }
+                    else if(p_dev->file_over_flag)
+                    {
+                        p_dev->file_over_flag = 0;
+                        p_dev->decoder_status = MUSIC_DECODER_FILE_END;
                     }
                 }
             }
