@@ -16,6 +16,9 @@ extern "C" {
 #define VERSION_TEN_L    (19)
 
 #define COULD_TCP_EN     1
+#define DNS_IP     ("yunbo.itc-pa.cn")
+
+#define LIST_TEXT_DEBUG 0
 
 #define NO_NEED_REGISTER 0
 
@@ -35,6 +38,7 @@ extern "C" {
 #define ETH_COMMUN_PORT	        8805
 #define TCP_COULD_PROT          7003
 #define ETH_DEBUG_PROT			8806
+#define ETH_DNS_PROT			53
 
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094

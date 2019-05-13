@@ -970,5 +970,18 @@
 
 #define TEXT_TXCNT_DATEND					(TEXT_TXCNT_FORRX_CNT+24)
 
+//====================================================================================================
+// DNS ≤È—Ø     
+//====================================================================================================
+#define DNS_IDENTIFICATION                  0   // 2
+#define DNS_CODE_FLAG                       (DNS_IDENTIFICATION+2)   // 2
+#define DNS_QUESTION                        (DNS_CODE_FLAG+2)  // 2
+#define DNS_ANSWERS                         (DNS_QUESTION+2)  // 2
+#define DNS_AUTHORITY                       (DNS_ANSWERS+2)  // 2
+#define DNS_ADDITIONAL                      (DNS_AUTHORITY+2)  // 2
+#define DNS_DAT_BASE                        (DNS_ADDITIONAL+2)
+// dat
+#define DNS_DOMAIN_NAME                     (DNS_DAT_BASE)
+
 #endif //__PROTOCOL_ADRBASE_H
 

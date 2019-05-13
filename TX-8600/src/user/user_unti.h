@@ -196,12 +196,17 @@ typedef struct g_sys_val_t{
     //-----------------------------------------------------
     // 广播连接
     xtcp_connection_t broadcast_conn;
-    //
+    // 云连接
     uint8_t could_send_cnt;
     xtcp_connection_t could_conn; //云链接状态
-    xtcp_ipaddr_t could_ip;
+    xtcp_ipaddr_t could_ip; //云服务器ip
     uint8_t colud_connect_f;
     int colud_port;
+    // DNS连接
+    xtcp_ipaddr_t dns_ip;   //dns服务器ip
+    xtcp_connection_t dns_conn;
+    uint8_t dns_timecnt;
+    uint8_t dns_resend_cnt;
     //
     uint8_t tftp_busy_f;
     //备份数据恢复状态

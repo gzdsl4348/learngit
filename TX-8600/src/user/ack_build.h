@@ -149,6 +149,8 @@ uint16_t taskview_page_build(uint16_t cmd);
 // 查看收发包数量 C001
 uint16_t chk_txpage_cnt_build();
 
+//DNS 查询
+uint16_t dns_couldip_chk_build();
 
 #if defined(__cplusplus) || defined(__XC__)
 }

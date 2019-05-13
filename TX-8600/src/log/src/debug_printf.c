@@ -8,7 +8,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "user_xccode.h"
-
+#include "list_instance.h"
+#include "user_unti.h"
 #undef debug_printf
 
 static void reverse_array(char buf[], unsigned size)
@@ -137,7 +138,6 @@ void debug_printf(char * fmt, ...)
   }
   _write(FD_STDOUT, buf, p - buf);
   va_end(args);
-  
 
   #if 0
   char *tmp=buf;

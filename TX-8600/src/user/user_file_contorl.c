@@ -89,7 +89,7 @@ void music_music_list_chk_recive(){
 
 //ÒôÀÖÃû³ÆÁ¬·¢
 void music_music_list_send_decode(uint8_t list_num){
-    debug_printf("music send\n");
+    //debug_printf("music send\n");
     user_sending_len = music_namelist_chk_build(t_list_connsend[list_num].list_info.musiclist.music_state,list_num);
     user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }

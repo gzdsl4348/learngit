@@ -108,6 +108,7 @@ void second_process(){
         timer_rttask_run_process(); //即时任务即时
         #if COULD_TCP_EN
         could_heart_send_timer();   //云服务主动连接与心跳计时
+        dns_twominute_chk();
         #endif
     }
     broadcast_for_minute();     //每分钟发送广播包计时

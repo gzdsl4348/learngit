@@ -8,6 +8,7 @@
 #include "kfifo.h"
 #include "user_messend.h"
 #include "checksum.h"
+#include "could_serve.h"
 #include "debug_print.h"
 //
 
@@ -27,8 +28,6 @@ void conn_decoder(){
 					   xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_ID_BASE+1],xtcp_rx_buf[POL_ID_BASE+2],xtcp_rx_buf[POL_ID_BASE+3],xtcp_rx_buf[POL_ID_BASE+4],xtcp_rx_buf[POL_ID_BASE+5]);
     }
     #endif
-    if(((uint16_t *)xtcp_rx_buf)[0]!=0x55AA)
-        return;
     //if(((uint16_t *)xtcp_rx_buf)[1]>1420)
     //    return;
     //if((xtcp_rx_buf[POL_LEN_BASE+((uint16_t *)xtcp_rx_buf)[1]]!=0x55)&&(xtcp_rx_buf[POL_LEN_BASE+1+((uint16_t *)xtcp_rx_buf)[1]]!=0xAA))
@@ -49,6 +48,15 @@ void conn_decoder(){
 //===========================================================================
 void udp_xtcp_recive_decode(uint16_t data_len){
     xtcp_rx_buf = all_rx_buf;
+    // DNS 处理
+    if(conn.id == g_sys_val.dns_conn.id){
+        debug_printf("rec dns\n");
+        dns_domain_recive_decode();
+        return;
+    }
+    //
+    if(((uint16_t *)xtcp_rx_buf)[0]!=0x55AA)
+        return;
     //是否透传云命令
     if(xtcp_rx_buf[POL_COULD_S_BASE]){
         #if COULD_TCP_EN

@@ -195,7 +195,9 @@ uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_
     //
     xtcp_tx_buf[DIVLISTRE_TOTALDIV_B] = div_inc;
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    #endif
     //----------------------------------------------------------------------------
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -232,7 +234,9 @@ uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num){
     xtcp_tx_buf[AREAGET_TOTALAREA_B] = area_inc;
     //
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    #endif
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
@@ -398,7 +402,9 @@ uint16_t account_list_ack_build(uint8_t list_num){
     xtcp_tx_buf[AC_LISTCK_TOLPAGE_B] = t_list_connsend[list_num].pack_tol;
 
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
     debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    #endif
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
@@ -544,7 +550,9 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     }
     xtcp_tx_buf[TASK_CK_TASK_TOL] = i;
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
     debug_printf("tol %d inc %d\n",xtcp_tx_buf[TASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
+    #endif
     if(t_list_connsend[list_num].pack_inc>=xtcp_tx_buf[TASK_CK_TOLPACK]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
@@ -709,7 +717,9 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     }
     xtcp_tx_buf[RTTASK_CK_TASKTOL] = i;
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
 	debug_printf("tol %d inc %d\n", xtcp_tx_buf[RTTASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
+    #endif
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[RTTASK_CK_TOLPACK]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
@@ -919,7 +929,7 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
     }else{
         user_fl_get_patchlist(tmp_union.buff);
     }
-    debug_printf("patch tol %d\n",*patch_tol);
+    //debug_printf("patch tol %d\n",*patch_tol);
     //======================================================
     if(*patch_tol == -1){
        *patch_tol=0; 
@@ -995,7 +1005,9 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     xtcp_tx_buf[MUS_LIBCHK_MUSICTOL] = i;
     //
     t_list_connsend[list_num].pack_inc++;
+    #if LIST_TEXT_DEBUG
     debug_printf("tol %d inc %d\n",xtcp_tx_buf[MUS_LIBCHK_PACKTOL],t_list_connsend[list_num].pack_inc);
+    #endif
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[MUS_LIBCHK_PACKTOL]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
     }
@@ -1260,7 +1272,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
     xtcp_tx_buf[DIVSRC_LIST_TOLPACK] = t_list_connsend[list_num].pack_tol;
     xtcp_tx_buf[DIVSRC_LIST_PACKNUM] = t_list_connsend[list_num].pack_inc;
     dat_base = DIVSRC_LIST_DAT_BASE;
-    debug_printf("div tol %d\n",g_sys_val.search_div_tol);
+    //debug_printf("div tol %d\n",g_sys_val.search_div_tol);
     for(i=0;i<10&&t_list_connsend[list_num].list_info.divsrc_list.div_inc<g_sys_val.search_div_tol;i++){
         user_divsrv_read(t_list_connsend[list_num].list_info.divsrc_list.div_inc,tmp_union.buff);
         memcpy(&xtcp_tx_buf[dat_base+DIVSRC_MAC_B],&tmp_union.buff[DIVSRC_MAC_B],6);
@@ -1272,7 +1284,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B] = tmp_union.buff[DIVSRC_VERSION_B];
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B+1] = tmp_union.buff[DIVSRC_VERSION_B+1];
         memcpy(&xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],&tmp_union.buff[DIVSRC_HOSTIP_B],4);     
-        debug_printf("src div %d %d %d %d\n",xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+1],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+2],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+3]);
+        //debug_printf("src div %d %d %d %d\n",xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+1],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+2],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+3]);
         t_list_connsend[list_num].list_info.divsrc_list.div_inc++;
         dat_base += DIVSRC_DATEND_B;
     }
@@ -1408,7 +1420,7 @@ uint16_t taskview_page_build(uint16_t cmd){
 
 //===============================================================================
 // 查看收发包数量 C001
-//================================================================================
+//===============================================================================
 uint16_t chk_txpage_cnt_build(){
 	unsigned tmp_cnt;
 	user_get_txpage_cnt(&tmp_cnt);
@@ -1418,5 +1430,45 @@ uint16_t chk_txpage_cnt_build(){
 	memset(&xtcp_tx_buf[TEXT_TXCNT_FORRX_CNT],0x00,24);
 	
 	return build_endpage_decode(TEXT_TXCNT_DATEND,TEXT_TXPAGE_GET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
+
+//===============================================================================
+// DNS 查询
+//===============================================================================
+uint16_t dns_couldip_chk_build(){
+    uint16_t data_base_len;
+    char could_domain[] = {0x05,0x79,0x75,0x6E,0x62,0x6F,0x06,0x69,0x74,0x63,0x2D,0x70,0x61,0x02,0x63,0x6E,0x00};
+    
+    xtcp_tx_buf[DNS_IDENTIFICATION] = 0;
+    xtcp_tx_buf[DNS_IDENTIFICATION+1] = 0;
+    xtcp_tx_buf[DNS_CODE_FLAG] = 01;
+    xtcp_tx_buf[DNS_CODE_FLAG+1] = 0;
+    xtcp_tx_buf[DNS_QUESTION] = 0;
+    xtcp_tx_buf[DNS_QUESTION+1] = 01;
+
+    xtcp_tx_buf[DNS_ANSWERS] = 0;
+    xtcp_tx_buf[DNS_ANSWERS+1] = 0;
+    xtcp_tx_buf[DNS_AUTHORITY] = 0;
+    xtcp_tx_buf[DNS_AUTHORITY+1] = 0;
+    xtcp_tx_buf[DNS_ADDITIONAL] = 0;
+    xtcp_tx_buf[DNS_ADDITIONAL+1] = 0;
+
+    data_base_len = DNS_DAT_BASE;
+    // 获取域名
+    memcpy(&xtcp_tx_buf[data_base_len],could_domain,sizeof(could_domain));
+    //
+    data_base_len += sizeof(could_domain);
+    // TYPE
+    xtcp_tx_buf[data_base_len]=0;
+    data_base_len++;
+    xtcp_tx_buf[data_base_len]=1;
+    data_base_len++;
+    //Class
+    xtcp_tx_buf[data_base_len]=0;
+    data_base_len++;
+    xtcp_tx_buf[data_base_len]=1;
+    data_base_len++;
+    //
+    return  data_base_len;
 }
 

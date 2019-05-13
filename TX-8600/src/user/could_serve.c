@@ -16,7 +16,7 @@ void could_heart_send_timer(){
     g_sys_val.could_heart_timcnt++;
     if(g_sys_val.could_heart_timcnt>CLD_HEART_TIME_CNT){
         g_sys_val.could_heart_timcnt = 0;
-        debug_printf("cld id %d\n",g_sys_val.could_conn.id);
+        //debug_printf("cld id %d\n",g_sys_val.could_conn.id);
         if(g_sys_val.could_conn.id!=0){
             user_sending_len = cld_heart_build();
             user_could_send(1);  
@@ -27,7 +27,7 @@ void could_heart_send_timer(){
             user_sending_len = cld_heart_build();
             user_could_send(1);  
             #endif
-            debug_printf("send cld\n");
+            //debug_printf("send cld\n");
             #if 0
             if(tmp1>=2){
                 debug_printf("send colud\n");
@@ -56,6 +56,51 @@ void could_heart_send_timer(){
         }
     }
     #endif
+}
+
+void dns_domain_recive_decode(){
+    #if 0
+    for(uint8_t i=0;i<49;i++){
+        debug_printf("%2x ",xtcp_rx_buf[i]);
+    }
+    debug_printf("\n");
+    #endif
+    if(xtcp_rx_buf[DNS_CODE_FLAG]!=0x81 || xtcp_rx_buf[DNS_CODE_FLAG+1]!=0x80)
+        return;
+    if(xtcp_rx_buf[DNS_ANSWERS+1]!=1)
+        return;
+    if(xtcp_rx_buf[44]!=4)
+        return;
+    memcpy(g_sys_val.could_ip,&xtcp_rx_buf[45],4);
+    debug_printf("\nrec dns could ip %d %d %d %d \n\n",g_sys_val.could_ip[0],g_sys_val.could_ip[1],g_sys_val.could_ip[2],g_sys_val.could_ip[3]);
+    g_sys_val.dns_resend_cnt =0;
+}
+
+void dns_couldip_chk_send(){
+    //debug_printf("send dns\n");
+    user_sending_len = dns_couldip_chk_build();
+    #if 0
+    for(uint8_t i=0;i<user_sending_len;i++){
+        debug_printf("%2x ",xtcp_tx_buf[i]);
+    }
+    debug_printf("\n");
+    #endif
+    user_xtcp_send(g_sys_val.dns_conn  ,0);    
+}
+
+void dns_twominute_chk(){
+    g_sys_val.dns_timecnt++;
+    // 重发机制
+    if(g_sys_val.dns_resend_cnt!=0){
+        g_sys_val.dns_resend_cnt--;
+        dns_couldip_chk_send();
+    }
+    //
+    if(g_sys_val.dns_timecnt>120){   // 2分钟更新一次DNS服务
+         g_sys_val.dns_timecnt=0;
+         g_sys_val.dns_resend_cnt=3;
+         dns_couldip_chk_send();
+    }
 }
 
 

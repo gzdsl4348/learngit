@@ -21,6 +21,7 @@
 #include "ack_build.h"
 #include "checksum.h"
 #include "pc_config_tool.h"
+#include "could_serve.h"
 
 #include "debug_print.h"
 #include "string.h"
@@ -685,6 +686,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.could_ip[1] = 98;
     g_sys_val.could_ip[2] = 189;
     g_sys_val.could_ip[3] = 224;
+	// DNS 地址
+    g_sys_val.dns_ip[0] = 114;
+    g_sys_val.dns_ip[1] = 114;
+    g_sys_val.dns_ip[2] = 114;
+    g_sys_val.dns_ip[3] = 114;
+	
     #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
@@ -710,7 +717,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     memset(ipconfig.ipaddr,255,4);
     i_xtcp.connect_udp(ETH_COMMUN_PORT,ipconfig.ipaddr,g_sys_val.broadcast_conn);
     i_xtcp.bind_local_udp(g_sys_val.broadcast_conn,LISTEN_BROADCAST_LPPORT);
-    
+
+	// 建立dns服务器连接
+    i_xtcp.connect_udp(ETH_DNS_PROT,g_sys_val.dns_ip,g_sys_val.dns_conn);
+	
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
 
@@ -808,6 +818,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         //audio_moudle_set();
                         user_disp_ip(ipconfig);
                         disp_text_conn(i_xtcp);
+						#if COULD_TCP_EN
+						g_sys_val.dns_resend_cnt=3;
+						dns_couldip_chk_send();
+						#endif
                         //i_xtcp.connect(ETH_COMMUN_PORT,a,XTCP_PROTOCOL_UDP);
 						break;
 		  			case XTCP_IFDOWN:
@@ -887,10 +901,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_SENT_DATA:
                         //-------------------------------------------------
+                        #if LIST_TEXT_DEBUG
 						if(conn.id==g_sys_val.could_conn.id)
 							debug_printf("send event tcp\n");
 						else
 							debug_printf("send event udp\n");
+						#endif
                         //列表发送
 						xtcp_sending_decoder();
 						//
