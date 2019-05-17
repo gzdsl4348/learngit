@@ -11,6 +11,7 @@
 #include "list_instance.h"
 #include "user_unti.h"
 #undef debug_printf
+#undef xtcp_debug_printf
 
 static void reverse_array(char buf[], unsigned size)
 {
@@ -54,8 +55,191 @@ static int itoa(unsigned n, char *buf, unsigned base, int fill)
 #define DEBUG_PRINTF_BUFSIZE 1000
 #endif
 
+char debug_buf[DEBUG_PRINTF_BUFSIZE];
+char *debug_end = &debug_buf[DEBUG_PRINTF_BUFSIZE - 1 - MAX_INT_STRING_SIZE];
+char *debug_buf_p; 
 
 void debug_printf(char * fmt, ...)
+{
+  #if 0 
+  char width = 0;
+  char * marker;
+  int intArg;
+  unsigned int uintArg;
+  char * strArg;
+
+  debug_end = &debug_buf[DEBUG_PRINTF_BUFSIZE - 1 - MAX_INT_STRING_SIZE];
+
+  va_list args;
+
+  va_start(args,fmt);
+  marker = fmt;
+  debug_buf_p = debug_buf;
+  while (*fmt) {
+    if (debug_buf_p > debug_end) {
+      // flush
+      _write(FD_STDOUT, debug_buf, debug_buf_p - debug_buf);
+      debug_buf_p = debug_buf;
+    }
+    switch (*fmt) {
+    case '%':
+      fmt++;
+      if (*(fmt) == '-' || *(fmt) == '+' || *(fmt) == '#' || *(fmt) == ' ') {
+        // Ignore flags
+        fmt++;
+      }
+      while (*(fmt) && *(fmt) >= '0' && *(fmt) <= '9') {
+        // Ignore width
+        width = *(fmt)-'0';
+        fmt++;
+      }
+      // Use 'tolower' to ensure both %x/%X do something sensible
+      switch (tolower(*(fmt))) {
+      case 'd':
+        intArg = va_arg(args, int);
+        if (intArg < 0) {
+          *debug_buf_p++ = '-';
+          intArg = -intArg;
+        }
+        debug_buf_p += itoa(intArg, debug_buf_p, 10, width);
+        break;
+      case 'u':
+        uintArg = va_arg(args, int);
+        debug_buf_p += itoa(uintArg, debug_buf_p, 10, width);
+        break;
+      case 'p':
+      case 'x':
+        uintArg = va_arg(args, int);
+        debug_buf_p += itoa(uintArg, debug_buf_p, 16, width);
+        break;
+      case 'c':
+        intArg = va_arg(args, int);
+        *debug_buf_p++ = intArg;
+        break;
+      case 's':
+        strArg = va_arg(args, char *);
+        int len = strlen(strArg);
+        if (len > (debug_end - debug_buf)) {
+                // flush
+          _write(FD_STDOUT, debug_buf, debug_buf_p - debug_buf);
+          debug_buf_p = debug_buf;
+        }
+        if (len > (debug_end - debug_buf))
+          len = debug_end - debug_buf;
+        memcpy(debug_buf_p, strArg, len);
+        debug_buf_p += len;
+        break;
+      default:
+        break;
+      }
+      break;
+
+    default:
+      *debug_buf_p++ = *fmt;
+    }
+    fmt++;
+  }
+  _write(FD_STDOUT, debug_buf, debug_buf_p - debug_buf);
+  va_end(args);
+
+  #if 0
+  char *tmp=debug_buf;
+  for(unsigned i=0;i<(p-debug_buf);i++){
+	printf("%c",*tmp);
+	tmp++;
+  }
+  printf("\n");
+  #endif
+  
+  return;
+  #endif
+  char width = 0;
+  char * marker;
+  int intArg;
+  unsigned int uintArg;
+  char * strArg;
+
+  char buf[DEBUG_PRINTF_BUFSIZE];
+  char *end = &buf[DEBUG_PRINTF_BUFSIZE - 1 - MAX_INT_STRING_SIZE];
+
+  va_list args;
+
+  va_start(args,fmt);
+  marker = fmt;
+  char *p = buf;
+  while (*fmt) {
+    if (p > end) {
+      // flush
+      _write(FD_STDOUT, buf, p - buf);
+      p = buf;
+    }
+    switch (*fmt) {
+    case '%':
+      fmt++;
+      if (*(fmt) == '-' || *(fmt) == '+' || *(fmt) == '#' || *(fmt) == ' ') {
+        // Ignore flags
+        fmt++;
+      }
+      while (*(fmt) && *(fmt) >= '0' && *(fmt) <= '9') {
+        // Ignore width
+        width = *(fmt)-'0';
+        fmt++;
+      }
+      // Use 'tolower' to ensure both %x/%X do something sensible
+      switch (tolower(*(fmt))) {
+      case 'd':
+        intArg = va_arg(args, int);
+        if (intArg < 0) {
+          *p++ = '-';
+          intArg = -intArg;
+        }
+        p += itoa(intArg, p, 10, width);
+        break;
+      case 'u':
+        uintArg = va_arg(args, int);
+        p += itoa(uintArg, p, 10, width);
+        break;
+      case 'p':
+      case 'x':
+        uintArg = va_arg(args, int);
+        p += itoa(uintArg, p, 16, width);
+        break;
+      case 'c':
+        intArg = va_arg(args, int);
+        *p++ = intArg;
+        break;
+      case 's':
+        strArg = va_arg(args, char *);
+        int len = strlen(strArg);
+        if (len > (end - buf)) {
+                // flush
+          _write(FD_STDOUT, buf, p - buf);
+          p = buf;
+        }
+        if (len > (end - buf))
+          len = end - buf;
+        memcpy(p, strArg, len);
+        p += len;
+        break;
+      default:
+        break;
+      }
+      width = 0;
+      break;
+
+    default:
+      *p++ = *fmt;
+    }
+    fmt++;
+  }
+  _write(FD_STDOUT, buf, p - buf);
+  va_end(args);
+
+  return;
+}
+
+#if 1
+void xtcp_debug_printf(char * fmt, ...)
 {
   char width = 0;
   char * marker;
@@ -139,16 +323,12 @@ void debug_printf(char * fmt, ...)
   _write(FD_STDOUT, buf, p - buf);
   va_end(args);
 
-  #if 0
-  char *tmp=buf;
-  for(unsigned i=0;i<(p-buf);i++){
-	printf("%c",*tmp);
-	tmp++;
-  }
-  printf("\n");
-  #endif
-  
+  //if(g_sys_val.eth_debug_f);
+  //    user_xtcp_debugudpsend(buf,p - buf);
+
   return;
 }
+
+#endif
 
 

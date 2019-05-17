@@ -24,7 +24,7 @@ void conn_decoder(){
         ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB905&&
         ((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]!=0xB90C&&
         (conn.remote_addr[3]!=214)){                        
-        debug_printf("rec ip %d,%d,%d,%d %x ID %x,%x,%x,%x,%x,%x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2],
+        xtcp_debug_printf("rec ip %d,%d,%d,%d %x ID %x,%x,%x,%x,%x,%x\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2],
 					   xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_ID_BASE+1],xtcp_rx_buf[POL_ID_BASE+2],xtcp_rx_buf[POL_ID_BASE+3],xtcp_rx_buf[POL_ID_BASE+4],xtcp_rx_buf[POL_ID_BASE+5]);
     }
     #endif
@@ -50,7 +50,7 @@ void udp_xtcp_recive_decode(uint16_t data_len){
     xtcp_rx_buf = all_rx_buf;
     // DNS 处理
     if(conn.id == g_sys_val.dns_conn.id){
-        debug_printf("rec dns\n");
+        xtcp_debug_printf("rec dns\n");
         dns_domain_recive_decode();
         return;
     }
@@ -74,16 +74,16 @@ void udp_xtcp_recive_decode(uint16_t data_len){
 // TCP接收处理
 //===========================================================================
 void tcp_xtcp_recive_decode(uint16_t data_len){
-    debug_printf("rec tcp\n");
+    xtcp_debug_printf("rec tcp\n");
     //获取真实数据
     #if 0
-    debug_printf("could rec len %d\n",data_len);
+    xtcp_debug_printf("could rec len %d\n",data_len);
     for(uint16_t i=0;i<data_len;i++){
-        debug_printf("%2x ",all_rx_buf[i]);
+        xtcp_debug_printf("%2x ",all_rx_buf[i]);
         if(i%30==0 && i!=0)
-            debug_printf("\n");
+            xtcp_debug_printf("\n");
     }
-    debug_printf("\nrecive end \n");
+    xtcp_debug_printf("\nrecive end \n");
     #endif
     //-------------------------------------------------------------------------------------
     //判断是否收到包头 及接收中处理
@@ -107,7 +107,7 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
             remaining_byte = data_len-len_tmp;
             // 复制字节
             memcpy(g_sys_val.tcp_buff_tmp,all_rx_buf,len_tmp);
-            //debug_printf("\nrec head \n\n");
+            //xtcp_debug_printf("\nrec head \n\n");
         }
     }
     // tcp 数据接收中
@@ -124,17 +124,17 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
         // 剩余字节
         remaining_byte = data_len-len_tmp;
 
-        //debug_printf("\n dat %d pol %d ned %d hav %d remain %d\n\n",data_len,poldat_len,len_tmp,recing_len_tmp,remaining_byte);
+        //xtcp_debug_printf("\n dat %d pol %d ned %d hav %d remain %d\n\n",data_len,poldat_len,len_tmp,recing_len_tmp,remaining_byte);
         // 复制字节
         memcpy(&g_sys_val.tcp_buff_tmp[g_sys_val.tcp_tmp_len],all_rx_buf,len_tmp);
         g_sys_val.tcp_tmp_len += len_tmp;
         #if 0
         for(uint16_t i=0;i<g_sys_val.tcp_tmp_len;i++){
-            debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
+            xtcp_debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
             if(i%30==0 && i!=0)
-                debug_printf("\n");
+                xtcp_debug_printf("\n");
         }
-        debug_printf("\nrecive end \n");
+        xtcp_debug_printf("\nrecive end \n");
         #endif
     }
     else{
@@ -145,7 +145,7 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
     //判断数据长度与包尾
     if(poldat_len >= RX_BUFFER_SIZE)
         return;
-    //debug_printf("tcp len %d,dat len %d\n",g_sys_val.tcp_tmp_len,rec_len);
+    //xtcp_debug_printf("tcp len %d,dat len %d\n",g_sys_val.tcp_tmp_len,rec_len);
     if((g_sys_val.tcp_tmp_len == poldat_len+6)&&
        (g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+poldat_len]==0x55)&&(g_sys_val.tcp_buff_tmp[CLH_LEN_BASE+1+poldat_len]==0xAA)&&g_sys_val.tcp_recing_f){
         g_sys_val.tcp_decode_f = 1;
@@ -159,13 +159,13 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
     if((((uint32_t *)g_sys_val.tcp_buff_tmp)[CLH_TYPE_BASE/4] == COLUD_HEADER_TAG) && g_sys_val.tcp_decode_f){
         //获取真实数据
         #if 0
-        debug_printf("could rec\n");
+        xtcp_debug_printf("could rec\n");
         for(uint16_t i=0;i<poldat_len+6;i++){
-            debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
+            xtcp_debug_printf("%2x ",g_sys_val.tcp_buff_tmp[i]);
             if(i%30==0 && i!=0)
-                debug_printf("\n");
+                xtcp_debug_printf("\n");
         }
-        debug_printf("\nrecive end \n");
+        xtcp_debug_printf("\nrecive end \n");
         
         #endif
         xtcp_rx_buf = g_sys_val.tcp_buff_tmp+CLH_HEADEND_BASE;
@@ -195,12 +195,12 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
                 //
                 #if 0
                 for(uint8_t i=0;i<user_sending_len;i++){
-                    debug_printf("%x ",xtcp_tx_buf[i]);
+                    xtcp_debug_printf("%x ",xtcp_tx_buf[i]);
                     if(i%20==0&&i!=0){
-                        debug_printf("\n");
+                        xtcp_debug_printf("\n");
                     }
                 }
-                debug_printf("\n");
+                xtcp_debug_printf("\n");
                 #endif
                 user_xtcp_send(conn_list_tmp->conn,0);
             }
@@ -233,13 +233,13 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
 void xtcp_sending_decoder(){
     //-------------------------------------------------------------------------------------------------------------------------
     // 上一个连接的列表数据包发送已完成
-    //debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
+    //xtcp_debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
     if(t_list_connsend[g_sys_val.list_sending_cnt].conn.id==conn.id && t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
-        //debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
+        //xtcp_debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
 		g_sys_val.list_sending_f=0;
 		if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state == LIST_SEND_END){
 			t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
-			//debug_printf("list send end\n");
+			//xtcp_debug_printf("list send end\n");
 		}
         // 发送超时清零
         t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt=0;
@@ -252,7 +252,7 @@ void xtcp_sending_decoder(){
             //找到下一个有效连接
             if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
 				g_sys_val.list_sending_f=1;
-				//debug_printf("send next list %d conn id %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id);
+				//xtcp_debug_printf("send next list %d conn id %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id);
                 sending_fun_lis[t_list_connsend[g_sys_val.list_sending_cnt].conn_state].sending_fun(g_sys_val.list_sending_cnt);
                 break;
             }
@@ -270,7 +270,7 @@ void list_sending_overtime(){
     	if(t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt>LIST_SENDING_OVERTIMECNT){
                t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
 			   g_sys_val.list_sending_f=0;
-			   debug_printf("timeover close list sending\n");
+			   xtcp_debug_printf("timeover close list sending\n");
         }
     }
 	else{
@@ -289,7 +289,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
             //查是否重复
             if(conn.id==t_list_connsend[i].conn.id && charncmp(t_list_connsend[i].could_id,could_id,6)){
                 #if DEBUG_LIST_EN 
-				debug_printf("list repet conn %d id%x,%x,%x,%x,%x,%x\n",conn.id ,t_list_connsend[i].could_id[0],t_list_connsend[i].could_id[1],t_list_connsend[i].could_id[2],
+				xtcp_debug_printf("list repet conn %d id%x,%x,%x,%x,%x,%x\n",conn.id ,t_list_connsend[i].could_id[0],t_list_connsend[i].could_id[1],t_list_connsend[i].could_id[2],
 																t_list_connsend[i].could_id[3],t_list_connsend[i].could_id[4],t_list_connsend[i].could_id[5]);
                 #endif
                 // 覆盖发送状态
@@ -307,11 +307,11 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
 	    }
 	    // 没有空闲的列表发送
 	    if(i==MAX_SEND_LIST_NUM){
-	        debug_printf("list send full\n");
+	        xtcp_debug_printf("list send full\n");
 	        return LIST_SEND_INIT;
 	    }
 	}
-	debug_printf("find num %d\n",i);
+	xtcp_debug_printf("find num %d\n",i);
     //----------------------------------------------------------------
     //初始化发送状态
     t_list_connsend[i].pack_inc=0;
@@ -344,7 +344,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
                     area_tmp++;
             }
             // 计算总包数
-            debug_printf("area_tol %d\n",area_tmp);
+            xtcp_debug_printf("area_tol %d\n",area_tmp);
             t_list_connsend[i].pack_tol = area_tmp/AREA_SEND_NUM;
             if(area_tmp%AREA_SEND_NUM || t_list_connsend[i].pack_tol==0){
                 t_list_connsend[i].pack_tol++;
@@ -429,7 +429,7 @@ uint8_t conn_long_decoder(){
     if(charncmp(g_sys_val.connect_ip,conn.remote_addr,4)){
         g_sys_val.connect_build_f = 0;
         for(uint8_t i=0;i<MAX_LONG_CONNET;i++){
-            debug_printf("new long connect %d\n",conn_long_list.lconn[i].id);
+            xtcp_debug_printf("new long connect %d\n",conn_long_list.lconn[i].id);
             if(conn_long_list.lconn[i].id==0xFF){
                 conn_long_list.lconn[i].conn = conn;
                 conn_long_list.lconn[i].id = i;
@@ -469,7 +469,7 @@ void conn_overtime_close(){
         //-------------------------------------------------------
         //连接超时，删除节点，关闭连接
         if(conn_list_tmp->over_time>CONN_OVERTIME){
-            debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
+            xtcp_debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
             user_xtcp_close(conn_list_tmp->conn);
             mes_list_close(conn_list_tmp->conn.id);
             delete_conn_node(conn_list_tmp->conn.stack_conn);
@@ -563,7 +563,7 @@ uint8_t xtcp_sendend_decode(){
         g_sys_val.tx_fifo_timout=0;
         xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
     }
-    debug_printf("could send_end\n");
+    xtcp_debug_printf("could send_end\n");
     if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
         user_xtcp_fifo_send(); 
         return 1;
@@ -586,7 +586,7 @@ void xtcp_resend_decode(){
 
 void user_xtcp_fifo_send(){
     if(g_sys_val.tcp_sending==0){
-        debug_printf("send fifo tcp\n");
+        xtcp_debug_printf("send fifo tcp\n");
         g_sys_val.tcp_sending = 1;
         g_sys_val.tx_fifo_timout = 0;
         xtcp_tx_fifo_get();

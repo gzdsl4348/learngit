@@ -144,6 +144,14 @@ static int tftp_make_expand_ack_pkt(unsigned char tx_buf[], int write_mode, unsi
         tsize = 3*1024*1024;
         offset = offset+itoa(tsize, (char*)pkt->data+offset, 10, 0)+1;
     }
+    // timeout×Ö¶Î
+    if(timeout > 0)
+    {
+        memcpy(pkt->data+offset, str_timeout, sizeof(str_timeout));
+        offset += sizeof(str_timeout);
+        offset = offset+itoa(timeout, (char*)pkt->data+offset, 10, 0)+1;  
+    }
+    
 #endif
 
 #if 1||TFTP_DEBUG_PRINT

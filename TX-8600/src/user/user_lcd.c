@@ -90,9 +90,9 @@ void send_buff(uint8_t id){
     disp_len += 6;
     /*
     for(uint8_t i=0;i<disp_len;i++){
-        debug_printf("%x ",disp_buff[i]);
+        xtcp_debug_printf("%x ",disp_buff[i]);
     }
-    debug_printf("\n");
+    xtcp_debug_printf("\n");
     */
     user_uart_tx(disp_buff,disp_len);
 }
@@ -354,10 +354,10 @@ void user_disp_task(uint8_t state){
         memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispfuture_buff[state*2],DIV_NAME_NUM*2);
         adr_base = DAT_DISP_BASE+DIV_NAME_NUM*2;
         //    
-        //debug_printf("task 3:");
+        //xtcp_debug_printf("task 3:");
         //for(uint8_t i=0;i<50;i++)
-        //    debug_printf("%x ",disp_buff[i]);
-        //debug_printf("\n");
+        //    xtcp_debug_printf("%x ",disp_buff[i]);
+        //xtcp_debug_printf("\n");
         //
         send_buff(DISP_FUTURE_TASK1_ID);
         //----------------------------------------------------------------------------------------
@@ -365,10 +365,10 @@ void user_disp_task(uint8_t state){
         memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispfuture_buff[state*2+1],DIV_NAME_NUM*2);
         adr_base = DAT_DISP_BASE+DIV_NAME_NUM*2;
         //
-        //debug_printf("task 4:");
+        //xtcp_debug_printf("task 4:");
         //for(uint8_t i=0;i<50;i++)
-        //    debug_printf("%x ",disp_buff[i]);
-        //debug_printf("\n");
+        //    xtcp_debug_printf("%x ",disp_buff[i]);
+        //xtcp_debug_printf("\n");
         //
         send_buff(DISP_FUTURE_TASK2_ID);
         //----------------------------------------------------------------------------------------

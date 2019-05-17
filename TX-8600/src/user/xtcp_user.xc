@@ -86,7 +86,7 @@ void mac_writeflash(uint8_t macadr[6]){
     //while(i_user_flash->is_flash_write_complete());
     user_fl_sector_write(USER_DAT_SECTOR);
     //
-    debug_printf("write: %x,%x,%x,%x,%x,%x\n",macadr[0],macadr[1],macadr[2],macadr[3],macadr[4],macadr[5]);
+    xtcp_debug_printf("write: %x,%x,%x,%x,%x,%x\n",macadr[0],macadr[1],macadr[2],macadr[3],macadr[4],macadr[5]);
     }
 }
 //=========================================================================================================
@@ -215,7 +215,7 @@ int tftp_app_transfer_begin(unsigned char filename[], int tsize, int blksize, in
 {
 
     unsafe {
-        debug_printf("tftp_app_transfer_begin %s %d\n", filename);
+        xtcp_debug_printf("tftp_app_transfer_begin %s %d\n", filename);
         
         g_sys_val.tftp_busy_f = 1;
 
@@ -238,14 +238,14 @@ int tftp_app_transfer_begin(unsigned char filename[], int tsize, int blksize, in
             if(write_mode)
             {
                 tftp_type = TFTP_TYPE_WRITE_BACKUP;
-                debug_printf("start_write_backup\n");
+                xtcp_debug_printf("start_write_backup\n");
                 //start_write_backup
                 i_user_flash->start_write_backup();
             }
             else
             {
                 tftp_type = TFTP_TYPE_READ_BACKUP;
-                debug_printf("start_read_backup\n");
+                xtcp_debug_printf("start_read_backup\n");
                 //start_read_backup                
             }
             
@@ -280,7 +280,7 @@ int tftp_app_process_data_block(unsigned char data[], int num_bytes)
     unsafe {
         char is_last_block = (num_bytes!=tftp_blksize);
         int fifo_size = 0;
-        //debug_printf("tftp_app_process_data_block num:%d\n", num_bytes);
+        //xtcp_debug_printf("tftp_app_process_data_block num:%d\n", num_bytes);
         if(tftp_type == TFTP_TYPE_IMAGE)
         {
             if(tftp_frist_block)
@@ -295,7 +295,7 @@ int tftp_app_process_data_block(unsigned char data[], int num_bytes)
                         tftp_data_reverse = 1;
                         return SHORTLY_ACK_SUCCEED;
                     }
-                    debug_printf("tftp_upgrade_jude_dev_type error\n");
+                    xtcp_debug_printf("tftp_upgrade_jude_dev_type error\n");
                     return SHORTLY_ACK_FAILED;
                 }
             }
@@ -357,14 +357,14 @@ int tftp_app_process_send_data_block(unsigned char tx_buf[], int block_num, int 
 #define BACKUP_SIZE             (SDRAM_FLASH_SECTOR_MAX_NUM*4096-BACKUP_START_ADDRESS)
     unsafe {
 
-        //debug_printf("tftp_app_process_send_data_block #%d %d\n", block_num, block_size);
+        //xtcp_debug_printf("tftp_app_process_send_data_block #%d %d\n", block_num, block_size);
         i_user_flash->read_backup(BACKUP_START_ADDRESS+(block_num-1)*block_size, block_size, tx_buf);
         
         last_block_num = block_num;
         
         if(block_num*block_size > BACKUP_SIZE) 
         {
-            debug_printf("tftp_app_process_send_data_block complete\n");
+            xtcp_debug_printf("tftp_app_process_send_data_block complete\n");
             complete = 1;
             return 0;
         }
@@ -397,13 +397,13 @@ void tftp_app_transfer_complete(void)
     {
         //i_user_flash->start_write_backup2flash();
     }
-    debug_printf("tftp_app_transfer_complete %d\n", tftp_type);
+    xtcp_debug_printf("tftp_app_transfer_complete %d\n", tftp_type);
     }
 }
 
 void tftp_app_transfer_error(void)
 {
-    debug_printf("tftp_app_transfer_error [tftp_block_wait %d] [last_block_num %d]\n",tftp_block_wait,last_block_num);
+    xtcp_debug_printf("tftp_app_transfer_error [tftp_block_wait %d] [last_block_num %d]\n",tftp_block_wait,last_block_num);
     unsafe {
         if(tftp_type==TFTP_TYPE_FILE)
             pi_fs->file_upload_forced_stop();
@@ -441,7 +441,7 @@ void user_fldat_init(){
     //------------------------------------------------------------
     i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
 	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
-    //init_string = 0;
+    init_string = 0;
 	if(0x5AA57349==init_string){
 		return;
 	}
@@ -490,7 +490,7 @@ void user_fldat_init(){
     user_fl_sector_write(SOLUSION_DAT_SECTOR);
     //--------------------------------------------------------------
     }//unsafe 
-    debug_printf("reset flash\n");
+    xtcp_debug_printf("reset flash\n");
 }
 
 void sys_gobalval_init(){
@@ -559,7 +559,7 @@ void disp_text_conn(client xtcp_if i_xtcp){
         conn_p = conn_p->next_p;
     }
     }
-    debug_printf("div %d \n",div_conn_num);
+    xtcp_debug_printf("div %d \n",div_conn_num);
     uint8_t tol_num = div_conn_num;
     i_xtcp.xtcp_conn_cmp(tol_num);
     #endif
@@ -632,9 +632,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	//协议栈初始化
     xtcp_ipconfig_t ipconfig={0};
     if(!host_info.dhcp_en){
-        debug_printf("te %d\n",host_info.div_type[0]);
-        debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
-        debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
+        xtcp_debug_printf("te %d\n",host_info.div_type[0]);
+        xtcp_debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
+        xtcp_debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
         memcpy(&ipconfig,&host_info.ipconfig,12);
     }
     if(mac_factory_init(i_xtcp,host_info.mac)==0){
@@ -742,12 +742,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         if((data.music_status[i].status != MUSIC_DECODER_START)&&(data.music_status[i].status != MUSIC_DECODER_STOP)){
                             if((data.music_status[i].status==MUSIC_DECODER_ERROR1)||(data.music_status[i].status==MUSIC_DECODER_ERROR2)){
                                 g_sys_val.play_error_inc[i]++;
-                                debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
+                                xtcp_debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
                             }
                             if(data.event == 0)
                                 task_musicevent_change(i,data.event,data.result);
                         }
-                        debug_printf("music_status[%d]:%d %d\n", i, 
+                        xtcp_debug_printf("music_status[%d]:%d %d\n", i, 
                         data.music_status[i].status,g_sys_val.play_error_inc[i]);
                     }
                 }
@@ -758,10 +758,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 }
                 else
                 {
-                    debug_printf("sdcard_status:%d event:%d result:%d error_code:%d \n", data.sdcard_status, data.event, data.result, data.error_code);
+                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d \n", data.sdcard_status, data.event, data.result, data.error_code);
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;
-                        debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
+                        xtcp_debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
                         task_musicevent_change(last_ch,data.event,data.result);
                     }
                     if(data.music_status[last_ch].status == MUSIC_DECODER_START){
@@ -810,7 +810,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					case XTCP_IFUP:
 						// Show the IP address of the interface
             			i_xtcp.get_ipconfig(ipconfig);
-						debug_printf("Link up\n IP Adr: %d,%d,%d,%d\n",ipconfig.ipaddr[0],
+						xtcp_debug_printf("Link up\n IP Adr: %d,%d,%d,%d\n",ipconfig.ipaddr[0],
 																	   ipconfig.ipaddr[1],
 																	   ipconfig.ipaddr[2],
 																	   ipconfig.ipaddr[3]);    
@@ -826,17 +826,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 		  			case XTCP_IFDOWN:
 						g_sys_val.eth_link_state = 0;
-						debug_printf("Link down\n");
+						xtcp_debug_printf("Link down\n");
                         disp_text_conn(i_xtcp);
 						break;
 		  			case XTCP_NEW_CONNECTION:
-						debug_printf("New connection:%x\n",conn.id);
-                        debug_printf("New :%d,%d,%d,%d\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3]);
+						xtcp_debug_printf("New connection:%x\n",conn.id);
+                        xtcp_debug_printf("New :%d,%d,%d,%d\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3]);
                         #if COULD_TCP_EN
                         if(conn.protocol==XTCP_PROTOCOL_TCP){
-                            debug_printf("TPC NEW \n");
+                            xtcp_debug_printf("TPC NEW \n");
                             if(g_sys_val.could_conn.id==0){
-                                debug_printf("could id%d\n\n",g_sys_val.could_conn.id);
+                                xtcp_debug_printf("could id%d\n\n",g_sys_val.could_conn.id);
                                 g_sys_val.could_conn = conn;
                                 disp_couldstate(1);
                                 register_could_chk();
@@ -855,9 +855,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         // 广播端口不建立节点
                         if(conn.local_port != LISTEN_BROADCAST_LPPORT){
                             //新建一个conn节点
-                            debug_printf("creat conect\n");
+                            xtcp_debug_printf("creat conect\n");
                             if(create_conn_node(&conn)==0){
-                                debug_printf("\nuser conn is full\n");
+                                xtcp_debug_printf("\nuser conn is full\n");
                             };    
                         }
                         else{
@@ -874,13 +874,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         //===================================================================================
                         #if 0
                         //获取真实数据
-                        debug_printf("could rec len %d\n",data_len);
+                        xtcp_debug_printf("could rec len %d\n",data_len);
                         for(uint16_t i=0;i<data_len;i++){
-                            debug_printf("%2x ",all_rx_buf[i]);
+                            xtcp_debug_printf("%2x ",all_rx_buf[i]);
                             if(i%30==0 && i!=0)
-                                debug_printf("\n");
+                                xtcp_debug_printf("\n");
                         }
-                        debug_printf("\nrecive end \n");
+                        xtcp_debug_printf("\nrecive end \n");
                         #endif
                         //==================================================================================
                         // tcp 包处理
@@ -897,15 +897,16 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					case XTCP_RESEND_DATA:	
                         //user_xtcp_send(conn);
                         xtcp_resend_decode();
-						debug_printf("resend_data:%x\n",conn.id);
+						xtcp_debug_printf("resend_data:%x\n",conn.id);
 						break;
 					case XTCP_SENT_DATA:
                         //-------------------------------------------------
-                        #if LIST_TEXT_DEBUG
+                        //#if LIST_TEXT_DEBUG
+						#if 1
 						if(conn.id==g_sys_val.could_conn.id)
-							debug_printf("send event tcp\n");
+							xtcp_debug_printf("send event tcp\n");
 						else
-							debug_printf("send event udp\n");
+							xtcp_debug_printf("send event udp\n");
 						#endif
                         //列表发送
 						xtcp_sending_decoder();
@@ -926,13 +927,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     					//user_xtcp_close(g_sys_val.could_conn);
                         g_sys_val.could_conn.id = 0;
                         g_sys_val.colud_connect_f = 0;
-    					debug_printf("\n\ntime out:%x\n\n",conn.id);
+    					xtcp_debug_printf("\n\ntime out:%x\n\n",conn.id);
                         break;
 					case XTCP_ABORTED:
                         //i_xtcp.close(g_sys_val.could_conn);
                         g_sys_val.could_conn.id = 0;
                         g_sys_val.colud_connect_f = 0;
-                        debug_printf("\n\naborted:%x\n\n",conn.id);
+                        xtcp_debug_printf("\n\naborted:%x\n\n",conn.id);
                         break;
 					case XTCP_CLOSED:
                         if((conn.protocol==XTCP_PROTOCOL_TCP)&&(g_sys_val.could_conn.id==conn.id)){
@@ -940,7 +941,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             g_sys_val.colud_connect_f=0;
                             //user_xtcp_unlisten(g_sys_val.colud_port);
                         }
-						debug_printf("Closed connection:%x\n",conn.id);
+						xtcp_debug_printf("Closed connection:%x\n",conn.id);
 					  	break;
 				}
 			break;
@@ -1054,7 +1055,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             // wifi按键长按
             if(g_sys_val.key_wait_release==KEY_WIFI_RELEASE && g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE && g_sys_val.key_wait_inc>30){  //长按3秒
                 // DHCP使能
-                //debug_printf("dhcp en\n");
+                //xtcp_debug_printf("dhcp en\n");
                 g_sys_val.wifi_mode=WIFI_DHCPEN_MODE;
                 dhcp_disp_en();
             }
@@ -1066,12 +1067,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
         // KEY process
         //------------------------------------------------------------------------------
         case  p_wifi_chk when pinsneq(g_sys_val.key_state) :> g_sys_val.key_state:
-            //debug_printf("key \n");
+            //xtcp_debug_printf("key \n");
             //---------------------------------------------------------------------------------
             if(g_sys_val.sys_timinc<20){
                 break;
             }
-            //debug_printf("key have %d %d\n",g_sys_val.key_delay,g_sys_val.key_state);
+            //xtcp_debug_printf("key have %d %d\n",g_sys_val.key_delay,g_sys_val.key_state);
             // wifi key 按下
             if((g_sys_val.key_state&0x04) && (g_sys_val.key_delay == 0)){
                 // 防抖
@@ -1084,7 +1085,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     wifi_ioset(0);
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,2);
                     dhcp_disp_none();
-                    //debug_printf("key wifi off\n");
+                    //xtcp_debug_printf("key wifi off\n");
                 }
                 else{
                     // 开启wifi模块
@@ -1096,7 +1097,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     g_sys_val.wifi_io_tmp = D_IO_WIFI_POWER|D_IO_WIFI_CONTORL;
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,1);
                     wifi_ioset(g_sys_val.wifi_io_tmp);
-                    //debug_printf("key wifi on\n");
+                    //xtcp_debug_printf("key wifi on\n");
                 }
             }
             //-----------------------------------------------------------------------------------
@@ -1110,7 +1111,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             }
             // key 松开 11 = 1011B 松开 
             if((g_sys_val.key_state==11)&&(g_sys_val.key_delay == 0)){
-                //debug_printf("key rel\n");
+                //xtcp_debug_printf("key rel\n");
                 g_sys_val.key_wait_release = 0;
                 g_sys_val.key_delay = 1;
                 //g_sys_val.key_delay = 0;

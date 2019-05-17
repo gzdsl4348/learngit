@@ -70,7 +70,7 @@ void area_fl_read(){
     #if 0
     for(uint8_t i=0;i<MAX_AREA_NUM;i++){
         
-        debug_printf("a sn:%x ",area_info[i].area_sn);
+        xtcp_debug_printf("a sn:%x ",area_info[i].area_sn);
     }
     debug_printf("\n");
     #endif

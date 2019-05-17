@@ -64,7 +64,7 @@ void wifi_ipset(uint8_t ip[],uint8_t mode){
     ip_tmp[ip_adrbase+1] = 0x0A;
     ip_adrbase+=2;
     for(uint8_t i=0;i<ip_adrbase;i++){
-        debug_printf("%x ",ip_tmp[i]);
+        xtcp_debug_printf("%x ",ip_tmp[i]);
     }
     user_lan_uart0_tx(ip_tmp,ip_adrbase,0);
 }
@@ -82,7 +82,7 @@ void wifi_contorl_mode(){
                 g_sys_val.wifi_contorl_state = WIFI_AT_ENTER;
                 g_sys_val.wifi_io_tmp ^= D_IO_WIFI_CONTORL;
                 wifi_ioset(g_sys_val.wifi_io_tmp);
-                debug_printf("enter at\n");
+                xtcp_debug_printf("enter at\n");
             }
             break;
         case WIFI_AT_ENTER:
@@ -92,7 +92,7 @@ void wifi_contorl_mode(){
                 g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
                 g_sys_val.wifi_io_tmp |= D_IO_WIFI_CONTORL;
                 wifi_ioset(g_sys_val.wifi_io_tmp);
-                debug_printf("at ouit\n");
+                xtcp_debug_printf("at ouit\n");
             }
             break;
         case WIFI_AT_COM_DHCP:
@@ -103,13 +103,13 @@ void wifi_contorl_mode(){
                     dhcp_dis();
                     dhcp_disp_dis();
                     g_sys_val.sys_dhcp_state_tmp=0;  
-                    debug_printf("dhcp dis\n");
+                    xtcp_debug_printf("dhcp dis\n");
                 }
                 else{
                     // 配置DHCP
                     dhcp_en();
                     g_sys_val.sys_dhcp_state_tmp=1;  
-                    debug_printf("dhcp en\n");
+                    xtcp_debug_printf("dhcp en\n");
                 }
                 // 进入配置wifi模式
                 g_sys_val.wifi_contorl_state = WIFI_LANIP_SET;
@@ -127,7 +127,7 @@ void wifi_contorl_mode(){
                     ip_tmp[3]++;
                 }   
                 wifi_ipset(ip_tmp,0);
-                debug_printf("set lanip %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
+                xtcp_debug_printf("set lanip %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
                 g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;
             }
             break;
@@ -144,14 +144,14 @@ void wifi_contorl_mode(){
                 else{
                     g_sys_val.wifi_contorl_state=0;
                 }
-                debug_printf("wifi save\n");
+                xtcp_debug_printf("wifi save\n");
             }
             break;
         case WIFI_AT_APPLY:
             if(g_sys_val.wifi_timer>5){
                 g_sys_val.wifi_timer = 0;
                 wifi_apply();
-                debug_printf("wifi apply\n");
+                xtcp_debug_printf("wifi apply\n");
                 g_sys_val.wifi_contorl_state = 0;
             }
             break;

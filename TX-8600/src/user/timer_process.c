@@ -100,6 +100,9 @@ void timee10hz_process(){
 // 1hz 检测线程
 //--------------------------------------------------------------------------
 void second_process(){
+    //uint8_t tmp; 
+	//unsigned *a;
+	//tmp = a;
     timer_process();            //系统时钟
     if(g_sys_val.eth_link_state){
         conn_overtime_close();  // conn连接超时

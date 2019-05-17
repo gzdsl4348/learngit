@@ -290,7 +290,7 @@ timetask_t *get_task_info_p(uint16_t id){
 //创建一个即时任务节点 return 0 失败 return 1成功
 uint8_t create_rttask_node(){
 	if(rttask_lsit.all_head_p==null){
-        //debug_printf("head\n");
+        //xtcp_debug_printf("head\n");
 		rttask_lsit.all_head_p = &rttask_lsit.rttask_info[1];
 		rttask_lsit.all_end_p = rttask_lsit.all_head_p;
         rttask_lsit.all_head_p->rttask_id = 1;
@@ -298,7 +298,7 @@ uint8_t create_rttask_node(){
 		return 1;
 	}
 	for(uint16_t i=1;i<MAX_RT_TASK_NUM;i++){
-        //debug_printf("find %d,%d,%d\n",i,rttask_lsit.rttask_info[i].all_next_p,rttask_lsit.rttask_info[i].rttask_id);
+        //xtcp_debug_printf("find %d,%d,%d\n",i,rttask_lsit.rttask_info[i].all_next_p,rttask_lsit.rttask_info[i].rttask_id);
 		if((rttask_lsit.rttask_info[i].all_next_p==null)&&(rttask_lsit.rttask_info[i].rttask_id==0xFFFF)){// 找空置元素
 			rttask_lsit.all_end_p->all_next_p = &rttask_lsit.rttask_info[i];
 			rttask_lsit.all_end_p = &rttask_lsit.rttask_info[i]; //插入新元素

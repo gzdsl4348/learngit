@@ -14,7 +14,7 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]){
         }
     }
     for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
-		debug_printf("find add\n");
+		xtcp_debug_printf("find add\n");
         // ÕÒ¿ÕÖÃÕËºÅ
         if(mes_send_list.messend_conn[i].state==0){
             mes_send_list.messend_conn[i].state = 1;
@@ -48,8 +48,8 @@ void mes_send_decode(){
 				user_sending_len = mes_send_list.len[mes_send_list.rpttr];
 				build_endpage_forid(user_sending_len,mes_send_list.messend_conn[mes_send_list.send_inc].could_id);
 				//
-                debug_printf("messend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
-                debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
+                xtcp_debug_printf("messend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
+                xtcp_debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[1],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[2],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[3]);
@@ -125,10 +125,10 @@ void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
     
     for(uint16_t i=0;i<mes_send_list.len[mes_send_list.wrptr] ;i++){
         if(i!=0 && i%20==0)
-            debug_printf("\n");
-        debug_printf("%x ",xtcp_tx_buf[i]);
+            xtcp_debug_printf("\n");
+        xtcp_debug_printf("%x ",xtcp_tx_buf[i]);
     }
-    debug_printf("\n");
+    xtcp_debug_printf("\n");
     
     	mes_send_list.wrptr++;
 

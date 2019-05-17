@@ -47,7 +47,7 @@ void timer_tasklist_read(){
         timetask_list.timetask[i].id = tmp_union.task_allinfo_tmp.task_coninfo.task_id;
         //判断错误任务 复位任务
         if((timetask_list.timetask[i].id!=0xFFFF)&&(timetask_list.timetask[i].id != i)){
-            //debug_printf("write task %d\n",timetask_list.timetask[i].id);
+            //xtcp_debug_printf("write task %d\n",timetask_list.timetask[i].id);
             tmp_union.task_allinfo_tmp.task_coninfo.task_id=0xFFFF;
             tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum=0x00;
             tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum = 0x00;
@@ -89,7 +89,7 @@ void create_alltask_list(){
     timetask_t *tmp_p;
     tmp_p = timetask_list.all_timetask_head;
     while(tmp_p!=null){
-        debug_printf("creat task id %d\n",tmp_p->id);
+        xtcp_debug_printf("creat task id %d\n",tmp_p->id);
         tmp_p = tmp_p->all_next_p;
     }
     #endif
@@ -141,7 +141,7 @@ void task_musicevent_change(uint8_t ch,char event,char data){
     }    
     timetask_now.task_musicplay[ch].music_inc++;
     //timetask_now.task_musicplay[ch].play_mode = LOOP_PLAY_M;
-    //debug_printf("play mode %d\n", timetask_now.task_musicplay[ch].play_mode);
+    //xtcp_debug_printf("play mode %d\n", timetask_now.task_musicplay[ch].play_mode);
     switch(timetask_now.task_musicplay[ch].play_mode){
         case ORDER_PLAY_M:
             if(timetask_now.task_musicplay[ch].music_inc == timetask_now.task_musicplay[ch].music_tol){
@@ -152,11 +152,11 @@ void task_musicevent_change(uint8_t ch,char event,char data){
                 return;
             }
             music_inc[ch] = timetask_now.task_musicplay[ch].music_inc;
-            //debug_printf("play mode %d  music num %d\n",timetask_now.task_musicplay[ch].play_mode,
+            //xtcp_debug_printf("play mode %d  music num %d\n",timetask_now.task_musicplay[ch].play_mode,
             //                                            music_inc[ch]);
             break;
         case LOOP_PLAY_M:
-            //debug_printf("loop mic tol %d  mic inc %d ch%d\n",timetask_now.task_musicplay[ch].music_tol,timetask_now.task_musicplay[ch].music_inc,ch);
+            //xtcp_debug_printf("loop mic tol %d  mic inc %d ch%d\n",timetask_now.task_musicplay[ch].music_tol,timetask_now.task_musicplay[ch].music_inc,ch);
             if(timetask_now.task_musicplay[ch].music_inc == timetask_now.task_musicplay[ch].music_tol){
                 timetask_now.task_musicplay[ch].music_inc=0;
             }
@@ -198,7 +198,7 @@ void timer_taskmusic_check(){
 //---------------------------------------------------------------------------------------------------------------
 // 配置发送目标与任务参数
 void task_music_config_play(uint8_t ch,uint16_t id){
-    debug_printf("play task id %d,%d\n",id,ch);
+    xtcp_debug_printf("play task id %d,%d\n",id,ch);
     g_sys_val.play_error_inc[ch] = 0;
     timer_task_read(&tmp_union.task_allinfo_tmp,id);
     // 置通道播放状态
@@ -267,7 +267,7 @@ void task_10hz_mutich_play(){
             g_sys_val.task_wait_state[j] = 0;
             for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
                 if(timetask_now.ch_state[i]==0xFF){
-                    debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
+                    xtcp_debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
                     //task_music_config_play(i,g_sys_val.music_task_id[j]);
                     task_music_config_play(i,g_sys_val.music_task_id[j]);
                     
@@ -305,7 +305,7 @@ void create_todaytask_list(time_info_t time_info){
         if(task_p->repe_mode){//判断日期
             for(uint8_t i=0;i<MAX_TASK_DATE_NUM;i++){
                 #if 0
-                debug_printf("year %d %d month %d %d day %d %d \n", task_p->date_info[i].year,g_sys_val.date_info.year,
+                xtcp_debug_printf("year %d %d month %d %d day %d %d \n", task_p->date_info[i].year,g_sys_val.date_info.year,
                                                                     task_p->date_info[i].month,g_sys_val.date_info.month,
                                                                     task_p->date_info[i].date,g_sys_val.date_info.date);
                 #endif
@@ -328,12 +328,12 @@ void create_todaytask_list(time_info_t time_info){
         //
         // 所有任务里找出今日任务 将今日任务加入今日任务链表
         //if(tmp_f)
-        //    debug_printf("id %d,taskt %x,begt %x tasken %d  soluid %d soluen %d day mode %d today %d\n",task_p->id,task_time,beg_time,task_p->task_en,task_p->solu_id,solution_list.solu_info[task_p->solu_id].en,task_p->week_repebit,tmp_f);
+        //    xtcp_debug_printf("id %d,taskt %x,begt %x tasken %d  soluid %d soluen %d day mode %d today %d\n",task_p->id,task_time,beg_time,task_p->task_en,task_p->solu_id,solution_list.solu_info[task_p->solu_id].en,task_p->week_repebit,tmp_f);
         //for(uint8_t i=0;i<10;i++){
-        //    debug_printf("data %d,%d,%d\n",task_p->date_info[i].date,task_p->date_info[i].month,task_p->date_info[i].year);
+        //    xtcp_debug_printf("data %d,%d,%d\n",task_p->date_info[i].date,task_p->date_info[i].month,task_p->date_info[i].year);
         //}
         if((tmp_f)&&(task_time >= beg_time)){//判断时间
-            //debug_printf("today time right\n");
+            //xtcp_debug_printf("today time right\n");
             task_p->today_next_p=null;
             today_t_p = timetask_list.today_timetask_head;
             //获取第一个任务
@@ -369,7 +369,7 @@ void create_todaytask_list(time_info_t time_info){
     #if 1
     timetask_t *tmp_p = timetask_list.today_timetask_head;
     while(tmp_p!=null){
-        debug_printf("today task id %d\n",tmp_p->id);
+        xtcp_debug_printf("today task id %d\n",tmp_p->id);
         tmp_p = tmp_p->today_next_p;
     }
     #endif
@@ -384,7 +384,7 @@ void create_todaytask_list(time_info_t time_info){
 void solution_check_recive(){
     user_sending_len = solution_list_ack_build(SOLUTION_CHECK_CMD,0);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-    //debug_printf("solution check\n");
+    //xtcp_debug_printf("solution check\n");
 }
 
 //====================================================================================================
@@ -417,7 +417,7 @@ void tasklist_sending_decode(uint8_t list_num){
                                            t_list_connsend[list_num].list_info.tasklist.solu_id,
                                            list_num);
     user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
-    //debug_printf("tasklist_sending\n");
+    //xtcp_debug_printf("tasklist_sending\n");
 }
 
 //====================================================================================================
@@ -439,7 +439,7 @@ void task_dtinfo_check_recive(){
 	    user_sending_len = task_dtinfo_chk_build(list_num);
 	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 	}
-    debug_printf("dtchk task %d\n",id);
+    xtcp_debug_printf("dtchk task %d\n",id);
 }
 
 //----------------------------------------------
@@ -448,7 +448,7 @@ void task_dtinfo_decode(uint8_t list_num){
     timer_task_read(&tmp_union.task_allinfo_tmp,t_list_connsend[list_num].list_info.task_dtinfo.task_id);
     user_sending_len = task_dtinfo_chk_build(list_num);
     user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
-    //debug_printf("task dtinfo send\n");
+    //xtcp_debug_printf("task dtinfo send\n");
 }
 
 //====================================================================================================
@@ -486,7 +486,7 @@ void solution_config_recive(){
     uint8_t state=0;
     //获取id
     uint8_t id = xtcp_rx_buf[SOLU_CFG_SOLU_ID];
-    //debug_printf("solution config %d\n",id);
+    //xtcp_debug_printf("solution config %d\n",id);
     //创建方案
     if((xtcp_rx_buf[SOLU_CFG_SOLU_CONTORL]==0)||(xtcp_rx_buf[SOLU_CFG_SOLU_CONTORL]==3)){
         id = 0xFF;
@@ -565,7 +565,7 @@ void solution_config_recive(){
         }
     }
     // 方案配置
-    //debug_printf("con solu %x\n",xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT]);
+    //xtcp_debug_printf("con solu %x\n",xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT]);
     //
     //配置方案名称
     if((xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT]>>1)&1)
@@ -627,7 +627,7 @@ void task_config_recive(){
     uint16_t id;
     // 获得任务ID
     id = (xtcp_rx_buf[TASK_CFG_TASK_ID+1]<<8)|xtcp_rx_buf[TASK_CFG_TASK_ID];
-    //debug_printf("B306 id %d\n",id);
+    //xtcp_debug_printf("B306 id %d\n",id);
     //
     if(id>MAX_HOST_TASK-1)
         return;
@@ -646,7 +646,7 @@ void task_config_recive(){
     // 取得任务信息
     //timer_task_read(&tmp_union.task_allinfo_tmp,id);
     //
-    //debug_printf("task config state %d\n",xtcp_rx_buf[TASK_CFG_CONTORL]);
+    //xtcp_debug_printf("task config state %d\n",xtcp_rx_buf[TASK_CFG_CONTORL]);
     if(xtcp_rx_buf[TASK_CFG_CONTORL]==1){ //删除任务
         delete_task_node(id);
         timetask_list.timetask[id].id=0xFFFF;
@@ -669,30 +669,30 @@ void task_config_recive(){
         xtcp_rx_buf[TASK_CFG_CFGBIT] = 0xFF;
     }
     // 设置根据标志位设置信息
-    //debug_printf("task id %d\n",id);
+    //xtcp_debug_printf("task id %d\n",id);
     if(config_bit&1){    //任务名称
-        //debug_printf("con name\n");
+        //xtcp_debug_printf("con name\n");
         //for(uint8_t i=0;i<DIV_NAME_NUM;i++){
-        //    debug_printf("%x,",xtcp_rx_buf[TASK_CFG_TASK_NAME+i]);
+        //    xtcp_debug_printf("%x,",xtcp_rx_buf[TASK_CFG_TASK_NAME+i]);
         //}
-        debug_printf("\n");
+        xtcp_debug_printf("\n");
         memcpy(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_name,&xtcp_rx_buf[TASK_CFG_TASK_NAME],DIV_NAME_NUM);
     }
     config_bit>>=1;     //任务状态
     if(config_bit&1){
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = xtcp_rx_buf[TASK_CFG_TASK_STATE];
-        //debug_printf("task state %d\n",g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state);
+        //xtcp_debug_printf("task state %d\n",g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state);
     }
     config_bit>>=1;
     if(config_bit&1){   //任务音量
-        //debug_printf("vol %d\n",xtcp_rx_buf[TASK_CFG_TASK_VOL]);
+        //xtcp_debug_printf("vol %d\n",xtcp_rx_buf[TASK_CFG_TASK_VOL]);
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_vol = xtcp_rx_buf[TASK_CFG_TASK_VOL];
     }
     config_bit>>=1;
     if(config_bit&1){   //任务重复模式
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_repe_mode = xtcp_rx_buf[TASK_CFG_REPE_MODE];
         //按日期重复
-        //debug_printf("config day:\n");
+        //xtcp_debug_printf("config day:\n");
         for(uint8_t i=0;i<MAX_TASK_DATE_NUM;i++){
             memcpy(&g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.dateinfo[i],&xtcp_rx_buf[TASK_CFG_REPE_DATE+i*3],3);
         }
@@ -710,7 +710,7 @@ void task_config_recive(){
     }
     config_bit>>=1; //播放设置
     if(config_bit&1){
-        //debug_printf("con play\n");
+        //xtcp_debug_printf("con play\n");
         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.play_mode = xtcp_rx_buf[TASK_CFG_PLAY_MODE];
         //tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum = xtcp_rx_buf[TASK_CFG_PLAY_TOL];
     }
@@ -730,7 +730,7 @@ void task_config_recive(){
             }
         }
     }
-    //debug_printf("task prio %d,%d\n", g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio,xtcp_rx_buf[TASK_CFG_SOLU_ID]);    
+    //xtcp_debug_printf("task prio %d,%d\n", g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_prio,xtcp_rx_buf[TASK_CFG_SOLU_ID]);    
     
     // 配置失败
     if(xtcp_rx_buf[TASK_CFG_CFGBIT] == 0)
@@ -745,9 +745,9 @@ void task_dtinfo_config_recive(){
     //机器同一时间只能处理一种多包发送类型
     //if(conn_sending_s.id!=null)
     //    goto dtinfo_send_end;
-    //debug_printf("B407 ID : %d,pack tol %d inc %d\n",((xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID]),xtcp_rx_buf[TASK_DTCFG_TOLPACK],xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
+    //xtcp_debug_printf("B407 ID : %d,pack tol %d inc %d\n",((xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID]),xtcp_rx_buf[TASK_DTCFG_TOLPACK],xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
     // 单次配一个任务
-    debug_printf("rec pack inc %d\n",xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
+    xtcp_debug_printf("rec pack inc %d\n",xtcp_rx_buf[TASK_DTCFG_PACKNUM]);
     
     if((g_sys_val.task_recid==0xFFFF)&&(xtcp_rx_buf[TASK_DTCFG_PACKNUM]==0)){
         g_sys_val.task_recid = (xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID];
@@ -762,12 +762,12 @@ void task_dtinfo_config_recive(){
         g_sys_val.task_dtinfo_setdiv_f = 0;
         g_sys_val.task_creat_s = 0;
         g_sys_val.task_config_s = 2;
-       // debug_printf("rec id:%d %d,%d\n",g_sys_val.task_recid,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum);
+       // xtcp_debug_printf("rec id:%d %d,%d\n",g_sys_val.task_recid,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum);
     }
     // 接收包+1
     g_sys_val.task_packrec_inc ++;
     //处理分包
-    //debug_printf("rec config byte %d\n",xtcp_rx_buf[TASK_DTCFG_PACKTYPE]);
+    //xtcp_debug_printf("rec config byte %d\n",xtcp_rx_buf[TASK_DTCFG_PACKTYPE]);
     if(g_sys_val.task_recid == ((xtcp_rx_buf[TASK_DTCFG_ID+1]<<8)|xtcp_rx_buf[TASK_DTCFG_ID]) ){
         uint16_t data_base;
         //基础信息配置
@@ -777,22 +777,22 @@ void task_dtinfo_config_recive(){
         else if(xtcp_rx_buf[TASK_DTCFG_PACKTYPE]==0){ //获取发送列表
             #if 0
             for(uint8_t i=0;i<80;i++){
-                debug_printf("%2x ",xtcp_rx_buf[i]);
+                xtcp_debug_printf("%2x ",xtcp_rx_buf[i]);
                 if(i!=0&&i%20==0)
-                    debug_printf("\n");
+                    xtcp_debug_printf("\n");
             }
-            debug_printf("\n");
+            xtcp_debug_printf("\n");
             #endif
             g_sys_val.task_dtinfo_setdiv_f = 1;
             data_base = TASK_DTCFG_MAC_BASE;
             //获得设备总数
             g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum = xtcp_rx_buf[TASK_DTCFG_MACTOL];
-            debug_printf("div tol %d\n",xtcp_rx_buf[TASK_DTCFG_MACTOL]);
+            xtcp_debug_printf("div tol %d\n",xtcp_rx_buf[TASK_DTCFG_MACTOL]);
             for(uint8_t i=0;i<xtcp_rx_buf[TASK_DTCFG_MACTOL] ;i++){
                 // 获得分区控制位
                 g_sys_val.tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control = 
                                                             (xtcp_rx_buf[data_base+TASK_DTCFG_AREACFG+1]<<8)|xtcp_rx_buf[data_base+TASK_DTCFG_AREACFG];
-                debug_printf("task area %x\n",g_sys_val.tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control);
+                xtcp_debug_printf("task area %x\n",g_sys_val.tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control);
                 // 获得MAC
                 memcpy(g_sys_val.tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,
                        &xtcp_rx_buf[data_base+TASK_DTCFG_MAC],6);
@@ -810,10 +810,10 @@ void task_dtinfo_config_recive(){
                 #if 0
                 for(uint8_t i=0;i<PATCH_NAME_NUM;i++){
                     if(xtcp_rx_buf[data_base+TASK_DTCFG_MUSICNAME+i]==0){
-                        debug_printf("\n");  
+                        xtcp_debug_printf("\n");  
                         break;
                     }
-                    debug_printf("%c",xtcp_rx_buf[data_base+TASK_DTCFG_MUSICPATCH+i]);        
+                    xtcp_debug_printf("%c",xtcp_rx_buf[data_base+TASK_DTCFG_MUSICPATCH+i]);        
                 }
                 #endif
                 // 获得音乐名
@@ -823,15 +823,15 @@ void task_dtinfo_config_recive(){
                 #if 0
                 for(uint8_t i=0;i<MUSIC_NAME_NUM;i++){
                     if(g_sys_val.tmp_union.task_allinfo_tmp.task_musiclist.music_info[g_sys_val.task_music_inc].music_name[i]==0){
-                        debug_printf("\n");  
+                        xtcp_debug_printf("\n");  
                         break;
                     }
-                    debug_printf("%c",g_sys_val.tmp_union.task_allinfo_tmp.task_musiclist.music_info[g_sys_val.task_music_inc].music_name[i]);        
+                    xtcp_debug_printf("%c",g_sys_val.tmp_union.task_allinfo_tmp.task_musiclist.music_info[g_sys_val.task_music_inc].music_name[i]);        
                 }
                 #endif
                 g_sys_val.task_music_inc++;  
                 g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum = g_sys_val.task_music_inc;
-                //debug_printf("music tol %d\n",g_sys_val.task_music_inc);
+                //xtcp_debug_printf("music tol %d\n",g_sys_val.task_music_inc);
                 data_base += TASK_DTCFG_MUSICLEN;
             }
         }
@@ -881,14 +881,14 @@ void task_dtinfo_config_recive(){
                     g_sys_val.task_con_id = id;
                     g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_id =id;
                     //                        
-                    debug_printf("task creat id:%d\n",id);
+                    xtcp_debug_printf("task creat id:%d\n",id);
                 }         
                 else{
                     g_sys_val.task_con_state |= 1;
                     goto dtinfo_send_end;
                 }
             }   
-            debug_printf("task save %d\n",g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.dura_time);
+            xtcp_debug_printf("task save %d\n",g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.dura_time);
             timetask_list.timetask[g_sys_val.task_con_id ].time_info = g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.time_info;
             timetask_list.timetask[g_sys_val.task_con_id ].task_en = g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state;
             timetask_list.timetask[g_sys_val.task_con_id ].solu_id = g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn;
@@ -918,22 +918,22 @@ void task_dtinfo_config_recive(){
                                 (tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute*60)+
                                  tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
                 // 时间不正确
-                //debug_printf("nt %d bt %d | ntt %d et %d | tid %d,ctid %d | sid %d tsid %d\n",next_tasktime,beg_time,next_tasktime,end_time,task_p->id,g_sys_val.task_con_id,tasksolu_id,task_p->solu_id);
+                //xtcp_debug_printf("nt %d bt %d | ntt %d et %d | tid %d,ctid %d | sid %d tsid %d\n",next_tasktime,beg_time,next_tasktime,end_time,task_p->id,g_sys_val.task_con_id,tasksolu_id,task_p->solu_id);
                 if((next_tasktime >= beg_time)&&(next_tasktime<=end_time)&&(task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)){
                     over_time_inc++;
-                    debug_printf("task time inc\n");
+                    xtcp_debug_printf("task time inc\n");
                     if(over_time_inc>SOLU_MAX_PLAYCH){
                         g_sys_val.task_con_state |= 16;
                         g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
                         timetask_list.timetask[g_sys_val.task_con_id].task_en=0;
-                        debug_printf("task time error\n");
+                        xtcp_debug_printf("task time error\n");
                         break;
                     }
                 }
                 task_p = task_p->all_next_p;
             }
             //-------------------------------------------------------------
-            debug_printf("rttask write id:%d buf id:%d\n",g_sys_val.task_con_id,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_id);
+            xtcp_debug_printf("rttask write id:%d buf id:%d\n",g_sys_val.task_con_id,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_id);
             
             timer_task_write(&g_sys_val.tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
             //-----------------------------------------------------------------------------------------------------
@@ -942,7 +942,7 @@ void task_dtinfo_config_recive(){
             g_sys_val.task_recid=0xFFFF;
             user_sending_len = threebyte_ack_build(g_sys_val.task_con_id,g_sys_val.task_con_id>>8,g_sys_val.task_con_state,TASK_DIINFO_CONFIG_CMD);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-            debug_printf("send id: %d\n state %x\n",g_sys_val.task_con_id,g_sys_val.task_con_state);
+            xtcp_debug_printf("send id: %d\n state %x\n",g_sys_val.task_con_id,g_sys_val.task_con_state);
             create_todaytask_list(g_sys_val.time_info);
             //---------------------------------------------------------------------------------
             // 信息更新
@@ -950,7 +950,7 @@ void task_dtinfo_config_recive(){
                 mes_send_taskinfo(&g_sys_val.tmp_union.task_allinfo_tmp);
             }
             //--------------------------------------------------------------------------------
-            debug_printf("task dtinfo config over\n");
+            xtcp_debug_printf("task dtinfo config over\n");
         }    
     }
     //    
@@ -1104,7 +1104,7 @@ void task_en_recive(){
     }
     timer_task_read(&tmp_union.task_allinfo_tmp,id);
     tmp_union.task_allinfo_tmp.task_coninfo.task_state = xtcp_rx_buf[POL_DAT_BASE+2];
-    debug_printf("B30E task en %d\n",xtcp_rx_buf[POL_DAT_BASE+2]);
+    xtcp_debug_printf("B30E task en %d\n",xtcp_rx_buf[POL_DAT_BASE+2]);
     timetask_list.timetask[id].task_en = xtcp_rx_buf[POL_DAT_BASE+2];
     timer_task_write(&tmp_union.task_allinfo_tmp,id);
     create_todaytask_list(g_sys_val.time_info);
@@ -1115,7 +1115,7 @@ void task_en_recive(){
     //---------------------------------------------------------------------------------
     // 任务信息更新
     if(state=1){
-        debug_printf("\n\ntask updata\n\n");
+        xtcp_debug_printf("\n\ntask updata\n\n");
 		g_sys_val.task_config_s = 2; //任务编辑
 		g_sys_val.task_con_id = id;
         mes_send_taskinfo(&tmp_union.task_allinfo_tmp);
@@ -1130,9 +1130,9 @@ void task_playtext_recive(){
     uint16_t id = (xtcp_rx_buf[TASK_PLAY_ID+1]<<8)|xtcp_rx_buf[TASK_PLAY_ID];
     if(xtcp_rx_buf[TASK_PLAY_CONTORL]){// 1 停止
         for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-            //debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
+            //xtcp_debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
             if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==id)){
-                debug_printf("text stop %d\n",id);
+                xtcp_debug_printf("text stop %d\n",id);
                 task_music_config_stop(i);
                 // 任务信息更新
             	g_sys_val.task_config_s = 2; //任务编辑
@@ -1143,7 +1143,7 @@ void task_playtext_recive(){
         }
         goto play_text_fail;
     }
-    debug_printf("play id %d\n",id);
+    xtcp_debug_printf("play id %d\n",id);
     // 读取任务
     timer_task_read(&tmp_union.task_allinfo_tmp,id);
     // 判断是否空任务
@@ -1182,7 +1182,7 @@ void task_playtext_recive(){
 void today_week_check_recive(){
     user_sending_len = todaytask_ack_build();
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-    debug_printf("today week check\n");
+    xtcp_debug_printf("today week check\n");
 }
 
 //====================================================================================================
@@ -1200,7 +1200,7 @@ void today_week_config_recive(){
     //
     mes_send_listinfo(TODAYTASK_INFO_REFRESH,0);
     //
-    debug_printf("today week config\n");
+    xtcp_debug_printf("today week config\n");
 }
 
 //==================================================================================================
@@ -1212,18 +1212,18 @@ void bat_task_divset_recive(){
     uint16_t div_base,div_tol,adr_base;
     //
     #if 0
-    debug_printf("\n\nbat set \n");
+    xtcp_debug_printf("\n\nbat set \n");
     for(uint8_t i=0;i<200;i++){
-        debug_printf("%x ",xtcp_rx_buf[POL_DAT_BASE+i]);
+        xtcp_debug_printf("%x ",xtcp_rx_buf[POL_DAT_BASE+i]);
     }
-    debug_printf("\n\n");
+    xtcp_debug_printf("\n\n");
     #endif
     task_num = xtcp_rx_buf[POL_DAT_BASE]|(xtcp_rx_buf[POL_DAT_BASE+1]<<8);
     
     div_base = task_num*2+dat_len;
     div_tol = xtcp_rx_buf[div_base];
     div_base++;
-    debug_printf("div tol %d task tol %d\n",div_tol,task_num);
+    xtcp_debug_printf("div tol %d task tol %d\n",div_tol,task_num);
     for(uint16_t i=0;i<task_num;i++){
         adr_base = div_base;
         task_id = xtcp_rx_buf[dat_len]|(xtcp_rx_buf[dat_len+1]<<8);
@@ -1280,7 +1280,7 @@ void rt_task_list_read(){
         }
         if(tmp_union.rttask_dtinfo.rttask_id!=0xFFFF){
             create_rttask_node_forid(i);
-            debug_printf("rt list %d\n",i);
+            xtcp_debug_printf("rt list %d\n",i);
         }
     }
 }
@@ -1298,13 +1298,13 @@ void rttask_list_check_recive(){
 	    user_sending_len = rttask_list_chk_build(list_num);
 	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 	}
-    //debug_printf("rttask list check\n");
+    //xtcp_debug_printf("rttask list check\n");
 }
 
 void rttask_list_sending_decode(uint8_t list_num){
     user_sending_len = rttask_list_chk_build(list_num);
     user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
-    //debug_printf("rttask list sending\n");
+    //xtcp_debug_printf("rttask list sending\n");
 }
 
 
@@ -1353,7 +1353,7 @@ void rttask_runningtask_stop_start(uint16_t id,uint8_t state,uint8_t del_en){
                                                     RTTASK_BUILD_CMD,00);
             user_xtcp_send(div_conn_p->conn,0);
             //有运行中任务 
-            debug_printf("old rttask rebuild\n");
+            xtcp_debug_printf("old rttask rebuild\n");
             break;
         }
         runtmp_p = runtmp_p->run_next_p;
@@ -1408,7 +1408,7 @@ void rttask_config_recive(){
     rttask_info_t *tmp_p;
     tmp_p = rttask_lsit.all_head_p;
     while(tmp_p!=null){
-        debug_printf("rt task id %d\n",tmp_p->rttask_id);
+        xtcp_debug_printf("rt task id %d\n",tmp_p->rttask_id);
         tmp_p = tmp_p->all_next_p;
     }
     #endif
@@ -1436,7 +1436,7 @@ void rttask_config_recive(){
         uint16_t data_base = RTTASK_CFG_DIV_BASE;
         for(uint8_t i=0; i<xtcp_rx_buf[RTTASK_CFG_DIVTOL]; i++){
             tmp_union.rttask_dtinfo.des_info[i].zone_control = (xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL+1]<<8)|xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL];
-            //debug_printf("rt t area %x\n",tmp_union.rttask_dtinfo.des_info[i].zone_control);
+            //xtcp_debug_printf("rt t area %x\n",tmp_union.rttask_dtinfo.des_info[i].zone_control);
             memcpy(tmp_union.rttask_dtinfo.des_info[i].mac,&xtcp_rx_buf[data_base+RTTASK_CFG_MAC],6);
             data_base += RTTASK_CFG_LEN;
         }
@@ -1468,7 +1468,7 @@ void close_running_rttask(uint8_t *mac){
         if(charncmp(tmp_union.rttask_dtinfo.src_mas,mac,6)){
             delete_rttask_run_node(runtmp_p->rttask_id);
             //有运行中任务 
-            debug_printf("del old rttask\n");
+            xtcp_debug_printf("del old rttask\n");
             break;
         }
         runtmp_p = runtmp_p->run_next_p;
@@ -1479,7 +1479,7 @@ void close_running_rttask(uint8_t *mac){
 // 即时任务开关控制                    B404
 //====================================================================================================
 void rttask_contorl_recive(){
-    debug_printf("rttask contorl\n");
+    xtcp_debug_printf("rttask contorl\n");
     uint16_t id;
     uint16_t user_id;
     div_node_t *div_tmp_p;
@@ -1496,7 +1496,7 @@ void rttask_contorl_recive(){
     rt_task_read(&tmp_union.rttask_dtinfo,id);
     //---------------------------------------------------------------------------------------------------------------
     // 从设备列表找源设备
-    //debug_printf("rt src mac %x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.src_mas[0],tmp_union.rttask_dtinfo.src_mas[1],tmp_union.rttask_dtinfo.src_mas[2],
+    //xtcp_debug_printf("rt src mac %x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.src_mas[0],tmp_union.rttask_dtinfo.src_mas[1],tmp_union.rttask_dtinfo.src_mas[2],
     //                                             tmp_union.rttask_dtinfo.src_mas[3],tmp_union.rttask_dtinfo.src_mas[4],tmp_union.rttask_dtinfo.src_mas[5]);
     div_tmp_p = get_div_info_p(tmp_union.rttask_dtinfo.src_mas);
     if(div_tmp_p == null){
@@ -1519,7 +1519,7 @@ void rttask_contorl_recive(){
     else{
         new_conn = div_conn_p->conn;
     }
-    debug_printf("des_ip %d,%d,%d,%d\n",div_tmp_p->div_info.ip[0],div_tmp_p->div_info.ip[1],div_tmp_p->div_info.ip[2],div_tmp_p->div_info.ip[3]);
+    xtcp_debug_printf("des_ip %d,%d,%d,%d\n",div_tmp_p->div_info.ip[0],div_tmp_p->div_info.ip[1],div_tmp_p->div_info.ip[2],div_tmp_p->div_info.ip[3]);
     //---------------------------------------------------------------------------------------------------------------
     for(uint8_t i=0;i<MAX_RTTASK_CONTORL_NUM;i++){
         if(rttask_build_state[i].des_conn_id==0){
@@ -1543,7 +1543,7 @@ void rttask_contorl_recive(){
     //--------------------------------------------------------------------------------------
     // 任务建立失败
     rttaask_creat_fail:
-    debug_printf("rt creat fail\n");
+    xtcp_debug_printf("rt creat fail\n");
     user_sending_len = rttask_creat_build(0x00,0x03,id);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
@@ -1551,7 +1551,7 @@ void rttask_contorl_recive(){
 // 即时任务 设备建立                    B407
 //====================================================================================================
 void rttask_build_recive(){
-    debug_printf("rttask build \n");
+    xtcp_debug_printf("rttask build \n");
     uint8_t state;
     conn_list_t *conn_tmp_p; 
     for(uint8_t i=0;i<MAX_RTTASK_CONTORL_NUM;i++){
@@ -1559,9 +1559,9 @@ void rttask_build_recive(){
             rttask_build_state[i].des_conn_id = 0;
             //---------------------------------------------------------------------------------------------------------------------
             //创建运行中任务
-            debug_printf("contorl %d\n",rttask_build_state[i].contorl);
+            xtcp_debug_printf("contorl %d\n",rttask_build_state[i].contorl);
             if(rttask_build_state[i].contorl==0){
-                debug_printf("creat run rt %d\n",rttask_build_state[i].rttask_id);
+                xtcp_debug_printf("creat run rt %d\n",rttask_build_state[i].rttask_id);
                 //---------------------------------------------------------------------------------------------------------
                 // 关闭运行中的即时任务 
                 close_running_rttask(&xtcp_rx_buf[POL_MAC_BASE]);
@@ -1585,11 +1585,11 @@ void rttask_build_recive(){
             else if(rttask_build_state[i].contorl==1){   
                 state = 1;
                 delete_rttask_run_node(rttask_build_state[i].rttask_id);
-                debug_printf("close run rt %d\n",rttask_build_state[i].rttask_id);
+                xtcp_debug_printf("close run rt %d\n",rttask_build_state[i].rttask_id);
             }
             //---------------------------------------------------------------------------------------------------------------------
             rttask_contorl_end:
-            debug_printf("rt build over %d\n",state);
+            xtcp_debug_printf("rt build over %d\n",state);
             user_sending_len = rttask_creat_build(rttask_build_state[i].user_id,state,rttask_build_state[i].rttask_id);
             //--------------------------------------------------------------------------------------------------------------------
             // 找控制源CONN连接
@@ -1626,7 +1626,7 @@ void rttask_build_overtime10hz(){
             }
             if(rttask_build_state[i].over_time>15){
                 rttask_build_state[i].des_conn_id=0;
-                debug_printf("rttask build timeout\n");
+                xtcp_debug_printf("rttask build timeout\n");
             }
         }
     }
@@ -1667,7 +1667,7 @@ void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p){
     g_sys_val.rttask_updat_f = 1;
     g_sys_val.rttask_div_p = div_info_p;
     memcpy(g_sys_val.rttask_up_ip,ip,4);
-    debug_printf("div ip change %d %d %d %d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
+    xtcp_debug_printf("div ip change %d %d %d %d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
 }
 
 void rttask_playlist_updata(){
@@ -1686,14 +1686,14 @@ void rttask_playlist_updata(){
             //
             if(div_conn_p != null)
                 user_xtcp_send(div_conn_p->conn,0);
-            debug_printf("send rttask list updat\n");
+            xtcp_debug_printf("send rttask list updat\n");
             g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
             return;
         }
         g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
     }
     g_sys_val.rttask_updat_f = 0;
-    debug_printf("rttask list updat end\n");
+    xtcp_debug_printf("rttask list updat end\n");
 }
 
 
@@ -1704,12 +1704,12 @@ void timer_rttask_run_process(){
     conn_list_t *div_conn_p;
 
     while(tmp_p!=null){
-        //debug_printf("tim %d\n",tmp_p->dura_time);
+        //xtcp_debug_printf("tim %d\n",tmp_p->dura_time);
         if(tmp_p->dura_time!=0xFFFFFFFF){
             // 任务异常 计时暂停
             if(tmp_p->run_state!=2)
                 tmp_p->over_time++;
-            //debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
+            //xtcp_debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
             if(tmp_p->over_time>=tmp_p->dura_time){ 
                 rt_task_read(&tmp_union.rttask_dtinfo,tmp_p->rttask_id);
                 //------------------------------------------------------------------------------------------------------------
@@ -1718,7 +1718,7 @@ void timer_rttask_run_process(){
                 if(div_tmp_p == null){
                     goto close_rttask;
                 }
-                debug_printf("close rt mac %x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.src_mas[0],tmp_union.rttask_dtinfo.src_mas[1],tmp_union.rttask_dtinfo.src_mas[2],
+                xtcp_debug_printf("close rt mac %x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.src_mas[0],tmp_union.rttask_dtinfo.src_mas[1],tmp_union.rttask_dtinfo.src_mas[2],
                                                                 tmp_union.rttask_dtinfo.src_mas[3],tmp_union.rttask_dtinfo.src_mas[4],tmp_union.rttask_dtinfo.src_mas[5]);
                 //------------------------------------------------------------------------------------------------------------
                 // 找到源连接
@@ -1768,14 +1768,14 @@ void tasklist_forsolu_chk_recive(){
     //
     uint16_t task_tol=0;
     timetask_t *task_p = timetask_list.all_timetask_head;
-    debug_printf("solu id chl%d\n",xtcp_rx_buf[POL_DAT_BASE]);
+    xtcp_debug_printf("solu id chl%d\n",xtcp_rx_buf[POL_DAT_BASE]);
     while(task_p!=null){
         if(task_p->solu_id==xtcp_rx_buf[POL_DAT_BASE]){
             task_tol++;
         }
         task_p = task_p->all_next_p;
     }
-    debug_printf("task num %d\n",task_tol);
+    xtcp_debug_printf("task num %d\n",task_tol);
     t_list_connsend[list_num].list_info.tasklist.task_tol = task_tol/MAX_TASK_ONCESEND;
     if(task_tol%MAX_TASK_ONCESEND || t_list_connsend[list_num].list_info.tasklist.task_tol==0)
         t_list_connsend[list_num].list_info.tasklist.task_tol++;

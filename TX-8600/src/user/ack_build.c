@@ -124,7 +124,7 @@ uint16_t threebyte_ack_build(uint8_t state1,uint8_t state2,uint8_t state3,uint16
 
 #if 0
 void could_list_init(){
-    //debug_printf("cf %d\n",xtcp_rx_buf[POL_COULD_S_BASE]);
+    //xtcp_debug_printf("cf %d\n",xtcp_rx_buf[POL_COULD_S_BASE]);
     if(xtcp_rx_buf[POL_COULD_S_BASE]){
         conn_sending_s.id = g_sys_val.could_conn.id;
     }
@@ -196,7 +196,7 @@ uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_
     xtcp_tx_buf[DIVLISTRE_TOTALDIV_B] = div_inc;
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    xtcp_debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     #endif
     //----------------------------------------------------------------------------
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
@@ -235,7 +235,7 @@ uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num){
     //
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    xtcp_debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     #endif
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -279,7 +279,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_PHONENUM_B],account_info[user_id].phone_num,DIV_NAME_NUM);
     //
-    debug_printf("log state %d\n",log_state);
+    xtcp_debug_printf("log state %d\n",log_state);
     xtcp_tx_buf[AC_LOGIN_STATE_B] = log_state;
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYSSN_B],host_info.sn,SYS_PASSWORD_NUM);
@@ -299,7 +299,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = VERSION_TEN_H;
    
     xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = VERSION_TEN_L;
-    debug_printf("ver %x %x  \n",xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B],xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1]);
+    xtcp_debug_printf("ver %x %x  \n",xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B],xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1]);
     //
     xtcp_tx_buf[AC_LOGIN_DHCP_EN_B] = host_info.dhcp_en;
     //
@@ -313,7 +313,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
     #endif
 
-    debug_printf("register %d day %d\n",xtcp_tx_buf[AC_LOGIN_RES_STATE_B] ,host_info.regiser_days);
+    xtcp_debug_printf("register %d day %d\n",xtcp_tx_buf[AC_LOGIN_RES_STATE_B] ,host_info.regiser_days);
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
@@ -351,7 +351,7 @@ uint16_t account_list_ack_build(uint8_t list_num){
     uint8_t total_user = 0;
     for(; tmp_inc<MAX_ACCOUNT_NUM && total_user<MAX_SEND_ACCOUNT_NUM_FORPACK; tmp_inc++){
         if(account_info[tmp_inc].id!=0xFF){
-            //debug_printf("ac %d,%d\n",account_info[tmp_inc].id,tmp_inc);
+            //xtcp_debug_printf("ac %d,%d\n",account_info[tmp_inc].id,tmp_inc);
             xtcp_tx_buf[dat_base+AC_LISTCK_TYPE_B] = account_info[tmp_inc].type;
             xtcp_tx_buf[dat_base+AC_LISTCK_NUM_B] = account_info[tmp_inc].id;
             //----------------------------------------------------------------------------------------------------
@@ -386,7 +386,7 @@ uint16_t account_list_ack_build(uint8_t list_num){
             memcpy(&xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_TIME_B],&account_info[tmp_inc].build_time_info,3);
             memcpy(&xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_DATE_B],&account_info[tmp_inc].build_date_info,3);
 
-            //debug_printf("year %d mon %d day %d\n",xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_DATE_B],
+            //xtcp_debug_printf("year %d mon %d day %d\n",xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_DATE_B],
             //    xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_DATE_B+1],xtcp_tx_buf[dat_base+AC_LISTCK_BUILD_DATE_B+2]);
 
             xtcp_tx_buf[dat_base+AC_LISTCK_DIV_TOL_B] = account_info[tmp_inc].div_tol;
@@ -403,7 +403,7 @@ uint16_t account_list_ack_build(uint8_t list_num){
 
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-    debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
+    xtcp_debug_printf("tol %d inc %d\n",t_list_connsend[list_num].pack_tol,t_list_connsend[list_num].pack_inc);
     #endif
     if(t_list_connsend[list_num].pack_inc >= t_list_connsend[list_num].pack_tol){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -457,7 +457,7 @@ uint16_t solution_list_ack_build(uint16_t cmd,uint8_t task_num_en){
         memcpy(&xtcp_tx_buf[data_base+SOLU_CK_BEGDATE],&solution_list.solu_info[i].begin_date,3);
         memcpy(&xtcp_tx_buf[data_base+SOLU_CK_ENDDATE],&solution_list.solu_info[i].end_date,3);
         xtcp_tx_buf[data_base+SOLU_CK_PRIO] = solution_list.solu_info[i].prio; 
-        //debug_printf("id %d %d\n", xtcp_tx_buf[data_base+SOLU_CK_ID],xtcp_tx_buf[data_base+SOLU_CK_STATE] );
+        //xtcp_debug_printf("id %d %d\n", xtcp_tx_buf[data_base+SOLU_CK_ID],xtcp_tx_buf[data_base+SOLU_CK_STATE] );
         //
         xtcp_tx_buf[SOLU_CK_TOLNUM]++;
         //
@@ -540,10 +540,10 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
         for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
             if((timetask_now.ch_state[j]!=0xFF)&&(timetask_now.task_musicplay[j].task_id==tmp_p->task_id)){
                 xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S] = 1;
-                debug_printf("have task id %d\n\n",tmp_p->task_id);
+                xtcp_debug_printf("have task id %d\n\n",tmp_p->task_id);
             }
         }
-        //debug_printf("\n task s: %d \n",xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S]);
+        //xtcp_debug_printf("\n task s: %d \n",xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S]);
         //
         t_list_connsend[list_num].list_info.tasklist.task_p = t_list_connsend[list_num].list_info.tasklist.task_p->all_next_p;
         data_base +=TASK_CK_LEN_END;
@@ -551,7 +551,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     xtcp_tx_buf[TASK_CK_TASK_TOL] = i;
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-    debug_printf("tol %d inc %d\n",xtcp_tx_buf[TASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
+    xtcp_debug_printf("tol %d inc %d\n",xtcp_tx_buf[TASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
     #endif
     if(t_list_connsend[list_num].pack_inc>=xtcp_tx_buf[TASK_CK_TOLPACK]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -635,7 +635,7 @@ uint16_t todaytask_ack_build(){
     xtcp_tx_buf[POL_DAT_BASE+2] = g_sys_val.today_date.month;
     xtcp_tx_buf[POL_DAT_BASE+3] = g_sys_val.today_date.date;
     //
-    //debug_printf("chk week %d\n",xtcp_tx_buf[POL_DAT_BASE]);
+    //xtcp_debug_printf("chk week %d\n",xtcp_tx_buf[POL_DAT_BASE]);
     return build_endpage_decode(POL_DAT_BASE+4,TASK_TODAYWEEK_CK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
 
@@ -718,7 +718,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     xtcp_tx_buf[RTTASK_CK_TASKTOL] = i;
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-	debug_printf("tol %d inc %d\n", xtcp_tx_buf[RTTASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
+	xtcp_debug_printf("tol %d inc %d\n", xtcp_tx_buf[RTTASK_CK_TOLPACK],t_list_connsend[list_num].pack_inc);
     #endif
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[RTTASK_CK_TOLPACK]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -770,7 +770,7 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
     //
     xtcp_tx_buf[RTTASK_BUILD_ID] = tmp_union.rttask_dtinfo.rttask_id;
     xtcp_tx_buf[RTTASK_BUILD_ID+1] = tmp_union.rttask_dtinfo.rttask_id>>8;
-    debug_printf("rttask id %d\n",tmp_union.rttask_dtinfo.rttask_id);
+    xtcp_debug_printf("rttask id %d\n",tmp_union.rttask_dtinfo.rttask_id);
     // 随机ID
     xtcp_tx_buf[RTTASK_BUILD_CONID] = ran_id;
     xtcp_tx_buf[RTTASK_BUILD_CONID+1] = ran_id>>8;
@@ -845,7 +845,7 @@ uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttas
         //
         //判断是否需要更新
         #if 0
-        debug_printf("%x,%x,%x,%x,%x,%x\n%x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.des_info[i].mac[0],tmp_union.rttask_dtinfo.des_info[i].mac[1],
+        xtcp_debug_printf("%x,%x,%x,%x,%x,%x\n%x,%x,%x,%x,%x,%x\n",tmp_union.rttask_dtinfo.des_info[i].mac[0],tmp_union.rttask_dtinfo.des_info[i].mac[1],
                                                               tmp_union.rttask_dtinfo.des_info[i].mac[2],tmp_union.rttask_dtinfo.des_info[i].mac[3],
                                                               tmp_union.rttask_dtinfo.des_info[i].mac[4],tmp_union.rttask_dtinfo.des_info[i].mac[5],
                                                               rttask_div_p->div_info.mac[0],rttask_div_p->div_info.mac[1],rttask_div_p->div_info.mac[2],
@@ -929,7 +929,7 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
     }else{
         user_fl_get_patchlist(tmp_union.buff);
     }
-    //debug_printf("patch tol %d\n",*patch_tol);
+    //xtcp_debug_printf("patch tol %d\n",*patch_tol);
     //======================================================
     if(*patch_tol == -1){
        *patch_tol=0; 
@@ -1006,7 +1006,7 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     //
     t_list_connsend[list_num].pack_inc++;
     #if LIST_TEXT_DEBUG
-    debug_printf("tol %d inc %d\n",xtcp_tx_buf[MUS_LIBCHK_PACKTOL],t_list_connsend[list_num].pack_inc);
+    xtcp_debug_printf("tol %d inc %d\n",xtcp_tx_buf[MUS_LIBCHK_PACKTOL],t_list_connsend[list_num].pack_inc);
     #endif
     if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[MUS_LIBCHK_PACKTOL]){
         t_list_connsend[list_num].conn_state = LIST_SEND_END;
@@ -1088,7 +1088,7 @@ uint16_t listinfo_upgrade_build(uint8_t type){
 // 定时任务更新通知
 //==========================================================================================
 uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t contorl,uint16_t task_id){
-    debug_printf("send updata\n");
+    xtcp_debug_printf("send updata\n");
     /*
     xtcp_tx_buf[TASK_SE_CONFIG] = xtcp_rx_buf[TASK_CFG_CONTORL];
     memcpy(&xtcp_tx_buf[TASK_SE_SOLU_ID],&xtcp_rx_buf[TASK_CFG_SOLU_ID],TASK_CFG_LEN_END - TASK_CFG_SOLU_ID);
@@ -1178,9 +1178,9 @@ uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
     xtcp_tx_buf[RTTASK_REFRESH_STATE] = task_state;
     /*
     for(uint8_t i=0;i<150;i++){
-        debug_printf("%x ",xtcp_tx_buf[i]);
+        xtcp_debug_printf("%x ",xtcp_tx_buf[i]);
     }
-    debug_printf("\n");
+    xtcp_debug_printf("\n");
     */
     return build_endpage_decode(RTTASK_REFRESH_DATEND,RTTASK_UPDATA_CMD,g_sys_val.con_id_tmp);
 }
@@ -1272,7 +1272,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
     xtcp_tx_buf[DIVSRC_LIST_TOLPACK] = t_list_connsend[list_num].pack_tol;
     xtcp_tx_buf[DIVSRC_LIST_PACKNUM] = t_list_connsend[list_num].pack_inc;
     dat_base = DIVSRC_LIST_DAT_BASE;
-    //debug_printf("div tol %d\n",g_sys_val.search_div_tol);
+    //xtcp_debug_printf("div tol %d\n",g_sys_val.search_div_tol);
     for(i=0;i<10&&t_list_connsend[list_num].list_info.divsrc_list.div_inc<g_sys_val.search_div_tol;i++){
         user_divsrv_read(t_list_connsend[list_num].list_info.divsrc_list.div_inc,tmp_union.buff);
         memcpy(&xtcp_tx_buf[dat_base+DIVSRC_MAC_B],&tmp_union.buff[DIVSRC_MAC_B],6);
@@ -1284,7 +1284,7 @@ uint16_t divsrc_list_build(uint8_t list_num){
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B] = tmp_union.buff[DIVSRC_VERSION_B];
         xtcp_tx_buf[dat_base+DIVSRC_VERSION_B+1] = tmp_union.buff[DIVSRC_VERSION_B+1];
         memcpy(&xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],&tmp_union.buff[DIVSRC_HOSTIP_B],4);     
-        //debug_printf("src div %d %d %d %d\n",xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+1],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+2],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+3]);
+        //xtcp_debug_printf("src div %d %d %d %d\n",xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+1],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+2],xtcp_tx_buf[dat_base+DIVSRC_HOSTIP_B+3]);
         t_list_connsend[list_num].list_info.divsrc_list.div_inc++;
         dat_base += DIVSRC_DATEND_B;
     }
@@ -1373,7 +1373,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         rttask_info_p = rttask_info_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE] = tmp_num; //即时任务总数
-    debug_printf("rttask num %d\n",tmp_num);
+    xtcp_debug_printf("rttask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     while(timetask_p!=null){
@@ -1383,7 +1383,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         timetask_p = timetask_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+1] = tmp_num; //定时任务总数
-    debug_printf("timetask num %d\n",tmp_num);
+    xtcp_debug_printf("timetask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
@@ -1392,28 +1392,28 @@ uint16_t taskview_page_build(uint16_t cmd){
         }
     }
     xtcp_tx_buf[POL_DAT_BASE+2] = tmp_num; //方案总数
-    debug_printf("solu num %d\n",tmp_num);
+    xtcp_debug_printf("solu num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num=0;
     while(div_info_p!=null){
 		#if 0
 		for(uint8_t i=0;i<14;i++){
-			debug_printf("%x ",c_tx_8623[i]);
+			xtcp_debug_printf("%x ",c_tx_8623[i]);
 		}
-		debug_printf("\n");
+		xtcp_debug_printf("\n");
 
 		for(uint8_t i=0;i<14;i++){
-			debug_printf("%x ",div_info_p->div_info.div_type[i]);
+			xtcp_debug_printf("%x ",div_info_p->div_info.div_type[i]);
 		}
-		debug_printf("\n");
+		xtcp_debug_printf("\n");
 		#endif
-        if(charncmp(c_tx_8623,div_info_p->div_info.div_type,14) && div_info_p->div_info.div_state){
+        if(charncmp(c_tx_8623,div_info_p->div_info.div_type,14)){
             tmp_num++;
         }
         div_info_p = div_info_p->next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+3] = tmp_num; //报警设备总数
-    debug_printf("firediv num %d\n",tmp_num);
+    xtcp_debug_printf("firediv num %d\n",tmp_num);
     //---------------------------------------------------------------------
     return build_endpage_decode(POL_DAT_BASE+4,cmd,&xtcp_rx_buf[POL_ID_BASE]);
 }

@@ -18,7 +18,7 @@ void task_music_send(uint8_t ch){
     // 配置发送目标
     for(uint8_t i=0;i<tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum;i++){
         //查找目标设备与IP
-        debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[0],
+        xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[0],
                                                 tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[1],
                                                 tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[2],
                                                 tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[3],
@@ -31,7 +31,7 @@ void task_music_send(uint8_t ch){
         }
         //if(div_tmp_p->div_info.div_state == 00)
         //    continue;
-        //debug_printf("div ok\n");
+        //xtcp_debug_printf("div ok\n");
         //
         //获得mac
         memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,6);
@@ -94,7 +94,7 @@ void task_music_stop(uint8_t ch){
     user_music_stop(ch);
     // 发送禁止
     user_audio_send_dis(ch);
-    //debug_printf("music stop\n");
+    //xtcp_debug_printf("music stop\n");
 }
 
 void task_music_play(uint8_t ch,uint8_t num){
@@ -126,15 +126,15 @@ void task_music_play(uint8_t ch,uint8_t num){
     #if 0
     for(i=0;i<(MUSIC_NAME_NUM+PATCH_NAME_NUM)/2;i++){
         if(((uint16_t *)f_name)[i]==0){
-            debug_printf("\n");  
+            xtcp_debug_printf("\n");  
             break;
         }
-        debug_printf("%c",f_name[i]);        
+        xtcp_debug_printf("%c",f_name[i]);        
     }
     #endif
     // 播放通道音乐
     user_music_play(ch);
-    //debug_printf("music play out\n");
+    //xtcp_debug_printf("music play out\n");
 }
 
 

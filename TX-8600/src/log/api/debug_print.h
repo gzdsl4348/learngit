@@ -72,8 +72,12 @@ enabled/disabled per debug unit.
  */
 void debug_printf(char fmt[], ...);
 
-
 #define debug_printf(...) debug_printf(__VA_ARGS__)
+
+void xtcp_debug_printf(char fmt[], ...);
+
+#define xtcp_debug_printf(...) debug_printf(__VA_ARGS__)
+
 /*
 #if DEBUG_PRINT_ENABLE0
 #else

@@ -11,7 +11,7 @@ TARGET = XL216-512-TQ128-C20
 APP_NAME = TX-8600
 
 # The USED_MODULES variable lists other module used by the application.
-USED_MODULES = lib_ethernet lib_gpio(>=1.1.0)  lib_locks lib_logging lib_otpinfo lib_xtcp module_fatfs module_sdio lib_uart lib_sdram
+USED_MODULES = lib_ethernet lib_gpio(>=1.1.0)  lib_locks lib_logging lib_otpinfo lib_xtcp module_fatfs module_sdio lib_uart lib_sdram 
 
 # The flags passed to xcc when building the application
 # You can also set the following to override flags for a particular language:

@@ -43,7 +43,7 @@ void user_uart_tx(uint8_t *data,uint8_t len){
     unsafe{
     uint16_t dat_l;
     dat_l = i_uart_tx->get_available_buffer_size();
-    //debug_printf("uart l %d \n",dat_l);
+    //xtcp_debug_printf("uart l %d \n",dat_l);
     if(dat_l<len)
         return;
     for(uint8_t i=0;i<len;i++){
@@ -55,7 +55,7 @@ void user_uart_tx(uint8_t *data,uint8_t len){
 
 void stop_all_timetask(){
     unsafe{
-    debug_printf("stop all task\n");
+    xtcp_debug_printf("stop all task\n");
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
         timetask_now.ch_state[i]=0xFF;
     }
@@ -180,12 +180,12 @@ void user_could_send(uint8_t pol_type){
     //
     #if 0
     for(uint16_t i=0;i<user_sending_len;i++){
-        debug_printf("%2x ",all_tx_buf[i]);
+        xtcp_debug_printf("%2x ",all_tx_buf[i]);
         if((i%20==0)&&(i!=0))
-            debug_printf("\n");
+            xtcp_debug_printf("\n");
     }
-    debug_printf("\n");
-    debug_printf("end\n");
+    xtcp_debug_printf("\n");
+    xtcp_debug_printf("end\n");
     #endif
     //
     xtcp_tx_fifo_put();
@@ -204,13 +204,13 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
         #endif 
         if(colud_f){
              //ÔÆ°üÍ·    
-            debug_printf("could cmd send %2x%2x id %x %x %x %x %x %x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE],
+            xtcp_debug_printf("could cmd send %2x%2x id %x %x %x %x %x %x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE],
                                                        xtcp_tx_buf[POL_ID_BASE],xtcp_tx_buf[POL_ID_BASE+1],xtcp_tx_buf[POL_ID_BASE+2],
                                                        xtcp_tx_buf[POL_ID_BASE+3],xtcp_tx_buf[POL_ID_BASE+4],xtcp_tx_buf[POL_ID_BASE+5]);
             user_could_send(0);
         }
         else{
-            //debug_printf("send dat\n");
+            //xtcp_debug_printf("send dat\n");
             if(conn.id != g_sys_val.could_conn.id)
                 i_user_xtcp->send(conn,&all_tx_buf[CLH_HEADEND_BASE],user_sending_len);
         }
@@ -228,7 +228,7 @@ void user_xtcp_connect_tcp(xtcp_ipaddr_t ipaddr){
     static int colud_prot;
     user_xtcp_unlisten(colud_prot);
     colud_prot = i_user_xtcp->connect(TCP_COULD_PROT, ipaddr, XTCP_PROTOCOL_TCP);
-    //debug_printf("lis %x\n",colud_prot);
+    //xtcp_debug_printf("lis %x\n",colud_prot);
     }
 }
 
@@ -240,7 +240,7 @@ void user_xtcp_connect(uint8_t ipaddr[]){
 
 void user_xtcp_close(xtcp_connection_t conn){
 	unsafe{
-        //debug_printf("close\n");
+        //xtcp_debug_printf("close\n");
 		i_user_xtcp->close(conn);
 	}
 }
@@ -366,9 +366,9 @@ int user_filefolder_del(uint8_t *f_name){
     uint8_t tmp[PATCH_NAME_NUM];
     memcpy(tmp,f_name,PATCH_NAME_NUM);
     for(uint8_t i=0;i<PATCH_NAME_NUM/2;i++){
-        debug_printf("%x ",((uint16_t *)tmp)[i]);
+        xtcp_debug_printf("%x ",((uint16_t *)tmp)[i]);
     }
-    debug_printf("end\n");
+    xtcp_debug_printf("end\n");
     
     return i_fs_user->file_delete(tmp,PATCH_NAME_NUM);
     }
@@ -402,9 +402,9 @@ void backup_system_chk(uint8_t *state,uint8_t *bar){
         i_user_flash->get_write_backup2flash_progress(complete,total,writed);
         *state = complete;
         *bar = (writed*100)/total;
-        debug_printf("abck bar[%d] wri[%d] com[%d]\n", *bar, writed, complete);
+        xtcp_debug_printf("abck bar[%d] wri[%d] com[%d]\n", *bar, writed, complete);
         #else
-        debug_printf("backup bar %d\n",*bar);
+        xtcp_debug_printf("backup bar %d\n",*bar);
         if((*bar)>=100){
             *state=0;
         }
