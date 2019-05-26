@@ -98,10 +98,13 @@ void task_music_stop(uint8_t ch){
 }
 
 void task_music_play(uint8_t ch,uint8_t num){
+    debug_printf("\n\n\nmusic play \n\n");
     //获取歌曲路径名
     uint8_t i,j,ch_tmp;
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+    uint8_t task_id_right=0;
+    for(uint8_t i=0;i<MAX_DISP_TASK;i++){
         if(g_sys_val.disp_ch[i]==ch){
+            task_id_right=1;
             ch_tmp = i;
             break;
         }
@@ -113,16 +116,37 @@ void task_music_play(uint8_t ch,uint8_t num){
     }
     ((uint16_t *)f_name)[i] = 0x002F;
     i++;
+    // 更新曲目名
     for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
         if(((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j]==0)
             break;
         ((uint16_t *)f_name)[i] = ((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j];
-        g_sys_val.dispmusic_buff[ch_tmp][j*2] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2+1];
-        g_sys_val.dispmusic_buff[ch_tmp][j*2+1] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2];
+
     }
     ((uint16_t *)f_name)[i] = 0x00;
-    g_sys_val.dispmusic_buff[ch_tmp][j*2] =0x00;
-    g_sys_val.dispmusic_buff[ch_tmp][j*2+1]=0x00; 
+    if(task_id_right){     
+        uint8_t playing_char[]={0x6B,0x63,0x57,0x28,0x64,0xAD,0x65,0x3E,0x00,0x3A};
+        memcpy(g_sys_val.disinfo2buf[ch_tmp],playing_char,10);
+        uint8_t data_base=10;
+        for(j=0; j<(MUSIC_NAME_NUM/2);j++){
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2+1];
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2];
+            if(g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1]==0 && g_sys_val.disinfo2buf[ch_tmp][data_base+j*2]==0)
+                goto music_dispend;
+            if(j>16)
+                break;
+        }   
+        data_base+=(12*2);
+        g_sys_val.disinfo2buf[ch_tmp][data_base] = 00;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+1] = 0x2E;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+2] = 00;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+3] = 0x2E;  
+        g_sys_val.disinfo2buf[ch_tmp][data_base+4] = 00;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+5] = 0x2E;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+6] =0x00;
+        g_sys_val.disinfo2buf[ch_tmp][data_base+7] =0x00;
+    }
+    music_dispend:
     #if 0
     for(i=0;i<(MUSIC_NAME_NUM+PATCH_NAME_NUM)/2;i++){
         if(((uint16_t *)f_name)[i]==0){

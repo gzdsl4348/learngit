@@ -1,3 +1,13 @@
+/*
+*  File Name:remotel_business_base.h
+*  Created on: 2019年5月20日
+*  Author: caiws
+*  description : 文件操作处理部分	
+*  Modify date: 2019年5月20日
+* 	Modifier Author: 无
+*  description : 无
+*/
+
 #ifndef __USER_FILE_CONTORL_H_
 #define __USER_FILE_CONTORL_H_
 
@@ -28,6 +38,18 @@ void music_bat_info_recive();
 void file_bat_contorl_event(uint8_t error_code);
 
 void bat_filecontorl_resend_tim();
+
+/*
+*@description: 批量处理音乐断线查询
+*@Author: ljh
+*@param[out]: 无
+*@param[in]: 无
+*@return: 无
+*@Modify date:
+*@Modifier Author:ljh
+*@others 无
+*/
+void music_batrechk_recive();
 
 #endif
 

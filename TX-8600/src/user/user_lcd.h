@@ -33,5 +33,7 @@ void dhcp_disp_none();
 
 void ip_disp_decode(uint8_t data,uint8_t *base_adr);
 
+void ip_conflict_disp(uint8_t state);
+
 #endif
 

@@ -441,7 +441,7 @@ void user_fldat_init(){
     //------------------------------------------------------------
     i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
 	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
-    init_string = 0;
+    //init_string = 0;
 	if(0x5AA57349==init_string){
 		return;
 	}
@@ -720,10 +720,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 
 	// 建立dns服务器连接
     i_xtcp.connect_udp(ETH_DNS_PROT,g_sys_val.dns_ip,g_sys_val.dns_conn);
-	
+
+	// 建立自身IP连接
+    i_xtcp.connect_udp(ETH_COMMUN_PORT,host_info.ipconfig.ipaddr,g_sys_val.ipchk_conn);
+
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
-
+	
     //====================================================================================================
 	//main loop process 
 	//====================================================================================================
@@ -895,14 +898,24 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         //===================================================================================
 						break;
 					case XTCP_RESEND_DATA:	
+						if(g_sys_val.ipchk_conn.id==conn.id){
+							g_sys_val.ipchk_ipconflict_f = 0;
+							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
+						}
                         //user_xtcp_send(conn);
                         xtcp_resend_decode();
 						xtcp_debug_printf("resend_data:%x\n",conn.id);
 						break;
 					case XTCP_SENT_DATA:
+						// ip 冲突
+						if(g_sys_val.ipchk_conn.id==conn.id){
+							debug_printf("\n\n ip conflict\n\n");
+							g_sys_val.ipchk_ipconflict_f = 1;
+							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
+						}
                         //-------------------------------------------------
                         //#if LIST_TEXT_DEBUG
-						#if 1
+						#if LIST_TEXT_DEBUG
 						if(conn.id==g_sys_val.could_conn.id)
 							xtcp_debug_printf("send event tcp\n");
 						else
@@ -950,12 +963,14 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		//----------------------------------------------------------------------------- 	
         case systime when timerafter(time_tmp+10000000):> time_tmp:	//10hz process
             //---------------------------------------------------------
-            //1HZ Process
+            // 1HZ Process
             static uint8_t time_count=0;
             time_count++;
             if(time_count>(10-1)){
                 time_count=0;
-        	    second_process();
+				//
+				second_process();
+				// 广播连接关闭处理
                 if(g_sys_val.brocast_rec_conn.id!=0){
                     g_sys_val.brocast_rec_timinc++;
                     if(g_sys_val.brocast_rec_timinc>2){
@@ -1001,6 +1016,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         g_sys_val.file_bat_contorl_s=0;
                     }
                 }
+                //--------------------------------------
+                // IP冲突检测
+				
             }
             //--------------------------------------------------
             // 10hz process

@@ -299,6 +299,52 @@ void musicfile_bar_chk_recive(){
 }
 
 //====================================================================================================
+// 批量操作状态恢复列表 对象初始化
+//====================================================================================================
+void bat_contorlobj_init(){
+    static uint8_t bat_obj_cnt=0;
+        
+    for(uint8_t i=0;i<MAX_BATCONTORL_OBJ_NUM;i++){
+        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,&xtcp_rx_buf[POL_MAC_BASE],6)){
+            g_sys_val.bat_contorling=i;
+            goto init_bat_contorlobj;
+        }
+    }
+    //
+    g_sys_val.bat_contorling = bat_obj_cnt;
+    memcpy(g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].bat_id,&xtcp_rx_buf[POL_MAC_BASE],6);
+    bat_obj_cnt++;
+    if(bat_obj_cnt>=MAX_BATCONTORL_OBJ_NUM)
+        bat_obj_cnt=0;
+    init_bat_contorlobj:
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].remain_num = g_sys_val.file_bat_tolnum;
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].bat_state=1;
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].succeed_num=0;
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].fail_num =0;
+    debug_printf("\ninit bat num %d id %x %x %x %x %x %x\n\n",g_sys_val.bat_contorling,xtcp_rx_buf[POL_MAC_BASE],xtcp_rx_buf[POL_MAC_BASE+1],xtcp_rx_buf[POL_MAC_BASE+2],xtcp_rx_buf[POL_MAC_BASE+3],
+                                                        xtcp_rx_buf[POL_MAC_BASE+4],xtcp_rx_buf[POL_MAC_BASE+5]);
+}
+
+void bat_contorlobj_add(uint8_t state){
+    if(state){
+        g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].fail_num++;
+    }
+    else{
+        g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].succeed_num++;
+    }
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].remain_num--;
+}
+
+void bat_contorlobj_end(){
+    g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].bat_state=0;
+}
+
+void music_batrechk_recive(){
+    user_sending_len = music_batrechk_build();
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
+}
+
+//====================================================================================================
 // 音乐文件批量操作                    MUSIC_BAT_CONTORL_CMD    0xB806
 //====================================================================================================
 void music_bat_contorl_recive(){
@@ -312,6 +358,7 @@ void music_bat_contorl_recive(){
         user_file_stop();
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],0,MUSIC_BAT_CONTORL_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
+        bat_contorlobj_end();
         return;
     }
     // 单次配一个批量任务
@@ -384,6 +431,7 @@ void music_bat_contorl_recive(){
         g_sys_val.file_bat_tim = 0;
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],0,MUSIC_BAT_CONTORL_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
+        bat_contorlobj_init();
         file_bat_contorl_event(0);
         xtcp_debug_printf("bat music tol %d\n",g_sys_val.file_bat_tolnum);
         xtcp_debug_printf("bat contorl recive over\n");
@@ -468,10 +516,13 @@ void file_bat_contorl_event(uint8_t error_code){
             g_sys_val.file_bat_resend_tmp[2] = contorl;
             user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,music_tmp,bat_state,file_state,contorl);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
+            bat_contorlobj_add(file_state);
             //g_sys_val.file_bat_conn.id = null;
         }
-        if(bat_state==FILE_BAT_CONTORL_SUCCEED)
+        if(bat_state==FILE_BAT_CONTORL_SUCCEED){
+            bat_contorlobj_end();
             return;
+        }
         //-----------------------------------------------------------------------------------------------------
         // 操作下一首音乐
         uint8_t busy_state=0;

@@ -73,6 +73,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
 							 {TEXT_TXPAGE_GET_CMD,text_get_txpage_recive},
 							 {ETH_CONTOL_DEBUG_CMD,eth_debug_contorl_recive},
+                             {MUSIC_B807_BATRECHK_CMD,music_batrechk_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 	

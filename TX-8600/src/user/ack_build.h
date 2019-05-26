@@ -152,6 +152,9 @@ uint16_t chk_txpage_cnt_build();
 //DNS 查询
 uint16_t dns_couldip_chk_build();
 
+//批量处理恢复
+uint16_t music_batrechk_build();
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

@@ -96,6 +96,8 @@
 
 #define MUSIC_BAT_CONTORL_CMD   0xB806
 #define MUSIC_BAT_STATE_CMD     0xB807
+
+#define MUSIC_B807_BATRECHK_CMD 0xB808
 //----------------------------------------------------
 // 列表更新消息
 #define LISTINFO_UPDATA_CMD     0xBF02
@@ -357,7 +359,7 @@
 
 #define TASK_CFG_LEN_END     (TASK_CFG_PLAY_TOL+1)
 // ACK
-#define TASKC_CFG_TASK_ID   (POL_DAT_BASE)              //2 应答方案编号
+#define TASKC_CFG_TASK_ID   (POL_DAT_BASE)              // 2 应答方案编号
 #define TASKC_CFG_STATE     (TASKC_CFG_TASK_ID+2)       //1 应答状态
 
 #define TASKC_CFG_ACK_LEN   (TASKC_CFG_STATE+1)
@@ -372,7 +374,7 @@
 
 #define TASK_DTCFG_MAC_BASE (TASK_DTCFG_MACTOL+1)       //
 
-#define TASK_DTCFG_AREACFG  (0)                         //2 物理分区控制位
+#define TASK_DTCFG_AREACFG  (0)                         // 2 物理分区控制位
 #define TASK_DTCFG_MAC      (TASK_DTCFG_AREACFG+2)      //6 MAC地址位    
 
 #define TASK_DTCFG_MAC_LEN  (TASK_DTCFG_MAC+6)
@@ -452,24 +454,24 @@
 // SEND 
 #define RTTASK_CFG_CONTORL  (POL_DAT_BASE)  //1 任务操作符
 #define RTTASK_CFG_ACID     (RTTASK_CFG_CONTORL+1)       //1 创建任务的账户编号
-#define RTTASK_CFG_TASKID   (RTTASK_CFG_ACID+1)          //2 任务ID 
+#define RTTASK_CFG_TASKID   (RTTASK_CFG_ACID+1)          // 2 任务ID 
 #define RTTASK_CFG_TASKNAME (RTTASK_CFG_TASKID+2)        //22 任务名称
 #define RTTASK_CFG_SRCMAC   (RTTASK_CFG_TASKNAME+DIV_NAME_NUM)  //6 播放源MAC
 #define RTTASK_CFG_TASKPRIO (RTTASK_CFG_SRCMAC+6)       //1 优先级 不使用 保留
 #define RTTASK_CFG_TASKVOL  (RTTASK_CFG_TASKPRIO+1)     //1 任务音量
-#define RTTASK_CFG_DURATIME (RTTASK_CFG_TASKVOL+1)      //3 持续时间
+#define RTTASK_CFG_DURATIME (RTTASK_CFG_TASKVOL+1)      // 3 持续时间
 #define RTTASK_CFG_KETINFO  (RTTASK_CFG_DURATIME+3)     //1 遥控按键信息
 #define RTTASK_CFG_DIVTOL   (RTTASK_CFG_KETINFO+1)      //1 播放目标总数
 
 #define RTTASK_CFG_DIV_BASE (RTTASK_CFG_DIVTOL+1)
 
 #define RTTASK_CFG_MAC          (0)                     //6 目标MAC             
-#define RTTASK_CFG_AREACONTORL  (RTTASK_CFG_MAC+6)      //2 物理分区控制位
+#define RTTASK_CFG_AREACONTORL  (RTTASK_CFG_MAC+6)      // 2 物理分区控制位
 
 #define RTTASK_CFG_LEN          (RTTASK_CFG_AREACONTORL+2)
 
 // ACK
-#define RTTASK_CFGC_ID          (POL_DAT_BASE)              //2 即时任务编号
+#define RTTASK_CFGC_ID          (POL_DAT_BASE)              // 2 即时任务编号 
 #define RTTASK_CFGC_STATE       (RTTASK_CFGC_ID+2)          //1 即时任务状态
 
 #define RTTASK_CFGC_LEN         (RTTASK_CFGC_STATE+1)       // 
@@ -485,12 +487,12 @@
 // 即时任务执行协议 B404
 //====================================================================================================
 // SEND
-#define RTTASK_PLAY_TASKID   (POL_DAT_BASE)              //2 任务ID
-#define RTTASK_PLAY_USERID   (RTTASK_PLAY_TASKID+2)              //2 任务ID
+#define RTTASK_PLAY_TASKID   (POL_DAT_BASE)              // 2 任务ID
+#define RTTASK_PLAY_USERID   (RTTASK_PLAY_TASKID+2)              // 2 任务ID
 #define RTTASK_PLAY_CONTORL  (RTTASK_PLAY_USERID+2)      //1 任务控制位
 // ACK
 #define RTTASKC_PLAY_TASKID      (POL_DAT_BASE)  
-#define RTTASKC_PLAY_USERID      (RTTASKC_PLAY_TASKID+2)    //2 控制ID
+#define RTTASKC_PLAY_USERID      (RTTASKC_PLAY_TASKID+2)    // 2 控制ID
 #define RTTASKC_PLAY_STATE       (RTTASKC_PLAY_USERID+2)           //1 控制状态
 
 #define RTTASKC_PLAY_END         (RTTASKC_PLAY_STATE+1)

@@ -722,7 +722,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
         nnn_task_sta_flag = status; 
         break;
         
-    case tmr when timerafter(timeout) :> timeout:
+    case tmr when timerafter(timeout) :> timeout: //10hz
       timeout += 10000000;
       /* Check for the link state */
       if (!isnull(i_smi)) {

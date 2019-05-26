@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x19)
+#define VERSION_L    (0x20)
 
 #define VERSION_TEN_H    (01)
 #define VERSION_TEN_L    (19)
@@ -73,7 +73,7 @@ extern "C" {
 #define MAX_RTTASK_CONTORL_NUM     10
 
 // 最大方案数
-#define MAX_TASK_SOULTION   4 //10 //4打铃 
+#define MAX_TASK_SOULTION   10 //10 //4打铃 
 
 #define MAX_SOUL_HAVETASK   100
 
@@ -86,6 +86,9 @@ extern "C" {
 
 // 最大MP3解码数
 #define MAX_MUSIC_CH        NUM_MEDIA_INPUTS    //48路音频
+
+// 最大显示任务数
+#define MAX_DISP_TASK       4
 
 // 发送数据堆栈
 #define MAX_TXBUFF_FIFOSIZE   64
@@ -110,6 +113,8 @@ extern char *xtcp_rx_buf;
 
 extern char all_rx_buf[RX_BUFFER_SIZE];
 extern char all_tx_buf[TX_BUFFER_SIZE];
+
+#define MAX_BATCONTORL_OBJ_NUM 5    //最大保存批量文件处理对象数
 
 extern uint16_t user_sending_len;
 

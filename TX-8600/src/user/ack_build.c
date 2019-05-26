@@ -1143,6 +1143,8 @@ uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
         runtmp_p = runtmp_p->run_next_p;
     }
     xtcp_tx_buf[RTTASK_CFG_CONTORL] = contorl;
+
+    xtcp_tx_buf[RTTASK_CFG_ACID] = tmp_union.rttask_dtinfo.account_id;
     //
     xtcp_tx_buf[RTTASK_CFG_TASKID] = id;
     xtcp_tx_buf[RTTASK_CFG_TASKID+1] = id>>8;
@@ -1470,5 +1472,23 @@ uint16_t dns_couldip_chk_build(){
     data_base_len++;
     //
     return  data_base_len;
+}
+
+
+uint16_t music_batrechk_build(){
+    memset(&xtcp_tx_buf[POL_DAT_BASE],0,4);
+    for(uint8_t i=0;i<MAX_BATCONTORL_OBJ_NUM;i++){
+        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,&xtcp_rx_buf[POL_MAC_BASE],6)){
+            xtcp_tx_buf[POL_DAT_BASE] = g_sys_val.bat_contorlobj[i].bat_state;
+            xtcp_tx_buf[POL_DAT_BASE+1] = g_sys_val.bat_contorlobj[i].succeed_num;
+            xtcp_tx_buf[POL_DAT_BASE+2] = g_sys_val.bat_contorlobj[i].fail_num;
+            xtcp_tx_buf[POL_DAT_BASE+3] = g_sys_val.bat_contorlobj[i].remain_num;
+            // ½ø¶È»Ö¸´
+            if(g_sys_val.bat_contorlobj[i].bat_state){
+                g_sys_val.file_bat_conn = conn;
+            }
+        }
+    }
+    return build_endpage_decode(POL_DAT_BASE+4,MUSIC_B807_BATRECHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
 

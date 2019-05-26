@@ -33,6 +33,15 @@ typedef struct xtcp_fifo_t
     unsigned int size;
 } xtcp_fifo_t;
 
+typedef struct bat_contorlobj_t
+{
+    uint8_t bat_state;
+    uint8_t succeed_num;
+    uint8_t fail_num;
+    uint8_t remain_num;
+    uint8_t bat_id[6];
+}bat_contorlobj_t;
+
 typedef struct g_sys_val_t{
 
     // TCP 包分割处理
@@ -115,12 +124,11 @@ typedef struct g_sys_val_t{
     date_info_t today_date;     //今日日期
     //----------------------------------------
     // 任务显示
-    uint8_t disp_furef[MAX_MUSIC_CH+2]; //是否即将进行任务
-    uint8_t disp_ch[MAX_MUSIC_CH+2];
-    uint8_t dispname_buff[MAX_MUSIC_CH+2][DIV_NAME_NUM*2];
-    uint8_t disptime_buff[MAX_MUSIC_CH+2][DIV_NAME_NUM];
-    uint8_t dispdura_buff[MAX_MUSIC_CH+2][DIV_NAME_NUM];
-    uint8_t dispmusic_buff[MAX_MUSIC_CH+2][MUSIC_NAME_NUM];
+    uint8_t disp_furef;     //即将进行 正在进行 状态
+    uint8_t disp_ch[MAX_DISP_TASK];
+    uint8_t dispname_buff[MAX_DISP_TASK][DIV_NAME_NUM*2];
+    uint8_t disinfo2buf[MAX_DISP_TASK][MUSIC_NAME_NUM];
+    uint16_t disp_task_id[MAX_DISP_TASK];
     uint8_t disp_num;
     uint8_t disp_delay_inc;
     uint8_t disp_delay_f;
@@ -129,6 +137,9 @@ typedef struct g_sys_val_t{
     xtcp_connection_t file_conn_tmp;
     uint8_t file_contorl_couldf;
     uint8_t file_contorl_id[6];
+
+    uint8_t bat_contorling;
+    bat_contorlobj_t bat_contorlobj[MAX_BATCONTORL_OBJ_NUM];
     //-----------------------------------------------
     // 信息更新部分
     //uint8_t connect_ip[4];
@@ -207,6 +218,10 @@ typedef struct g_sys_val_t{
     xtcp_connection_t dns_conn;
     uint8_t dns_timecnt;
     uint8_t dns_resend_cnt;
+    // ip 冲突连接
+    xtcp_connection_t ipchk_conn;
+    uint8_t ipchk_timecnt;
+    uint8_t ipchk_ipconflict_f;
     //
     uint8_t tftp_busy_f;
     //备份数据恢复状态

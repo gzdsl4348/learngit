@@ -100,7 +100,7 @@ uint8_t ds1302_contorl(uint8_t cmd,uint8_t data){
 	}		
 	// read
 	if(tmp &0x01!=0){	
-	  ds1302_IO <:0x01;
+	    ds1302_IO <:0x01;
 		set_port_drive_low(ds1302_IO); //ÉÏÀ­ÉèÖÃ
 		for(uint8_t i=0;i<8;i++){
 			ds1302_Clk <: 0x01;

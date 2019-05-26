@@ -122,14 +122,14 @@ void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
     mes_send_decode();
-    
+    #if 0
     for(uint16_t i=0;i<mes_send_list.len[mes_send_list.wrptr] ;i++){
         if(i!=0 && i%20==0)
             xtcp_debug_printf("\n");
         xtcp_debug_printf("%x ",xtcp_tx_buf[i]);
     }
     xtcp_debug_printf("\n");
-    
+    #endif
     	mes_send_list.wrptr++;
 
 	taskview_page_messend();

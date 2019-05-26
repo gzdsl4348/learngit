@@ -221,8 +221,8 @@ void task_music_config_play(uint8_t ch,uint16_t id){
         random_inc[ch] = g_sys_val.time_info.second%20;
         tmp_inc = random_play_inc(ch);
     }
-    task_music_play(ch,tmp_inc);
     user_disptask_refresh();
+    task_music_play(ch,tmp_inc);
 }
 
 //-------------------------------------------------------------------------------------------
@@ -270,7 +270,6 @@ void task_10hz_mutich_play(){
                     xtcp_debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
                     //task_music_config_play(i,g_sys_val.music_task_id[j]);
                     task_music_config_play(i,g_sys_val.music_task_id[j]);
-                    
                     // 任务信息更新
                 	g_sys_val.task_config_s = 2; //任务编辑
                 	g_sys_val.task_con_id = g_sys_val.music_task_id[j];

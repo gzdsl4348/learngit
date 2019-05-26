@@ -432,7 +432,7 @@ void cld_account_login_recive(){
         return;
     //ÅÐ¶ÏµÇÂ¼
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
-        if(charncmp(&xtcp_rx_buf[POL_DAT_BASE+1],account_info[i].phone_num,DIV_NAME_NUM)){
+        if(charncmp(&xtcp_rx_buf[POL_DAT_BASE+1],account_info[i].phone_num,DIV_NAME_NUM) && account_info[i].id!=0xFF){
             //¶ÁÈ¡ÕË»§ÏêÏ¸ÐÅÏ¢
             account_fl_read(&tmp_union.account_all_info,account_info[i].id);
             account_info[i].login_state = 1; // account login

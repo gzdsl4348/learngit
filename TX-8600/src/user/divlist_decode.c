@@ -209,6 +209,9 @@ void div_info_set_recive()
         //-----------------------------------------------------------------
          //SET IP INFO
         if((xtcp_rx_buf[DIVSET_SETBITMASK_B]>>1)&01){ //SET IP INFO
+            if(charncmp(host_info.ipconfig.ipaddr,&xtcp_rx_buf[DIVSET_IP_B],4)==0){
+                g_sys_val.reboot_f = 1;
+            }
             host_info.dhcp_en = xtcp_rx_buf[DIVSET_DHCPEN_B];
             memcpy(host_info.ipconfig.ipaddr,&xtcp_rx_buf[DIVSET_IP_B],4);    
             memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[DIVSET_GATEWAY_B],4);    

@@ -228,6 +228,36 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
 }
 
 //==============================================================================
+// 查找下一个发送列表
+//==============================================================================
+void find_next_sendlist(){
+    j_listsend_decode:
+	g_sys_val.list_sending_f=0;
+	if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state == LIST_SEND_END){
+		t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
+		xtcp_debug_printf("list send end\n");
+	}
+    // 发送超时清零
+    t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt=0;
+    // 发送下一个连接的列数据包
+    for(uint8_t cnt=0;cnt<MAX_SEND_LIST_NUM;cnt++){
+        g_sys_val.list_sending_cnt++;
+        if(g_sys_val.list_sending_cnt>=MAX_SEND_LIST_NUM){
+            g_sys_val.list_sending_cnt=0;
+        }
+        //找到下一个有效连接
+        if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state==LIST_SEND_END)
+            goto j_listsend_decode;
+        if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
+			g_sys_val.list_sending_f=1;
+			xtcp_debug_printf("send next list %d conn id %d lis %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id,t_list_connsend[g_sys_val.list_sending_cnt].conn_state);
+            sending_fun_lis[t_list_connsend[g_sys_val.list_sending_cnt].conn_state].sending_fun(g_sys_val.list_sending_cnt);
+            break;
+        }
+    }   
+}
+
+//==============================================================================
 // sending xtcp data  发送完成与数据连发处理线程
 //==============================================================================
 void xtcp_sending_decoder(){
@@ -235,28 +265,8 @@ void xtcp_sending_decoder(){
     // 上一个连接的列表数据包发送已完成
     //xtcp_debug_printf("conn %d listcnt %d\n",conn.id,g_sys_val.list_sending_cnt);
     if(t_list_connsend[g_sys_val.list_sending_cnt].conn.id==conn.id && t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
-        //xtcp_debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
-		g_sys_val.list_sending_f=0;
-		if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state == LIST_SEND_END){
-			t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
-			//xtcp_debug_printf("list send end\n");
-		}
-        // 发送超时清零
-        t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt=0;
-        // 发送下一个连接的列数据包
-        for(uint8_t cnt=0;cnt<MAX_SEND_LIST_NUM;cnt++){
-            g_sys_val.list_sending_cnt++;
-            if(g_sys_val.list_sending_cnt>=MAX_SEND_LIST_NUM){
-                g_sys_val.list_sending_cnt=0;
-            }
-            //找到下一个有效连接
-            if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
-				g_sys_val.list_sending_f=1;
-				//xtcp_debug_printf("send next list %d conn id %d\n",g_sys_val.list_sending_cnt,t_list_connsend[g_sys_val.list_sending_cnt].conn.id);
-                sending_fun_lis[t_list_connsend[g_sys_val.list_sending_cnt].conn_state].sending_fun(g_sys_val.list_sending_cnt);
-                break;
-            }
-        }   
+        xtcp_debug_printf("have list send %d\n",g_sys_val.list_sending_cnt);
+        find_next_sendlist();
     }
     //-------------------------------------------------------------------------------------------------------------------------
 }
@@ -268,16 +278,15 @@ void list_sending_overtime(){
 	if(t_list_connsend[g_sys_val.list_sending_cnt].conn_state!=LIST_SEND_INIT){
 	    t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt++;
     	if(t_list_connsend[g_sys_val.list_sending_cnt].tim_cnt>LIST_SENDING_OVERTIMECNT){
-               t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
-			   g_sys_val.list_sending_f=0;
-			   xtcp_debug_printf("timeover close list sending\n");
+           t_list_connsend[g_sys_val.list_sending_cnt].conn_state = LIST_SEND_INIT;
+		   g_sys_val.list_sending_f=0;
+           #if DEBUG_LIST_EN
+		   xtcp_debug_printf("timeover close list sending\n");
+           #endif
+           // 发送下一个连接的列数据包
+           find_next_sendlist();
         }
     }
-	else{
-		g_sys_val.list_sending_cnt++;
-		if(g_sys_val.list_sending_cnt>=MAX_SEND_LIST_NUM)
-			g_sys_val.list_sending_cnt=0;
-	}
 }
 
 uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uint8_t could_s){
@@ -311,7 +320,9 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
 	        return LIST_SEND_INIT;
 	    }
 	}
+    #if DEBUG_LIST_EN
 	xtcp_debug_printf("find num %d\n",i);
+    #endif
     //----------------------------------------------------------------
     //初始化发送状态
     t_list_connsend[i].pack_inc=0;
@@ -452,6 +463,18 @@ void broadcast_for_minute(){
         user_sending_len = 64;
         user_xtcp_send(g_sys_val.broadcast_conn,0);
     }
+}
+
+//------------------------------------------------------------------------
+//每15秒检测IP冲突
+void ipconflict_for_15s(){
+    g_sys_val.ipchk_timecnt++;
+    if(g_sys_val.ipchk_timecnt>15){
+		g_sys_val.ipchk_timecnt=0;
+        memset(xtcp_tx_buf,0,64);
+        user_sending_len = 64;
+        user_xtcp_send(g_sys_val.ipchk_conn,0);
+	}
 }
 
 //==============================================================================

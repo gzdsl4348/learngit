@@ -11,21 +11,17 @@
 //---------------------------------------------
 // 日期显示
 #define DISP_YEAR_ER    (DAT_DISP_BASE)    
-#define DISP_YEAR_BAI   (DISP_YEAR_ER+2)
-#define DISP_YEAR_SHI   (DISP_YEAR_BAI+2)
-#define DISP_YEAR_GE    (DISP_YEAR_SHI+2)
-#define DISP_YEAR_GANG  (DISP_YEAR_GE+2)
-#define DISP_MONTH_SHI  (DISP_YEAR_GANG+2)
-#define DISP_MONTH_GE   (DISP_MONTH_SHI+2)
-#define DISP_MONTH_GANG (DISP_MONTH_GE+2)
-#define DISP_DAY_SHI    (DISP_MONTH_GANG+2)
-#define DISP_DAY_GE     (DISP_DAY_SHI+2)
-#define DISP_DAY_SPEC   (DISP_DAY_GE+2)
-#define DISP_WEEK_XING  (DISP_DAY_SPEC+2) //2
-#define DISP_WEEK_QI    (DISP_WEEK_XING+2) //2
-#define DISP_WEEK_DAY   (DISP_WEEK_QI+2)   //2
+#define DISP_YEAR_BAI   (DISP_YEAR_ER+1)
+#define DISP_YEAR_SHI   (DISP_YEAR_BAI+1)
+#define DISP_YEAR_GE    (DISP_YEAR_SHI+1)
+#define DISP_YEAR_GANG  (DISP_YEAR_GE+1)
+#define DISP_MONTH_SHI  (DISP_YEAR_GANG+1)
+#define DISP_MONTH_GE   (DISP_MONTH_SHI+1)
+#define DISP_MONTH_GANG (DISP_MONTH_GE+1)
+#define DISP_DAY_SHI    (DISP_MONTH_GANG+1)
+#define DISP_DAY_GE     (DISP_DAY_SHI+1)
 
-#define DISP_DATA_LEN   (DISP_WEEK_DAY+2)  
+#define DISP_DATA_LEN   (DISP_DAY_GE+1)  
 //-------------------------------------------
 // 时间显示
 #define DISP_HOUR_SHI   (DAT_DISP_BASE)
@@ -48,27 +44,29 @@
 //-------------------------------------------
 // 版本显示
 //--------------------------------------------
-#define DISP_TIME_ID    2
-#define DISP_DATA_ID    1
-#define DISP_TASKNAME_ID 11
-#define DISP_TASKTIME_ID 13
-#define DISP_TASKDURA_ID 14
-#define DISP_TASKPLAY_ID 16
+#define DISP_VER_ID 14
 
-#define DISP_IP_ID 7
-#define DISP_GATE_ID 8
-#define DISP_MASK_ID 6
-#define DISP_MAC_ID  10
+#define DISP_IP_ID 1
+#define DISP_GATE_ID 2
+#define DISP_MASK_ID 4
+#define DISP_MAC_ID  3
 
-#define DISP_A_ID  4
-#define DISP_B_ID  3
-#define DISP_C_ID  5
+#define DISP_TIME_ID    8
+#define DISP_DATA_ID    5
+#define DISP_WEEK_ID    7
 
-#define DISP_COULDSTATE_ID  15
+#define DISP_COULD_ID   13
 
-#define DISP_VER_ID 9
+//
+#define DISP_TASKINFO1_ID 9
+#define DISP_TASKINFO2_ID 10
 
-#define DISP_DHCPS_ID 12
+#define DISP_TASKSTATE_ID  6
+
+//
+#define DISP_DHCPS_ID 11
+
+#define DISP_IPCONFILCT_ID 12
 
 uint8_t disp_buff[100];
 volatile uint8_t disp_len;
@@ -97,6 +95,22 @@ void send_buff(uint8_t id){
     user_uart_tx(disp_buff,disp_len);
 }
 
+void user_disp_icon(uint8_t id,uint8_t dat){
+    disp_buff[0] = 0xEE;
+    disp_buff[1] = 0xB1;
+    disp_buff[2] = 0x23;
+    disp_buff[3] = 0x00;
+    disp_buff[4] = 0x00;
+    disp_buff[5] = 0x00;
+    disp_buff[6] = id;
+    disp_buff[7] = dat;
+    disp_buff[8] = 0xFF;
+    disp_buff[9] = 0xFC;
+    disp_buff[10] = 0xFF;
+    disp_buff[11] = 0xFF;
+    user_uart_tx(disp_buff,12);
+}
+
 void disp_unti(uint8_t id,uint8_t *dat_base){
     memcpy(&disp_buff[DAT_DISP_BASE],dat_base,10);
     disp_len = 10+DAT_DISP_BASE;
@@ -104,39 +118,26 @@ void disp_unti(uint8_t id,uint8_t *dat_base){
 }
 
 void disp_time_unti(time_info_t *time_info,uint8_t *buff,uint8_t adr_base){
-    buff[adr_base] = 0x00;
-    buff[adr_base+1] = 0x30+time_info->hour/10;
+    buff[adr_base] = 0x30+time_info->hour/10;
     //
-    buff[adr_base+2] = 0x00;
-    buff[adr_base+3] = 0x30+time_info->hour%10;
+    buff[adr_base+1] = 0x30+time_info->hour%10;
     // 冒号
-    buff[adr_base+4] = 0x00;
-    buff[adr_base+5] = 0x3A;
+    buff[adr_base+2] = 0x3A;
     // 分
-    buff[adr_base+6] = 0x00;
-    buff[adr_base+7] = 0x30+time_info->minute/10;
-    buff[adr_base+8] = 0x00;
-    buff[adr_base+9] = 0x30+time_info->minute%10;
+    buff[adr_base+3] = 0x30+time_info->minute/10;
+    buff[adr_base+4] = 0x30+time_info->minute%10;
     // 冒号
-    buff[adr_base+10] = 0x00;
-    buff[adr_base+11] = 0x3A;
+    buff[adr_base+5] = 0x3A;
     // 秒
-    buff[adr_base+12] = 0x00;
-    buff[adr_base+13] = 0x30+time_info->second/10;
+    buff[adr_base+6] = 0x30+time_info->second/10;
     // 
-    buff[adr_base+14] = 0x00;
-    buff[adr_base+15] = 0x30+time_info->second%10;
+    buff[adr_base+7] = 0x30+time_info->second%10;
     //
-    buff[adr_base+16] = 0x00;
-    buff[adr_base+17] = 0x00;
+    buff[adr_base+8] = 0x00;
 }
 
 uint8_t disp_task_char[12]={0x62,0x53,0x94,0xC3,0x4E,0xFB,0x52,0xA1,0x00,0x3A,0x00,0x00};
 uint8_t disp_rttask_char[12]={0x5B,0x9A,0x65,0xF6,0x4E,0xFB,0x52,0xA1,0x00,0x3A,0x00,0x00};
-//(定时)
-uint8_t timetask_char[8] = {0x00,0x28,0x5B,0x9A,0x65,0xF6,0x00,0x29};
-//(打铃)
-uint8_t ringtask_char[8] = {0x00,0x28,0x62,0x53,0x94,0xC3,0x00,0x29};
 // 没有任务
 uint8_t none_task_char[10] = {0x6C,0xA1,0x67,0x09,0x4E,0xFB,0x52,0xA1,0x00,0x00};
 
@@ -152,9 +153,9 @@ uint8_t playing_char[10] = {0x6B,0x63,0x57,0x28,0x64,0xAD,0x65,0x3E,0x00,0x3A};
 uint8_t future_play_char[10] = {0x53,0x73,0x5C,0x06,0x62,0x67,0x88,0x4C,0x00,0x3A};
 
 void user_dispunti_init(){
-    disp_unti(DISP_A_ID,nowtask_char);
-    disp_unti(DISP_B_ID,begtime_char);
-    disp_unti(DISP_C_ID,dura_char);
+    //disp_unti(DISP_A_ID,nowtask_char);
+    //disp_unti(DISP_B_ID,begtime_char);
+    //disp_unti(DISP_C_ID,dura_char);
     //disp_unti(DISP_D_ID,playing_char);
 }
 
@@ -162,149 +163,135 @@ void user_dispunti_init(){
 uint8_t dispchange_futuref=0;
 uint8_t dispchange_nowf=0;
 
-void disp_task_info(uint32_t dura_time,uint8_t *name,time_info_t *time_info,uint8_t solu_id,uint8_t future_f){
-    uint8_t inc=0;
-    uint8_t adr_base;
+void disp_taskname(uint8_t *name){
+    // 任务名称
+    uint8_t task_name_char[]={0x4E,0xFB,0x52,0xA1,0x54,0x0D,0x79,0xF0,0x00,0x3A};
     //------------------------------------------------------------------------------------
     //获取任务名
+    memcpy(&g_sys_val.dispname_buff[g_sys_val.disp_num][0],task_name_char,10);
+    uint8_t data_base=10;
+    //
+    uint8_t inc=0;
     for(inc=0;inc<DIV_NAME_NUM/2;inc++){
-        g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2] = name[inc*2+1];
-        g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2+1] = name[inc*2];
-        if((g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2]==0)&&(g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2+1]==0))
+        g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2] = name[inc*2+1];
+        g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2+1] = name[inc*2];
+        if((g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2]==0)&&(g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2+1]==0))
             break;
     }
-    // 判断打铃or定时任务
-    if(solu_id==0xFF){
-        memcpy(&g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2],timetask_char,8);
-    }
-    else{
-        memcpy(&g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2],ringtask_char,8);
-    }
-    g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2+8] = 0x00;
-    g_sys_val.dispname_buff[g_sys_val.disp_num][inc*2+9] = 0x00;
-    //--------------------------------------------------------------------------
-    //获取开始时间
-    disp_time_unti(time_info,g_sys_val.disptime_buff[g_sys_val.disp_num],0); 
-    //获取持续时间
-    uint8_t hour,minute,second;
-    adr_base = 0;
-    hour = dura_time/3600;
-    minute = (dura_time%3600)/60;
-    second = (dura_time%3600)%60;
-    //小时            
-    if(hour!=0){
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = hour/10+0x30;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = hour%10+0x30;
-        adr_base++;
-        //5C 0F 65 F6
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x5C;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x0F;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x65;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0xF6;
-        adr_base++;
-    }
-    //分钟 
-    if(minute!=0){
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = minute/10+0x30;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = minute%10+0x30;
-        adr_base++;
-        //52 06 94 9F 
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x52;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x06;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x94;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x9F;
-        adr_base++;
-    }
-    //秒
-    if(second!=0){
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = second/10+0x30;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = second%10+0x30;
-        adr_base++;
-        //79 D2
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x79;
-        adr_base++;
-        g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0xD2;
-        adr_base++;
-    }
-    g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base] = 0x00;
-    g_sys_val.dispdura_buff[g_sys_val.disp_num][adr_base+1] =0x00;
-    //
-    g_sys_val.disp_furef[g_sys_val.disp_num] = future_f;
-    //音乐
-    g_sys_val.dispmusic_buff[g_sys_val.disp_num][0] = 0x65;
-    g_sys_val.dispmusic_buff[g_sys_val.disp_num][1] = 0xE0;
-    g_sys_val.dispmusic_buff[g_sys_val.disp_num][2] = 0x00;
-    g_sys_val.dispmusic_buff[g_sys_val.disp_num][3] = 0x00;
+    // 显示省略号
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+20] = 00;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+21] = 0x2E;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+22] = 00;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+23] = 0x2E;  
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+24] = 00;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+25] = 0x2E;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+26] =0x00;
+    g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+27] =0x00;
     
+    //g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2+1] = 0x00;
+    //g_sys_val.dispname_buff[g_sys_val.disp_num][data_base+inc*2+2] = 0x00;
+}
+
+void disp_tasktime_forunicode(time_info_t *time_info,uint8_t *buff,uint8_t *adr_base){
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->hour/10;
+    //
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->hour%10;
+    // 冒号
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x3A;
+    // 分
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->minute/10;
+    //
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->minute%10;
+    // 冒号
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x3A;
+    // 秒
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->second/10;
+    // 
+    *adr_base+=2;
+    buff[*adr_base]  = 0;
+    buff[*adr_base+1] = 0x30+time_info->second%10;
+    //
+    *adr_base+=2;
+}
+
+void disp_task_time(){
+    uint8_t data_base=0;
+    //开始时间
+    memcpy(g_sys_val.disinfo2buf[g_sys_val.disp_num],begtime_char,10); 
+    data_base+=10;
+    //
+    disp_tasktime_forunicode(&tmp_union.task_allinfo_tmp.task_coninfo.time_info,g_sys_val.disinfo2buf[g_sys_val.disp_num],&data_base);
+    // 持续时间
+    /*
+    memcpy(&g_sys_val.disinfo2buf[g_sys_val.disp_num][data_base],dura_char,10); 
+    data_base+=10;
+    time_info_t time_info;
+    time_info.hour = tmp_union.task_allinfo_tmp.task_coninfo.dura_time/3600;
+    time_info.minute = (tmp_union.task_allinfo_tmp.task_coninfo.dura_time%3600)/60;
+    time_info.second = (tmp_union.task_allinfo_tmp.task_coninfo.dura_time%3600)%60;
+    disp_tasktime_forunicode(&time_info,g_sys_val.disinfo2buf[g_sys_val.disp_num],&data_base);
+    */
+    g_sys_val.disinfo2buf[g_sys_val.disp_num][data_base] = 0;
+    g_sys_val.disinfo2buf[g_sys_val.disp_num][data_base+1] = 0;
 }
 
 void user_disptask_refresh(){
     g_sys_val.disp_num = 0;
+    g_sys_val.disp_furef=0;
     //---------------------------------------------------------------------------------------------
-    // 4个现在任务
+    // 获取现在任务名称
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
         if(timetask_now.ch_state[i]!=0xFF){
+            //有正在运行的任务
+            g_sys_val.disp_furef=1;
             g_sys_val.disp_ch[g_sys_val.disp_num] = i; 
-            disp_task_info(timetask_now.task_musicplay[i].dura_time,
-                           timetask_now.task_musicplay[i].name,
-                           &timetask_now.task_musicplay[i].time_info,
-                           timetask_now.task_musicplay[i].sulo_id,
-                           0);
+            disp_taskname(timetask_now.task_musicplay[i].name);
+            g_sys_val.disp_task_id[g_sys_val.disp_num]=timetask_now.task_musicplay[i].task_id;
+            //
             g_sys_val.disp_num++;
         }
+        if(g_sys_val.disp_num>=MAX_DISP_TASK)
+            break;
     }
-    // 未来任务
+    // 获取即将运行任务名称
+    if(g_sys_val.disp_furef)
+        return;
     timetask_t *today_t_p = timetask_list.today_timetask_head;
-    for(uint8_t i=0;i<2;i++){
+    for(uint8_t i=0;i<1;i++){ //只显示一个即时任务
         if(today_t_p==null)
             break;
-        timer_task_read(&tmp_union.task_allinfo_tmp,today_t_p->id);  
-        disp_task_info(tmp_union.task_allinfo_tmp.task_coninfo.dura_time,
-                       tmp_union.task_allinfo_tmp.task_coninfo.task_name,
-                       &tmp_union.task_allinfo_tmp.task_coninfo.time_info,
-                       tmp_union.task_allinfo_tmp.task_coninfo.solution_sn,
-                       1);
+        if(g_sys_val.disp_num>=MAX_DISP_TASK)
+            break;
+        //-----------------------------------------------------------------------------------
+        // 显示任务名称
+        timer_task_read(&tmp_union.task_allinfo_tmp,today_t_p->id);
+        debug_printf("\n\nhave future task disp\n\n");
+        disp_taskname(tmp_union.task_allinfo_tmp.task_coninfo.task_name);
+        // 显示任务时间
+        disp_task_time();
+        // 无
+        //------------------------------------------------------------------------------------
         g_sys_val.disp_num++;
         today_t_p = today_t_p->today_next_p;
     }
+    //
     if (g_sys_val.disp_num==0){
         // 没有任务
         memcpy(g_sys_val.dispname_buff[0],none_task_char,10);
-        g_sys_val.disptime_buff[0][0] =0x65;
-        g_sys_val.disptime_buff[0][1] =0xE0;
-        g_sys_val.disptime_buff[0][2] =0x00;
-        g_sys_val.disptime_buff[0][3] =0x00;
-        //
-        g_sys_val.dispdura_buff[0][0] =0x65;
-        g_sys_val.dispdura_buff[0][1] =0xE0;
-        g_sys_val.dispdura_buff[0][2] =0x00;
-        g_sys_val.dispdura_buff[0][3] =0x00;
-        //
-        g_sys_val.dispmusic_buff[0][0] =0x65;
-        g_sys_val.dispmusic_buff[0][1] =0xE0;
-        g_sys_val.dispmusic_buff[0][2] =0x00;
-        g_sys_val.dispmusic_buff[0][3] =0x00;
+        memset(g_sys_val.disinfo2buf[0],0x00,10);
     } 
     g_sys_val.disp_delay_f = 1;
     g_sys_val.disp_delay_inc = 0;
@@ -325,55 +312,17 @@ void disp_task_delay(){
 //现在任务      rt_state 0=打铃任务 1=定时任务          now_state 
 void user_disp_task(uint8_t state){
     uint16_t adr_base;
-    if(g_sys_val.disp_furef[state])        
-        disp_unti(DISP_A_ID,future_play_char);
-    else
-        disp_unti(DISP_A_ID,nowtask_char);
+    
+    user_disp_icon(DISP_TASKSTATE_ID,g_sys_val.disp_furef);
     //----------------------------------------------------------------------------------------
     // 任务名
-    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispname_buff[state],DIV_NAME_NUM+8);
-    disp_len = DAT_DISP_BASE+DIV_NAME_NUM+8;
-    send_buff(DISP_TASKNAME_ID);
-    // 开始时间
-    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.disptime_buff[state],DIV_NAME_NUM);
-    disp_len = DAT_DISP_BASE+DIV_NAME_NUM;
-    send_buff(DISP_TASKTIME_ID);
-    // 持续时间
-    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispdura_buff[state],DIV_NAME_NUM);
-    disp_len = DAT_DISP_BASE+DIV_NAME_NUM;
-    send_buff(DISP_TASKDURA_ID);
-    // 播放音乐
-    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispmusic_buff[state],MUSIC_NAME_NUM);
-    disp_len = DAT_DISP_BASE+DIV_NAME_NUM;
-    send_buff(DISP_TASKPLAY_ID);
-
-    /*
-    //----------------------------------------------------------------------------------------
-    if((state==0)||(dispchange_futuref==1)){
-        // 未来任务1
-        memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispfuture_buff[state*2],DIV_NAME_NUM*2);
-        adr_base = DAT_DISP_BASE+DIV_NAME_NUM*2;
-        //    
-        //xtcp_debug_printf("task 3:");
-        //for(uint8_t i=0;i<50;i++)
-        //    xtcp_debug_printf("%x ",disp_buff[i]);
-        //xtcp_debug_printf("\n");
-        //
-        send_buff(DISP_FUTURE_TASK1_ID);
-        //----------------------------------------------------------------------------------------
-        // 未来任务2
-        memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispfuture_buff[state*2+1],DIV_NAME_NUM*2);
-        adr_base = DAT_DISP_BASE+DIV_NAME_NUM*2;
-        //
-        //xtcp_debug_printf("task 4:");
-        //for(uint8_t i=0;i<50;i++)
-        //    xtcp_debug_printf("%x ",disp_buff[i]);
-        //xtcp_debug_printf("\n");
-        //
-        send_buff(DISP_FUTURE_TASK2_ID);
-        //----------------------------------------------------------------------------------------
-    }
-    */
+    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.dispname_buff[state],DIV_NAME_NUM+6);
+    disp_len = DAT_DISP_BASE+DIV_NAME_NUM+6;
+    send_buff(DISP_TASKINFO1_ID);
+    // 信息2显示
+    memcpy(&disp_buff[DAT_DISP_BASE],g_sys_val.disinfo2buf[state],MUSIC_NAME_NUM);
+    disp_len = DAT_DISP_BASE+MUSIC_NAME_NUM;
+    send_buff(DISP_TASKINFO2_ID);
 }
 
 void timer_task_disp(){
@@ -411,10 +360,6 @@ void ip_disp_decode(uint8_t data,uint8_t *base_adr){
 
 void user_disp_ip(xtcp_ipconfig_t ipconfig){
     uint8_t base_adr = DISP_IP_BASE;
-    disp_buff[base_adr] = 0x49;
-    disp_buff[base_adr+1] = 0x50;
-    disp_buff[base_adr+2] = 0x3A;
-    base_adr+=3;    
     ip_disp_decode(ipconfig.ipaddr[0],&base_adr);
     //disp_buff[base_adr] = 00;
     disp_buff[base_adr] = 0x2E;
@@ -436,12 +381,6 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     //---------------------------------------------------------------
     // 显示网关  
     base_adr = DISP_IP_BASE;
-    disp_buff[base_adr] = 0x47;
-    disp_buff[base_adr+1] = 0x41;
-    disp_buff[base_adr+2] = 0x54;
-    disp_buff[base_adr+3] = 0x45;
-    disp_buff[base_adr+4] = 0x3A;   
-    base_adr+=5;    
     ip_disp_decode(ipconfig.gateway[0],&base_adr);
     //disp_buff[base_adr] = 00;
     disp_buff[base_adr] = 0x2E;
@@ -463,12 +402,6 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     //---------------------------------------------------------------
     // 显示掩码       4D 41 53 4B 
     base_adr = DISP_IP_BASE;
-    disp_buff[base_adr] = 0x4D;
-    disp_buff[base_adr+1] = 0x41;
-    disp_buff[base_adr+2] = 0x53;
-    disp_buff[base_adr+3] = 0x4B;
-    disp_buff[base_adr+4] = 0x3A;   
-    base_adr+=5;    
     ip_disp_decode(ipconfig.netmask[0],&base_adr);
     //disp_buff[base_adr] = 00;
     disp_buff[base_adr] = 0x2E;
@@ -490,11 +423,6 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     //---------------------------------------------------------------
     // 显示MAC    4D 41 43 3A 
     base_adr = DISP_IP_BASE;
-    disp_buff[base_adr] = 0x4D;
-    disp_buff[base_adr+1] = 0x41;
-    disp_buff[base_adr+2] = 0x43;
-    disp_buff[base_adr+3] = 0x3A;  
-    base_adr+=4;    
     for(uint8_t i=0;i<6;i++){
         if((host_info.mac[i]>>4)<0x0A)
             disp_buff[base_adr] = (host_info.mac[i]>>4)+0x30;
@@ -515,9 +443,6 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     send_buff(DISP_MAC_ID);
 }
 
-
-uint8_t week_day[16]={0X00,0X00,0x4E,0x00,0x4E,0x8C,0x4E,0x09,0x56,0xDB,0x4E,0x94,0x51,0x6D,0x65,0xE5};
-
 void user_disp_time(){
     //
     disp_time_unti(&g_sys_val.time_info,disp_buff,DAT_DISP_BASE);
@@ -527,51 +452,30 @@ void user_disp_time(){
 
 void user_disp_data(){
     // year
-    disp_buff[DISP_YEAR_ER] = 0x00;
-    disp_buff[DISP_YEAR_ER+1] = 0x32;
+    disp_buff[DISP_YEAR_ER] = 0x32;
     //
-    disp_buff[DISP_YEAR_BAI] = 0x00; 
-    disp_buff[DISP_YEAR_BAI+1] = 0x30 + g_sys_val.date_info.year/100;
+    disp_buff[DISP_YEAR_BAI] = 0x30 + g_sys_val.date_info.year/100;
     //
-    disp_buff[DISP_YEAR_SHI] = 0x00;
-    disp_buff[DISP_YEAR_SHI+1] = 0x30 + (g_sys_val.date_info.year/10)%10;
+    disp_buff[DISP_YEAR_SHI] = 0x30 + (g_sys_val.date_info.year/10)%10;
     //
-    disp_buff[DISP_YEAR_GE] = 0x00;
-    disp_buff[DISP_YEAR_GE+1] = 0x30 + g_sys_val.date_info.year%10;
+    disp_buff[DISP_YEAR_GE] = 0x30 + g_sys_val.date_info.year%10;
     // - 
-    disp_buff[DISP_YEAR_GANG] = 0x00;
-    disp_buff[DISP_YEAR_GANG+1] = 0x2D;
+    disp_buff[DISP_YEAR_GANG] = 0x2D;
     // month
-    disp_buff[DISP_MONTH_SHI] = 0x00;
-    disp_buff[DISP_MONTH_SHI+1] = 0x30+g_sys_val.date_info.month/10;
+    disp_buff[DISP_MONTH_SHI] = 0x30+g_sys_val.date_info.month/10;
     //
-    disp_buff[DISP_MONTH_GE] = 0x00;
-    disp_buff[DISP_MONTH_GE+1] = 0x30+g_sys_val.date_info.month%10;
+    disp_buff[DISP_MONTH_GE] = 0x30+g_sys_val.date_info.month%10;
     // -
-    disp_buff[DISP_MONTH_GANG] = 0x00;
-    disp_buff[DISP_MONTH_GANG+1] = 0x2D;
+    disp_buff[DISP_MONTH_GANG] = 0x2D;
     // day
-    disp_buff[DISP_DAY_SHI] = 0x00;
-    disp_buff[DISP_DAY_SHI+1] = 0x30+g_sys_val.date_info.date/10;
+    disp_buff[DISP_DAY_SHI] = 0x30+g_sys_val.date_info.date/10;
     //
-    disp_buff[DISP_DAY_GE] = 0x00;
-    disp_buff[DISP_DAY_GE+1] = 0x30+g_sys_val.date_info.date%10;
-    // 空格
-    disp_buff[DISP_DAY_SPEC] = 0x00;
-    disp_buff[DISP_DAY_SPEC+1] = 0x20;
-    // 星  
-    disp_buff[DISP_WEEK_XING] = 0x66;
-    disp_buff[DISP_WEEK_XING+1] = 0x1F;
-    // 期
-    disp_buff[DISP_WEEK_QI] = 0x67;
-    disp_buff[DISP_WEEK_QI+1] = 0X1F;
-    // x
-    disp_buff[DISP_WEEK_DAY] = week_day[g_sys_val.date_info.week*2];
-    disp_buff[DISP_WEEK_DAY+1] = week_day[g_sys_val.date_info.week*2+1];
-    
+    disp_buff[DISP_DAY_GE] = 0x30+g_sys_val.date_info.date%10;
     //
     disp_len = DISP_DATA_LEN;
     send_buff(DISP_DATA_ID);
+
+    user_disp_icon(DISP_WEEK_ID,g_sys_val.date_info.week-1);
 }
 
 void user_disp_version(){
@@ -619,25 +523,21 @@ void dhcp_disp_none(){
     
 }
 
-void disp_couldstate(uint8_t state){
-    uint8_t could_dispchar[8]={0x4E,0x91,0x94,0xFE,0x63,0xA5,0x00,0x3A};
-    memcpy(&disp_buff[DAT_DISP_BASE],could_dispchar,8);
-    // 云链接打开
+void ip_conflict_disp(uint8_t state){
     if(state){
-        disp_buff[DAT_DISP_BASE+8]=0x62; 
-        disp_buff[DAT_DISP_BASE+9]=0x53;
-
+        uint8_t ipconflict_char[]={0x00,0x49,0x00,0x50,0x51,0xB2,0x7A,0x81,0x00,0x21}; 
+        memcpy(&disp_buff[DAT_DISP_BASE],ipconflict_char,8);
+        disp_len = DAT_DISP_BASE+8;
+        send_buff(DISP_IPCONFILCT_ID);
     }
-    // 云链接断开
     else{
-        disp_buff[DAT_DISP_BASE+8]=0x65;
-        disp_buff[DAT_DISP_BASE+9]=0xAD;
+        memset(&disp_buff[DAT_DISP_BASE],0,2);
+        disp_len = DAT_DISP_BASE+2;
+        send_buff(DISP_IPCONFILCT_ID);
     }
-    disp_buff[DAT_DISP_BASE+10]=0x5F;
-    disp_buff[DAT_DISP_BASE+11]=0x00;
-    
-    disp_len = DAT_DISP_BASE+12;
-    send_buff(DISP_COULDSTATE_ID);
-    
+}
+
+void disp_couldstate(uint8_t state){
+    user_disp_icon(DISP_COULD_ID,state);
 }
 
