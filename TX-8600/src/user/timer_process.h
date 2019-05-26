@@ -9,6 +9,8 @@ void timee10hz_process();
 
 void second_process();
 
+void ipconflict_for_15s();
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

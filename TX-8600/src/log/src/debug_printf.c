@@ -322,10 +322,9 @@ void xtcp_debug_printf(char * fmt, ...)
   }
   _write(FD_STDOUT, buf, p - buf);
   va_end(args);
-
-  //if(g_sys_val.eth_debug_f);
-  //    user_xtcp_debugudpsend(buf,p - buf);
-
+  if(g_sys_val.eth_debug_f){
+      user_xtcp_debugudpsend(buf,p - buf);
+  }
   return;
 }
 

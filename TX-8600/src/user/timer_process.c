@@ -114,6 +114,7 @@ void second_process(){
         dns_twominute_chk();
         #endif
     }
+    ipconflict_for_15s();
     broadcast_for_minute();     //每分钟发送广播包计时
     timer_taskmusic_check();    //定时任务播放计时
     task_check_and_play();      //定时任务定时播放

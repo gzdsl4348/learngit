@@ -455,9 +455,8 @@ void debug_conn_connect(uint8_t ip[]){
 	if(g_sys_val.debug_conn.id!=0){
 		user_udpconn_close(g_sys_val.debug_conn);
 	}
-	if(user_xtcp_connect_udp(ETH_DEBUG_PROT,ipaddr,&g_sys_val.debug_conn)==0){
-		g_sys_val.eth_debug_f =1;
-	}
+    g_sys_val.debug_conn = conn;
+	g_sys_val.eth_debug_f =1;
 	}//unsafe
 }
 
@@ -471,7 +470,7 @@ void debug_conn_colse(){
 }
 
 void user_xtcp_debugudpsend(uint8_t buf[],unsigned len){
-	unsafe{
+   	unsafe{
 		i_user_xtcp->send_udp(g_sys_val.debug_conn,buf,len);
 	}
 }

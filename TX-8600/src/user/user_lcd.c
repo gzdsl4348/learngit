@@ -526,8 +526,8 @@ void dhcp_disp_none(){
 void ip_conflict_disp(uint8_t state){
     if(state){
         uint8_t ipconflict_char[]={0x00,0x49,0x00,0x50,0x51,0xB2,0x7A,0x81,0x00,0x21}; 
-        memcpy(&disp_buff[DAT_DISP_BASE],ipconflict_char,8);
-        disp_len = DAT_DISP_BASE+8;
+        memcpy(&disp_buff[DAT_DISP_BASE],ipconflict_char,10);
+        disp_len = DAT_DISP_BASE+10;
         send_buff(DISP_IPCONFILCT_ID);
     }
     else{

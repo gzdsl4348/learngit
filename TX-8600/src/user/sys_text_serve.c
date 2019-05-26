@@ -12,9 +12,8 @@ void text_get_txpage_recive(){
 
 // ÍøÂç´òÓ¡¿ªÆô¹Ø±Õ   C002
 void eth_debug_contorl_recive(){
+    g_sys_val.eth_debug_f=0;
 	if(xtcp_rx_buf[POL_DAT_BASE]==0){
-        xtcp_debug_printf("debug_on\n");
-		g_sys_val.eth_debug_f=1;
 		debug_conn_connect(&xtcp_rx_buf[POL_DAT_BASE+1]);
 	}
 	else{
