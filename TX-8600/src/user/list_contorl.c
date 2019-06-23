@@ -5,6 +5,7 @@
 #include "debug_print.h"
 #include "fl_buff_decode.h"
 #include "user_unti.h"
+#include "sys_log.h"
 
 //==============================================================================================================
 // а╢╫сап╠М
@@ -450,8 +451,8 @@ void account_list_init(){
 //================================================================================
 void account_list_read(){
     for(uint8_t i=0; i<MAX_ACCOUNT_NUM; i++){
-        account_fl_read(&tmp_union.account_all_info,i);
-        account_info[i] = tmp_union.account_all_info.account_info;
+        account_fl_read(&g_tmp_union.account_all_info,i);
+        account_info[i] = g_tmp_union.account_all_info.account_info;
     }
     account_info[0].id=0x00;
     account_info[0].type=0x00;
@@ -466,8 +467,8 @@ void account_list_read(){
     memset(&account_info[0].build_time_info,0x00,3);
     memset(&account_info[0].build_date_info,0x01,4);
     account_info[0].div_tol = 0;
-    tmp_union.account_all_info.account_info=account_info[0];
-    account_fl_write(&tmp_union.account_all_info,0);
+    g_tmp_union.account_all_info.account_info=account_info[0];
+    account_fl_write(&g_tmp_union.account_all_info,0);
 }
 
 

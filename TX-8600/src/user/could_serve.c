@@ -7,6 +7,8 @@
 #include "debug_print.h"
 #include "conn_process.h"
 #include "user_lcd.h"
+#include "sys_log.h"
+#include "user_log.h"
 
 #define CLD_HEART_TIME_CNT  10 //10秒心跳
 
@@ -37,12 +39,14 @@ void could_heart_send_timer(){
             }
             #endif
             g_sys_val.could_send_cnt++;
-            if(g_sys_val.could_send_cnt>3){    //30秒重连
+            if(g_sys_val.could_send_cnt>2){    //20秒重连
                 g_sys_val.could_conn.id=0;
                 xtcp_debug_printf("could send time over\n");
                 user_xtcp_close(g_sys_val.could_conn);
                 //user_xtcp_unlisten(g_sys_val.colud_port);
                 g_sys_val.colud_connect_f=0;
+                // 日志更新
+                log_could_offline();
             }
         }
         else if(g_sys_val.colud_connect_f==0){

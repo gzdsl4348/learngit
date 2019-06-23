@@ -11,5 +11,8 @@ uint8_t mf_unlink(uint8_t *pname);
 
 uint8_t mf_rename(uint8_t *oldname,uint8_t* newname);
 
+uint8_t mf_open_log(char *file_newname,char *file_oldname);
+
+uint8_t mf_add_loginfo(char *file_name,unsigned len);
 #endif
 

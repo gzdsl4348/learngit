@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <string.h>
-#include <debug_print.h>
+#include "debug_print.h"
 #include "mymalloc.h"
 #include "ff.h"
 #include "mystring.h"
@@ -295,5 +295,49 @@ uint8_t mf_unlink(uint8_t *pname)
     return res;
 }
 
+
+//=======================================================================================================================
+// 日志管理
+static uint8_t log_filename[64];
+//------------------------------------------------------------------------------
+// 建立日志文件
+uint8_t mf_open_log(char *file_newname,char *file_oldname)
+{
+    FIL *logfile = 0;
+    uint8_t res;
+    uint16_t bw=0;
+    uint8_t utf_16le_type[2]={0xFF,0xFE};
+    //
+    logfile=(FIL*)mymalloc(sizeof(FIL));//申请内存
+    // 删除日志文件
+    f_unlink((const TCHAR*)file_oldname);
+    // 创建新日志    
+    res = f_open(logfile,(const TCHAR*)file_newname,FA_WRITE|FA_READ|FA_OPEN_ALWAYS);   //打开创建文件
+    f_write(logfile,(const TCHAR*)utf_16le_type, 2, &bw);
+    memcpy(log_filename,file_newname,64);    //备份文件名  
+    f_close(logfile);
+    myfree(logfile);
+    //
+    return res;
+}
+//------------------------------------------------------------------------------
+// 插入日志条目
+uint8_t mf_add_loginfo(char *file_name,unsigned len){
+    FIL *logfile = 0;
+    uint8_t res;
+    uint16_t br=0;
+    uint16_t bw=0;
+    logfile=(FIL*)mymalloc(sizeof(FIL));//申请内存
+    //
+    res = f_open(logfile,(const TCHAR*)log_filename,FA_WRITE|FA_READ|FA_OPEN_ALWAYS);   //打开创建文件
+    //
+    f_lseek(logfile,logfile->fptr+logfile->fsize);
+    res = f_write(logfile,(const TCHAR*)file_name, len, &bw);
+    //debug_printf("loginfo er %d \n",res);
+    //
+    f_close(logfile);
+    myfree(logfile);
+    return res;
+}
 
 

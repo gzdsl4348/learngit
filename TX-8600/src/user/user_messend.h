@@ -28,11 +28,14 @@ void mes_send_listinfo(uint8_t type,uint8_t need_send);
 // 账号更新通知
 void mes_send_acinfo(uint16_t id);
 
-// 任务更新通知
+// 任务更新通知 附带页面更新
 void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info);
 
+// 任务更新通知 不带页面更新
+void mes_send_taskinfo_nopage(task_allinfo_tmp_t* task_all_info);
+
 // 即时任务更新通知
-void mes_send_rttaskinfo(uint16_t id,uint8_t contorl);
+void mes_send_rttaskinfo(uint16_t id,uint8_t contorl,uint8_t page_state);
 
 // 方案更新通知
 void mes_send_suloinfo(uint16_t id);

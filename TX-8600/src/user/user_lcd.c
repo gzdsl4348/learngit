@@ -6,6 +6,7 @@
 #include "task_decode.h"
 #include "fl_buff_decode.h"
 #include "debug_print.h"
+#include "sys_log.h"
 
 #define DAT_DISP_BASE   (7)
 //---------------------------------------------
@@ -233,7 +234,7 @@ void disp_task_time(){
     memcpy(g_sys_val.disinfo2buf[g_sys_val.disp_num],begtime_char,10); 
     data_base+=10;
     //
-    disp_tasktime_forunicode(&tmp_union.task_allinfo_tmp.task_coninfo.time_info,g_sys_val.disinfo2buf[g_sys_val.disp_num],&data_base);
+    disp_tasktime_forunicode(&g_tmp_union.task_allinfo_tmp.task_coninfo.time_info,g_sys_val.disinfo2buf[g_sys_val.disp_num],&data_base);
     // 持续时间
     /*
     memcpy(&g_sys_val.disinfo2buf[g_sys_val.disp_num][data_base],dura_char,10); 
@@ -277,9 +278,9 @@ void user_disptask_refresh(){
             break;
         //-----------------------------------------------------------------------------------
         // 显示任务名称
-        timer_task_read(&tmp_union.task_allinfo_tmp,today_t_p->id);
+        timer_task_read(&g_tmp_union.task_allinfo_tmp,today_t_p->id);
         debug_printf("\n\nhave future task disp\n\n");
-        disp_taskname(tmp_union.task_allinfo_tmp.task_coninfo.task_name);
+        disp_taskname(g_tmp_union.task_allinfo_tmp.task_coninfo.task_name);
         // 显示任务时间
         disp_task_time();
         // 无

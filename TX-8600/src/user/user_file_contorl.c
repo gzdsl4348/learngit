@@ -9,6 +9,8 @@
 #include "user_messend.h"
 #include "task_decode.h"
 #include "conn_process.h"
+#include "sys_log.h"
+#include "user_log.h"
 
 #include "debug_print.h"
 
@@ -41,9 +43,9 @@ void music_music_list_chk_recive(){
     if(list_num==LIST_SEND_INIT)
         return;
     //获取文件夹列表
-    user_fl_get_patchlist(tmp_union.buff);
-    uint32_t *patch_tol = &tmp_union.buff[0];
-    dir_info_t *dir_info = &tmp_union.buff[4];
+    user_fl_get_patchlist(g_tmp_union.buff);
+    uint32_t *patch_tol = &g_tmp_union.buff[0];
+    dir_info_t *dir_info = &g_tmp_union.buff[4];
     //----------------------------------------------------------------------------------
     //查找指定文件夹
     #if 0
@@ -102,9 +104,9 @@ void music_patchname_config_recive(){
     if(g_sys_val.file_bat_contorl_s)
         goto file_contorl_end;
     //-----------------------------------------------------------------
-    user_fl_get_patchlist(tmp_union.buff);
-    uint32_t *patch_tol = &tmp_union.buff[0];
-    dir_info_t *dir_info = &tmp_union.buff[4];
+    user_fl_get_patchlist(g_tmp_union.buff);
+    uint32_t *patch_tol = &g_tmp_union.buff[0];
+    dir_info_t *dir_info = &g_tmp_union.buff[4];
     
     // 创建文件夹
     if(xtcp_rx_buf[MUS_PTHCON_CONFIG]==0){
@@ -146,6 +148,7 @@ void music_patchname_config_recive(){
         memcpy(g_sys_val.file_contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
         user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        log_musicpatch_config();
     }
     else{
         user_sending_len = onebyte_ack_build(state,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
@@ -172,20 +175,20 @@ void music_busy_chk_recive(){
 void file_patch_get(uint8_t *patch,uint8_t *file,uint16_t *file_patch){
     uint8_t i,j; 
     //获得文件夹名称
-    memcpy(tmp_union.buff,patch,PATCH_NAME_NUM);
+    memcpy(g_tmp_union.buff,patch,PATCH_NAME_NUM);
     for(i=0;i<(PATCH_NAME_NUM/2);i++){
-        if(((uint16_t *)tmp_union.buff)[i]==0)
+        if(((uint16_t *)g_tmp_union.buff)[i]==0)
             break;
-        file_patch[i] = ((uint16_t *)tmp_union.buff)[i];
+        file_patch[i] = ((uint16_t *)g_tmp_union.buff)[i];
     }
     file_patch[i] = 0x002F;
     i++;
     //获得文件名称
-    memcpy(tmp_union.buff,file,MUSIC_NAME_NUM);
+    memcpy(g_tmp_union.buff,file,MUSIC_NAME_NUM);
     for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
-        if(((uint16_t *)tmp_union.buff)[j]==0)
+        if(((uint16_t *)g_tmp_union.buff)[j]==0)
             break;
-        file_patch[i] = ((uint16_t *)tmp_union.buff)[j];
+        file_patch[i] = ((uint16_t *)g_tmp_union.buff)[j];
     }
     file_patch[i] = 0x00;
 }
@@ -225,9 +228,9 @@ void music_file_config_recive(){
     //
     // 移动文件
     if(xtcp_rx_buf[FILECON_CONTORL_B] == FILE_CONTORL_MOVE){
-        user_fl_get_patchlist(tmp_union.buff);
-        patch_tol = &tmp_union.buff[0];
-        dir_info = &tmp_union.buff[4]; 
+        user_fl_get_patchlist(g_tmp_union.buff);
+        patch_tol = &g_tmp_union.buff[0];
+        dir_info = &g_tmp_union.buff[4]; 
     
         for(uint8_t i=0;i<*patch_tol;i++){
             if(charncmp(dir_info[i].name,&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
@@ -243,9 +246,9 @@ void music_file_config_recive(){
     }
     // 复制文件
     else if(xtcp_rx_buf[FILECON_CONTORL_B] == FILE_CONTORL_COPY){
-        user_fl_get_patchlist(tmp_union.buff);
-        patch_tol = &tmp_union.buff[0];
-        dir_info = &tmp_union.buff[4]; 
+        user_fl_get_patchlist(g_tmp_union.buff);
+        patch_tol = &g_tmp_union.buff[0];
+        dir_info = &g_tmp_union.buff[4]; 
     
         for(uint8_t i=0;i<*patch_tol;i++){
             if(charncmp(dir_info[i].name,&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
@@ -401,12 +404,12 @@ void music_bat_contorl_recive(){
     //完成分包接收
     if(((xtcp_rx_buf[MUSIC_BAT_PACKINC]+1)==xtcp_rx_buf[MUSIC_BAT_PACKTOL])&&(g_sys_val.file_batpack_inc == xtcp_rx_buf[MUSIC_BAT_PACKTOL])){
         //======================================================================================================================    
-        user_fl_get_patchlist(tmp_union.buff);
+        user_fl_get_patchlist(g_tmp_union.buff);
         uint32_t *patch_tol;
         dir_info_t *dir_info;
-        patch_tol = &tmp_union.buff[0];
-        dir_info = &tmp_union.buff[4]; 
-        uint8_t *music_tmp = &tmp_union.buff[1024]; 
+        patch_tol = &g_tmp_union.buff[0];
+        dir_info = &g_tmp_union.buff[4]; 
+        uint8_t *music_tmp = &g_tmp_union.buff[1024]; 
         
         for(uint8_t i=0;i<*patch_tol;i++){
             if(charncmp(g_sys_val.file_bat_despatch,dir_info[i].name,PATCH_NAME_NUM)==1){
@@ -433,8 +436,10 @@ void music_bat_contorl_recive(){
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
         bat_contorlobj_init();
         file_bat_contorl_event(0);
-        xtcp_debug_printf("bat music tol %d\n",g_sys_val.file_bat_tolnum);
+        //xtcp_debug_printf("bat music tol %d\n",g_sys_val.file_bat_tolnum);
         xtcp_debug_printf("bat contorl recive over\n");
+        // 日志更新
+        log_musicfile_config();
     
     }
 }
@@ -482,7 +487,7 @@ void file_bat_contorl_event(uint8_t error_code){
     uint8_t file_state=0;
     uint8_t bat_state=FILE_BAT_CONTORL_BUSY;
     uint8_t contorl;
-    uint8_t *music_tmp = &tmp_union.buff[1024]; 
+    uint8_t *music_tmp = &g_tmp_union.buff[1024]; 
 
     uint32_t *patch_tol;
     dir_info_t *dir_info;
@@ -553,9 +558,9 @@ void file_bat_contorl_event(uint8_t error_code){
         //----------------------------------------------------------------------------
         // 复制
         if(g_sys_val.file_bat_contorl==0){
-            user_fl_get_patchlist(tmp_union.buff);
-            patch_tol = &tmp_union.buff[0];
-            dir_info = &tmp_union.buff[4]; 
+            user_fl_get_patchlist(g_tmp_union.buff);
+            patch_tol = &g_tmp_union.buff[0];
+            dir_info = &g_tmp_union.buff[4]; 
             for(uint8_t i=0;i<*patch_tol;i++){
                 if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
                     if(dir_info[i].music_num_full){
@@ -572,9 +577,9 @@ void file_bat_contorl_event(uint8_t error_code){
         // 移动
         else if(g_sys_val.file_bat_contorl==1){
             //
-            user_fl_get_patchlist(tmp_union.buff);
-            patch_tol = &tmp_union.buff[0];
-            dir_info = &tmp_union.buff[4]; 
+            user_fl_get_patchlist(g_tmp_union.buff);
+            patch_tol = &g_tmp_union.buff[0];
+            dir_info = &g_tmp_union.buff[4]; 
             for(uint8_t i=0;i<*patch_tol;i++){
                 if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
                     if(dir_info[i].music_num_full){
@@ -635,8 +640,8 @@ void bat_filecontorl_resend_tim(){
         // 重发数据
         if(g_sys_val.file_bat_resendtim>4){
             g_sys_val.file_bat_resendtim=0;
-            user_file_bat_read(g_sys_val.file_bat_musicinc-1,tmp_union.buff);
-            user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,tmp_union.buff,
+            user_file_bat_read(g_sys_val.file_bat_musicinc-1,g_tmp_union.buff);
+            user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,g_tmp_union.buff,
                                                   g_sys_val.file_bat_resend_tmp[0],g_sys_val.file_bat_resend_tmp[1],g_sys_val.file_bat_resend_tmp[2]);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
             // 停止重发

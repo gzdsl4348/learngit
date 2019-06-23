@@ -2,6 +2,10 @@
 #ifndef _debug_printf_h_
 #define _debug_printf_h_
 
+#if defined(__cplusplus) || defined(__XC__)
+extern "C" {
+#endif
+
 /**
 Debug Printing Module
 =====================
@@ -74,16 +78,15 @@ void debug_printf(char fmt[], ...);
 
 #define debug_printf(...) debug_printf(__VA_ARGS__)
 
-void xtcp_debug_printf(char fmt[], ...);
-
-#define xtcp_debug_printf(...) xtcp_debug_printf(__VA_ARGS__)
-
 /*
 #if DEBUG_PRINT_ENABLE0
 #else
 #define debug_printf(...)
 #endif
 */
+#if defined(__cplusplus) || defined(__XC__)
+}
+#endif
 
 
 #endif // _debug_printf_h_

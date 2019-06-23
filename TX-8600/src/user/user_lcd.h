@@ -1,3 +1,13 @@
+/*
+*  File Name:remotel_business_base.h
+*  Created on: 2019年5月26日
+*  Author: caiws
+*  description :lcd显示函数
+*   Modify date: 
+* 	Modifier Author:
+*  description :
+*/
+
 #ifndef __USER_LCD_H_
 #define __USER_LCD_H_
 
@@ -18,16 +28,15 @@ void user_disptask_refresh();
 void timer_task_disp();
 // 显示版本
 void user_disp_version();
-
+//显示初始化
 void user_dispunti_init();
-
 // 延时显示
 void disp_task_delay();
-
 // 显示云链接状态
 void disp_couldstate(uint8_t state);
-
+// DHCP图标开启显示
 void dhcp_disp_en();
+// DHCP图标关闭显示
 void dhcp_disp_dis();
 void dhcp_disp_none();
 

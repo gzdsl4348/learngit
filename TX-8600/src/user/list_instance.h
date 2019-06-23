@@ -13,7 +13,7 @@ extern "C" {
 #define VERSION_L    (0x20)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (19)
+#define VERSION_TEN_L    (20)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -82,7 +82,7 @@ extern "C" {
 // 定时任务最大指定日期
 #define MAX_TASK_DATE_NUM   10  //最大指定10天   
 
-#define SOLU_MAX_PLAYCH     16
+#define SOLU_MAX_PLAYCH     8
 
 // 最大MP3解码数
 #define MAX_MUSIC_CH        NUM_MEDIA_INPUTS    //48路音频
@@ -94,6 +94,9 @@ extern "C" {
 #define MAX_TXBUFF_FIFOSIZE   64
 // 接收数据堆栈
 #define MAX_RXBUFF_FIFOSIZE   16
+
+// 最大记录日数
+#define MAX_LOGDATE_NUM 7
 
 // 注册信息
 #define HOST_UNREGISTER             0
@@ -160,9 +163,9 @@ typedef struct host_info_t{
     uint16_t regiser_days;              //注册天数
     xtcp_ipconfig_t ipconfig;           //ip 信息
     uint8_t div_brand[DIV_NAME_NUM];              //设备品牌
-    uint8_t regiser_code[3][20];        //保存注册码
-    uint8_t regiser_inc;
     uint8_t sys_dhcp_state;
+    uint8_t log_daycnt;
+    uint8_t log_filename[MAX_LOGDATE_NUM][64];
 }host_info_t;
 
 extern host_info_t host_info;
@@ -417,6 +420,15 @@ typedef union{
     uint8_t buff[8*1024];
     xtcp_ipconfig_t ipconfig;
 }tmp_union_t;
+
+typedef union{
+    task_allinfo_tmp_t task_allinfo_tmp;
+    account_all_info_t account_all_info;
+    rttask_dtinfo_t rttask_dtinfo;
+    uint8_t buff[4*1024];
+    xtcp_ipconfig_t ipconfig;
+}tmp_union_l_t;
+
 //
 //================================================================
 //fun list 

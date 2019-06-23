@@ -5,6 +5,7 @@
 #include "fl_buff_decode.h"
 
 #include "debug_print.h"
+#include "sys_log.h"
 
 #include <xs1.h>
 #include <platform.h>
@@ -16,7 +17,7 @@ on tile[1]: port ds1302_IO = XS1_PORT_1J;
 #define one_us 100 //100MHZ /100
 
 
-uint8_t tmp;
+static uint8_t tmp;
 void ds1302_get_date(){
 	//
 	tmp = ds1302_contorl(ds1302_minute_read,0x00);
@@ -80,6 +81,8 @@ void ds1302_init(){
 	}
 	ds1302_get_date();
     g_sys_val.today_date = g_sys_val.date_info;
+    // 打开日志记录
+    user_file_mklog();
 }
 
 uint8_t ds1302_contorl(uint8_t cmd,uint8_t data){

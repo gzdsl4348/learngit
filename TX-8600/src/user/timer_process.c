@@ -14,6 +14,7 @@
 #include "user_messend.h"
 #include "user_file_contorl.h"
 #include "could_serve.h"
+#include "sys_log.h"
 
 #include "debug_print.h"
 
@@ -72,6 +73,8 @@ void timer_process(){
             user_disp_data();
             // 更新注册信息
             register_could_chk();
+            //
+            user_file_mklog();
         }
     }
 }

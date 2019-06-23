@@ -1,6 +1,7 @@
 #include "user_messend.h"
 #include "user_xccode.h"
 #include "fl_buff_decode.h"
+#include "sys_log.h"
 
 // 添加进网络消息更新队列
 uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]){
@@ -14,7 +15,7 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]){
         }
     }
     for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
-		xtcp_debug_printf("find add\n");
+		debug_printf("\n\n mes find add \n\n");
         // 找空置账号
         if(mes_send_list.messend_conn[i].state==0){
             mes_send_list.messend_conn[i].state = 1;
@@ -48,11 +49,17 @@ void mes_send_decode(){
 				user_sending_len = mes_send_list.len[mes_send_list.rpttr];
 				build_endpage_forid(user_sending_len,mes_send_list.messend_conn[mes_send_list.send_inc].could_id);
 				//
-                xtcp_debug_printf("messend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
-                xtcp_debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
+                debug_printf("\n\nmessend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
+                debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[1],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[2],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[3]);
+                debug_printf("mac : %x,%x,%x,%x,%x,%x\n",mes_send_list.messend_conn[mes_send_list.send_inc].could_id[0],
+                                                            mes_send_list.messend_conn[mes_send_list.send_inc].could_id[1],
+                                                            mes_send_list.messend_conn[mes_send_list.send_inc].could_id[2],
+                                                            mes_send_list.messend_conn[mes_send_list.send_inc].could_id[3],
+                                                            mes_send_list.messend_conn[mes_send_list.send_inc].could_id[4],
+                                                            mes_send_list.messend_conn[mes_send_list.send_inc].could_id[5]);
                 user_xtcp_send(mes_send_list.messend_conn[mes_send_list.send_inc].conn,mes_send_list.messend_conn[mes_send_list.send_inc].could_f);
                 mes_send_list.send_inc++;
                 mes_send_list.tim_inc = 0;
@@ -117,7 +124,7 @@ void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //备份发送数据
-    timer_task_read(&tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
+    timer_task_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
     mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
@@ -130,13 +137,34 @@ void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
     }
     xtcp_debug_printf("\n");
     #endif
-    	mes_send_list.wrptr++;
-
-	taskview_page_messend();
+	mes_send_list.wrptr++;
+    
+    taskview_page_messend();
 }
 
+void mes_send_taskinfo_nopage(task_allinfo_tmp_t* task_all_info){
+    if(mes_send_list.wrptr>=MES_STACK_NUM)
+        return;
+    //备份发送数据
+    timer_task_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
+    mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
+    //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
+	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+    mes_send_decode();
+    #if 0
+    for(uint16_t i=0;i<mes_send_list.len[mes_send_list.wrptr] ;i++){
+        if(i!=0 && i%20==0)
+            xtcp_debug_printf("\n");
+        xtcp_debug_printf("%x ",xtcp_tx_buf[i]);
+    }
+    xtcp_debug_printf("\n");
+    #endif
+	mes_send_list.wrptr++;
+}
+
+
 // 即时任务更新通知
-void mes_send_rttaskinfo(uint16_t id,uint8_t contorl){
+void mes_send_rttaskinfo(uint16_t id,uint8_t contorl,uint8_t page_state){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //
@@ -144,8 +172,9 @@ void mes_send_rttaskinfo(uint16_t id,uint8_t contorl){
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
 	mes_send_list.wrptr++;
-
-	taskview_page_messend();
+    if(page_state){
+    	taskview_page_messend();
+    }
 }
 
 // 方案更新通知

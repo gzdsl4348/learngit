@@ -3,6 +3,7 @@
 #include "ack_build.h"
 #include "user_unti.h"
 #include "debug_print.h"
+#include "sys_log.h"
 
 // 查看收发包数量 C001
 void text_get_txpage_recive(){

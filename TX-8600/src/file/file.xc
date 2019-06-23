@@ -266,7 +266,24 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 
                 break;
             }
-            
+            case if_fs.log_mklog(uint8_t new_fname[newlen],unsigned newlen,uint8_t old_fname[oldlen],unsigned oldlen)-> int res:
+            {
+                res = FOR_SUCCEED;
+                memcpy(fopr.data.file.fsrc, new_fname, newlen);
+                memcpy(fopr.data.file.fdes, old_fname, oldlen);
+                fopr.log_event = FOR_LOGMK;
+                c_faction <: (char)1;
+                break;
+            }
+            case if_fs.log_loginfo_add(uint8_t log_info[len],unsigned len)-> int res:
+            {
+                res = FOR_SUCCEED;
+                memcpy(fopr.data.file.log_info, log_info, len);
+                fopr.data.file.len =len;
+                fopr.log_event = FOR_LOGADD;   
+                c_faction <: (char)1;
+                break;
+            }
             case if_fs.get_notify(file_server_notify_data_t &data):
             {
                 //file_server_notify_data_t data;
@@ -305,7 +322,6 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     fopr.event = FOE_IDLE;
                     fopr.result = FOR_IDLE;
                 }
-                
                 fopr.error_code = 0;//ADD:20181023
 
                 sdcard_status = get_sdcard_status();

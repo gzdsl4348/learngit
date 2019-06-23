@@ -10,6 +10,8 @@
 #include "sdram.h"
 #endif
 
+#define WAV_FILE_ENABLE 0
+
 typedef enum
 {
     SD_CARD_OK = 0,
@@ -38,9 +40,16 @@ typedef enum
     
     FOE_FUPLOAD,
 
-    FOE_FORCED_STOP
+    FOE_FORCED_STOP,
     
 }F_OPR_EVENT_E;
+
+typedef enum
+{
+    FOR_LOGIDLE = 0xff,
+    FOR_LOGMK = 0,
+    FOR_LOGADD,
+}F_LOG_RESULT_E;
 
 typedef enum
 {
@@ -68,6 +77,8 @@ typedef struct
 {
     uint8_t fsrc[128*2];
     uint8_t fdes[128*2];
+    uint8_t log_info[256*2];
+    unsigned len;
 }f_opr_file_t;
 
 typedef enum
@@ -110,6 +121,7 @@ typedef struct
 {
     //int id;
     //char state;
+    char log_event;
     
     char event;
     char result;
@@ -174,6 +186,11 @@ typedef interface file_server_if
     int music_start(uint8_t ch, uint8_t f_name[n], static const unsigned n, unsigned f_offset);
     int music_stop(uint8_t ch);
     int music_stop_all();
+
+    //
+    int log_mklog(uint8_t new_fname[newlen],unsigned newlen,uint8_t old_fname[oldlen],unsigned oldlen);
+
+    int log_loginfo_add(uint8_t log_info[len],unsigned len);
 
     //·µ»Ø×´Ì¬
     [[clears_notification]] void get_notify(file_server_notify_data_t &data);

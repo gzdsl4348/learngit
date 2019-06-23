@@ -188,7 +188,7 @@ unsigned int get_mp3_totsec(TCHAR *pname)
         return 0;
     }
 
-    if(mp3_info.samplerate!=48000 && mp3_info.samplerate!=44100)
+    if(mp3_info.samplerate!=48000 && mp3_info.samplerate!=44100 && mp3_info.samplerate!=16000) //&& mp3_info.samplerate!=24000 && mp3_info.samplerate!=22050 && mp3_info.samplerate!=11025 && mp3_info.samplerate!=32000 && mp3_info.samplerate!=8000)
         return 0;
     else
         return mp3_info.totsec;
@@ -238,6 +238,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     {
         return res;
     }
+    // MP3 文件头判断 WAV文件头判断
 
     res = f_read(&p_dev->file, tag, 10, &br);
     mp3_tag_offset = get_mp3_datastart(tag, 10);
@@ -245,7 +246,6 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     {
         f_offset += (mp3_tag_offset+10);
     }
-	
 
     res = f_lseek(&p_dev->file, f_offset);
     if(res != FR_OK)

@@ -1,3 +1,14 @@
+/*
+*  File Name:remotel_business_base.h
+*  Created on: 2019年5月26日
+*  Author: caiws
+*  description :系统变量及基本操作函数定义
+*  Modify date: 
+* 	Modifier Author:
+*  description :
+*/
+
+
 #ifndef __USER_UNTI_H_
 #define __USER_UNTI_H_
 
@@ -7,6 +18,9 @@
 #include "eth_audio_config.h"
 #include "protocol_adrbase.h"
 #include "list_instance.h"
+#include "debug_print.h"
+#include "sys_log.h"
+
 
 #if defined(__cplusplus) || defined(__XC__)
 extern "C" {
@@ -59,7 +73,7 @@ typedef struct g_sys_val_t{
     // 需flash 操作的任务编号
     uint16_t fl_task_sn;
     //
-    tmp_union_t tmp_union;
+    tmp_union_l_t tmp_union;
     // 协议任务处理部分
     uint8_t task_busy;
     uint8_t task_pol_cmd;
@@ -284,11 +298,14 @@ typedef struct g_sys_val_t{
 	uint8_t eth_debug_f;
 	uint8_t eth_debug_des_ip[4];
 	xtcp_connection_t debug_conn;
+
+    // 日志处理
+    log_info_t *log_info_p;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;
 
-extern tmp_union_t tmp_union;
+extern tmp_union_t g_tmp_union;
 
 #if defined(__cplusplus) || defined(__XC__)
 }

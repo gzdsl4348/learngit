@@ -94,7 +94,7 @@ unsafe void enqueue_event_and_notify(unsigned client_num,
 #endif
                                      )
 {
-  if(client_num==-1)
+  if(client_num!=0)
     return;
   unsigned position = (client_heads[client_num] + client_num_events[client_num]) % CLIENT_QUEUE_SIZE;
   client_queue[client_num][position].xtcp_event = xtcp_event;

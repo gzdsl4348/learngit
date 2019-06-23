@@ -5,6 +5,7 @@
 #include "list_instance.h"
 #include "list_contorl.h"
 #include "user_unti.h"
+#include "sys_log.h"
 
 #include "debug_print.h"
 #include "string.h"
@@ -20,11 +21,11 @@ void hostinfo_fl_write(){
 }
 
 void sys_dat_read(uint8_t buff[],uint16_t num,uint16_t base_adr){
-    memcpy(buff,tmp_union.buff+base_adr,num);
+    memcpy(buff,g_tmp_union.buff+base_adr,num);
 }
 
 void sys_dat_write(uint8_t buff[],uint16_t num,uint16_t base_adr){
-    memcpy(tmp_union.buff+base_adr,buff,num);
+    memcpy(g_tmp_union.buff+base_adr,buff,num);
 }
 
 //----------------------------------------------------------------------------
@@ -66,7 +67,7 @@ void area_fl_write(){
 // 即时读
 void area_fl_read(){
     user_fl_sector_read(AREA_INFOLIST_SECTOR);
-    memcpy(&area_info,tmp_union.buff,sizeof(area_info_t)*MAX_AREA_NUM);    
+    memcpy(&area_info,g_tmp_union.buff,sizeof(area_info_t)*MAX_AREA_NUM);    
     #if 0
     for(uint8_t i=0;i<MAX_AREA_NUM;i++){
         
@@ -77,7 +78,7 @@ void area_fl_read(){
 }
 // 写flash 实体
 uint8_t timer_fl_arealist_decode(){
-    memcpy(tmp_union.buff,&area_info,sizeof(area_info_t)*MAX_AREA_NUM);
+    memcpy(g_tmp_union.buff,&area_info,sizeof(area_info_t)*MAX_AREA_NUM);
     user_fl_sector_write(AREA_INFOLIST_SECTOR);
     g_sys_val.need_flash ^= NEED_FL_AREALIST;
     return 1;
@@ -106,7 +107,7 @@ void divlist_fl_read(){
         buf_adrbase = 0;
         // 取数据 100个byte一个设备 ，一个sector放40个设备
         for(uint16_t i=0;(i<30)&&(divlist_inc<MAX_DIV_LIST);i++,divlist_inc++){
-            memcpy(&div_list.div_node[divlist_inc],tmp_union.buff+buf_adrbase,divinfo_len);
+            memcpy(&div_list.div_node[divlist_inc],g_tmp_union.buff+buf_adrbase,divinfo_len);
             buf_adrbase+=130;   // 100个byte一个设备 ，一个sector放30个设备
         }
         sector_num++;
@@ -150,7 +151,7 @@ uint8_t timer_fl_divlist_decode(){
     //
     // 写数据缓冲 130个byte一个设备 ，一个sector放30个设备
     for(uint16_t i=0;(i<30)&&(g_sys_val.fl_divlist_inc<MAX_DIV_LIST);i++,g_sys_val.fl_divlist_inc++){
-        memcpy(tmp_union.buff+buf_adrbase,&div_list.div_node[g_sys_val.fl_divlist_inc],divinfo_len);
+        memcpy(g_tmp_union.buff+buf_adrbase,&div_list.div_node[g_sys_val.fl_divlist_inc],divinfo_len);
         buf_adrbase+=130;   // 130个byte一个设备 ，一个sector放30个设备
     }
     if(g_sys_val.fl_divlist_inc==MAX_DIV_LIST){    //烧写完毕

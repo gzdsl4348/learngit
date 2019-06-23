@@ -33,6 +33,8 @@ unsigned char mf_typetell(TCHAR *fname)
 {
     const TCHAR mp31[] = {'m','p','3', 0};
     const TCHAR mp32[] = {'M','P','3', 0};
+    const TCHAR wav31[]={'w','a','v',0};
+    const TCHAR wav32[]={'W','A','V',0};
     TCHAR *attr = 0;//后缀名
     unsigned char i=0;
     while(i<250)
@@ -58,6 +60,10 @@ unsigned char mf_typetell(TCHAR *fname)
     if(wstrcmp(mp31, attr)==0 ||
        wstrcmp(mp32, attr)==0)
         return 1;
+
+    if(wstrcmp(wav31, attr)==0 ||
+       wstrcmp(wav32, attr)==0)
+       return 2;
 
     return 0XFF;//没找到
 }
@@ -209,6 +215,32 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         break;
                     }
                 }
+                #if WAV_FILE_ENABLE
+                else if(type == 2)//wav文件
+                {
+                    if(offset+sizeof(music_info_t) < buff_size)
+                    {
+                        TCHAR g[] = {'/',0};
+                        pt_mi = (music_info_t*)&buff[offset];
+                        //pt_mi->type = type;
+
+                        wstrcpy(music_path, (const TCHAR*)path);
+                        wstrcat(music_path, g);
+                        wstrcat(music_path, (const TCHAR*)fn);
+
+                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
+                        wstrcpy(pt_mi->name, fn);
+                        offset += sizeof(music_info_t);
+                        (*num)++;
+                    }
+                    else
+                    {
+                        if(buff_full) *buff_full = 1;
+                        debug_printf(" buff_size over\n");
+                        break;
+                    }
+                }
+                #endif
                 else 
                 {
                     continue;  //不需要的类型
@@ -254,6 +286,32 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         break;
                     }
                 }
+                #if WAV_FILE_ENABLE
+                else if(type == 2)//wav文件
+                {
+                    if(offset+sizeof(music_info_t) < buff_size)
+                    {
+                        TCHAR g[] = {'/',0};
+                        pt_mi = (music_info_t*)&buff[offset];
+                        //pt_mi->type = type;
+
+                        wstrcpy(music_path, (const TCHAR*)path);
+                        wstrcat(music_path, g);
+                        wstrcat(music_path, (const TCHAR*)fn);
+
+                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
+                        wstrcpy(pt_mi->name, fn);
+                        offset += sizeof(music_info_t);
+                        (*num)++;
+                    }
+                    else
+                    {
+                        if(buff_full) *buff_full = 1;
+                        debug_printf(" buff_size over\n");
+                        break;
+                    }
+                }
+                #endif
                 else 
                 {
                     continue;  //不需要的类型

@@ -22,6 +22,8 @@
 #include "checksum.h"
 #include "pc_config_tool.h"
 #include "could_serve.h"
+#include "sys_log.h"
+#include "user_log.h"
 
 #include "debug_print.h"
 #include "string.h"
@@ -77,7 +79,7 @@ extern host_info_t host_info;
 void mac_writeflash(uint8_t macadr[6]){
     unsafe{
 	// Get Host info
-	i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+	i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
 	sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
     //
     memcpy(host_info.mac,macadr,6);
@@ -173,6 +175,7 @@ void tftp_upgrade_reply_deal(client xtcp_if i_xtcp, client image_upgrade_if i_im
     }
 
 }
+
 
 void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_data)
 {
@@ -439,7 +442,7 @@ void user_fldat_init(){
     #endif
     // sn
     //------------------------------------------------------------
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
 	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
     //init_string = 0;
 	if(0x5AA57349==init_string){
@@ -450,8 +453,8 @@ void user_fldat_init(){
     account_list_init();
     // 账户flash初始化
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
-        tmp_union.account_all_info.account_info=account_info[i];
-        account_fl_write(&tmp_union.account_all_info,i);
+        g_tmp_union.account_all_info.account_info=account_info[i];
+        account_fl_write(&g_tmp_union.account_all_info,i);
     }
     //-------------------------------------------------------------
     // 分区信息初始化
@@ -468,7 +471,7 @@ void user_fldat_init(){
     //
     //-------------------------------------------------------------
     // 用户信息初始化
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
 	init_string = 0x5AA57349;
 	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
@@ -517,12 +520,12 @@ void sys_info_init(){
     unsafe{
     //-------------------------------------------------------------------------------------------------
 	// Get Host info
-	i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+	i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
 	sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
 	host_info.version[0] = VERSION_H;
     host_info.version[1] = VERSION_L;
 	//----------------------------------------------------------------------------------------------------
-	i_user_flash->flash_sector_read(SOLUSION_DAT_SECTOR,tmp_union.buff);
+	i_user_flash->flash_sector_read(SOLUSION_DAT_SECTOR,g_tmp_union.buff);
 	sys_dat_read((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
     area_fl_read();    //分区表读取
     divlist_fl_read(); //列表读取
@@ -678,7 +681,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     delay_milliseconds(100);
     user_dispunti_init();
     delay_milliseconds(100);
-    // TEXT
+    // TEX
     //audio_moudle_set();
     //task_music_config_play(0,01);
     // 云服务连接
@@ -726,7 +729,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
-	
+
     //====================================================================================================
 	//main loop process 
 	//====================================================================================================
@@ -844,6 +847,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 disp_couldstate(1);
                                 register_could_chk();
 								cld_timesysnc_request();
+                                // 日志更新
+                                log_could_online();
                             }
                             else{
                                 i_xtcp.close(conn);
@@ -909,7 +914,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 					case XTCP_SENT_DATA:
 						// ip 冲突
 						if(g_sys_val.ipchk_conn.id==conn.id){
-							debug_printf("\n\n ip conflict\n\n");
 							g_sys_val.ipchk_ipconflict_f = 1;
 							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
 						}

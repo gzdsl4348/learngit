@@ -113,10 +113,25 @@ void fopr_handle()
     f_opr_music_t *p_fopr_music = &pitem->data.music;
     f_opr_file_t *p_fopr_file = &pitem->data.file;
     f_opr_upload_t *p_for_upload = &pitem->data.upload;
-    
+
+    switch(pitem->log_event){
+        case FOR_LOGMK:{
+            error = mf_open_log(p_fopr_file->fsrc,p_fopr_file->fdes);
+            // 日志信息无需返回提示
+            pitem->log_event = FOR_LOGIDLE;
+            return; 
+        }
+        case FOR_LOGADD:{
+            error = mf_add_loginfo(p_fopr_file->log_info,p_fopr_file->len);
+            // 日志信息无需返回提示
+            pitem->log_event = FOR_LOGIDLE;
+            return;  
+        }
+    }
+        
     if(pitem->result != FOR_IDLE)
         return;
-    
+
     switch(pitem->event)
     {
         case FOE_IDLE:
@@ -140,6 +155,7 @@ void fopr_handle()
         }
         case FOE_FRENAME:
         {
+            //debug_printf("\n\n rename %d\n\n",error);
             error = mf_rename(p_fopr_file->fsrc, p_fopr_file->fdes);
             update_music_filelist(p_fopr_file->fdes, 0);
             break;
@@ -176,7 +192,7 @@ void fopr_handle()
             {
                 error = file_upload_start(p_for_upload->fname);
 
-                debug_printf("file_upload_start %s %d\n", p_for_upload->fname, error);
+                //debug_printf("file_upload_start %s %d\n", p_for_upload->fname, error);
                 if(error == 0)
                 {
                     p_for_upload->state = FOU_STATE_PUT_DATA;
@@ -191,7 +207,8 @@ void fopr_handle()
                 return;
             }
             break;
-        }           
+        }         
+
     }
 
     if(error != FR_OK)
@@ -203,11 +220,7 @@ void fopr_handle()
     {   
         pitem->error_code = error;
         pitem->result = FOR_SUCCEED;
-
     }
-    
-
-    
 }
 //需要改用double buff
 kfifo_t upload_fifo;

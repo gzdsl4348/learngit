@@ -11,6 +11,7 @@
 #include "conn_process.h"
 #include "kfifo.h"
 #include <string.h>
+#include "sys_log.h"
 
 extern client interface xtcp_if  * unsafe i_user_xtcp;
 extern client interface fl_manage_if  * unsafe i_user_flash;
@@ -273,13 +274,13 @@ int user_xtcp_connect_udp(unsigned port_number, xtcp_ipaddr_t ipaddr, xtcp_conne
 
 void user_fl_sector_read(unsigned sector_num){
 	unsafe{
-		i_user_flash->flash_sector_read(sector_num,tmp_union.buff);
+		i_user_flash->flash_sector_read(sector_num,g_tmp_union.buff);
 	}
 }
 
 void user_fl_sector_write(unsigned sector_num){
 	unsafe{
-		i_user_flash->flash_sector_write(sector_num,tmp_union.buff);
+		i_user_flash->flash_sector_write(sector_num,g_tmp_union.buff);
 	}
 }
 
@@ -475,4 +476,64 @@ void user_xtcp_debugudpsend(uint8_t buf[],unsigned len){
 	}
 }
 
+void user_file_mklog(){
+    unsafe{
+        if(host_info.log_daycnt>=MAX_LOGDATE_NUM){
+            host_info.log_daycnt=0;
+        }
+        // 建立日志 取日志文件名字符串
+        g_sys_val.log_info_p = log_info_chang("syslog_%d-%d-%d.txt\n",2000+g_sys_val.date_info.year,g_sys_val.date_info.month,g_sys_val.date_info.date);
+        // 删旧日志，建新日志
+        i_fs_user->log_mklog(g_sys_val.log_info_p->buff,g_sys_val.log_info_p->len,host_info.log_filename[host_info.log_daycnt],64);
+        // 保存日志名
+        memcpy(host_info.log_filename[host_info.log_daycnt],g_sys_val.log_info_p->buff,64);
+        //
+        host_info.log_daycnt++;
+        hostinfo_fl_write();    //烧写主机信息
+    }
+}
+
+void user_loginfo_add(uint8_t mac[],uint8_t ip[]){
+    unsafe{
+    unsigned len;
+    uint8_t loginfo[512];
+    uint8_t *unsafe p = loginfo;        
+    p += itoa_forutf16(g_sys_val.time_info.hour,p,10,2);   
+    *p = ':';
+    p++;
+    *p = 0x00;
+    p++;
+    p += itoa_forutf16(g_sys_val.time_info.minute,p,10,2);
+    *p = ':';
+    p++;
+    *p = 0x00;
+    p++;
+    p += itoa_forutf16(g_sys_val.time_info.second,p,10,2);
+    *p = ' ';
+    p++;
+    *p = 0x00;
+    p++;
+    // mac
+    for(uint8_t i=0;i<6;i++){
+        p += itoa_forutf16(mac[i],p,16,2);
+        *p = '-';
+        p++;
+        *p = 0x00;
+        p++;
+    }
+    // ip
+    for(uint8_t i=0;i<4;i++){
+        p += itoa_forutf16(ip[i],p,16,2);
+        *p = '.';
+        p++;
+        *p = 0x00;
+        p++;
+    }  
+    memcpy(p,g_sys_val.log_info_p->buff,g_sys_val.log_info_p->len);
+    p+= g_sys_val.log_info_p->len;
+    len = p-loginfo;
+    //
+    i_fs_user->log_loginfo_add(loginfo,len);
+    }
+}
 

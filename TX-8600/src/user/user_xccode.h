@@ -3,6 +3,7 @@
 
 #include "xtcp.h"
 #include "eth_audio.h"
+#include "sys_log.h"
 
 void stop_all_timetask();
 
@@ -101,6 +102,11 @@ void debug_conn_connect(uint8_t ip[]);
 void debug_conn_colse();
 
 void user_xtcp_debugudpsend(uint8_t buf[],unsigned len);
+
+void user_file_mklog();
+
+void user_loginfo_add(uint8_t mac[],uint8_t ip[]);
+
 
 #endif //__USER_XCCODE_H_
 

@@ -10,6 +10,8 @@
 #include "checksum.h"
 #include "could_serve.h"
 #include "debug_print.h"
+#include "sys_log.h"
+
 //
 
 #define DEBUG_LIST_EN 01
@@ -320,9 +322,7 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
 	        return LIST_SEND_INIT;
 	    }
 	}
-    #if DEBUG_LIST_EN
-	xtcp_debug_printf("find num %d\n",i);
-    #endif
+    debug_printf("\n\n find num %d \n\n",i);
     //----------------------------------------------------------------
     //³õÊ¼»¯·¢ËÍ×´Ì¬
     t_list_connsend[i].pack_inc=0;

@@ -10,6 +10,8 @@
 #include "user_messend.h"
 #include "task_decode.h"
 #include "conn_process.h"
+#include "sys_log.h"
+#include "user_log.h"
 
 uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 
@@ -155,6 +157,7 @@ void area_config_recive(){
     user_sending_len = area_config_ack_build(rx_sn,ack_state,xtcp_rx_buf[AREASET_CONFIG_BYE_B],div_fail_cnt); //scuess
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     //
+    log_divarea_config();
     mes_send_listinfo(AREALIS_INFO_REFRESH,0);
     //
     xtcp_debug_printf("area_config\n");
@@ -277,6 +280,7 @@ void div_info_set_recive()
         //}
         //-------------------------------------------------------
         // flash info 
+        log_hostinfo_config();
         hostinfo_fl_write();    //烧写主机信息
         //-----------------------------------------------------------------
     }
@@ -285,6 +289,7 @@ void div_info_set_recive()
         div_tmp_p = get_div_info_p(&xtcp_rx_buf[DIVSET_MAC_B]);
         if(div_tmp_p != null){
             if(div_tmp_p->div_info.div_state==OFFLINE){
+                log_div_del(div_tmp_p);
                 delete_div_node(div_tmp_p->div_info.mac);
                 divlist_fl_write(); //保存列表信息
                 mes_send_listinfo(DIVLIS_INFO_REFRESH,0);
@@ -349,10 +354,12 @@ void div_heart_recive(){
     if((div_info_p->div_info.div_onlineok)&&(div_info_p->div_info.div_state == 0)&&(xtcp_rx_buf[HEART_STATE_B]!=0)){
         xtcp_debug_printf("\ndivlist ud online\n\n");
         div_info_p->div_info.div_state = ONLINE;
+        // 更新日志
+        log_divonline(div_info_p);
         //设备上线 异常即时任务恢复
         uint16_t task_id = rttask_run_state_set(01,div_info_p->div_info.mac);
         if(task_id!=0xFFFF){
-			mes_send_rttaskinfo(task_id,02);
+			mes_send_rttaskinfo(task_id,02,0);
         }
         need_send = 1;
     }
@@ -462,8 +469,8 @@ uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
     while(tmp_p!=null){
         //比较MAC
-        rt_task_read(&tmp_union.rttask_dtinfo,tmp_p->rttask_id);
-        if(charncmp(tmp_union.rttask_dtinfo.src_mas,mac,6)){
+        rt_task_read(&g_tmp_union.rttask_dtinfo,tmp_p->rttask_id);
+        if(charncmp(g_tmp_union.rttask_dtinfo.src_mas,mac,6)){
             //有运行中任务 任务置为异常状态
             tmp_p->run_state = state;
             return tmp_p->rttask_id;
@@ -488,10 +495,12 @@ void div_heart_overtime_close(){
                 div_node_tmp->div_info.div_state = OFFLINE;
                 div_node_tmp->div_info.div_onlineok = OFFLINE;
                 uint8_t state = DIVLIS_INFO_REFRESH;
+                // 更新日志
+                log_divoffline(div_node_tmp);
                 //----------------------------------------------------------------------------------
                 uint16_t task_id = rttask_run_state_set(02,div_node_tmp->div_info.mac);
 				if(task_id!=0xFFFF){
-					mes_send_rttaskinfo(task_id,02);
+					mes_send_rttaskinfo(task_id,02,0);
 				}
 				#if 0
                 if(rttask_run_state_set(02,div_node_tmp->div_info.mac)){
@@ -535,23 +544,23 @@ void research_lan_revice(){
     if(g_sys_val.divsreach_f==0)
         return;
     
-    memcpy(&tmp_union.buff[DIVSRC_MAC_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_MAC_B],6);
-    memcpy(&tmp_union.buff[DIVSRC_NAME_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_NAME_B],DIV_NAME_NUM);
-    tmp_union.buff[DIVSRC_STATE_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_STATE_B];
-    tmp_union.buff[DIVSRC_VOL_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VOL_B];
-    memcpy(&tmp_union.buff[DIVSRC_PASSWORD_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_PASSWORD_B],SYS_PASSWORD_NUM);
-    memcpy(&tmp_union.buff[DIVSRC_TYPE_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_TYPE_B],DIV_NAME_NUM);
-    tmp_union.buff[DIVSRC_VERSION_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VERSION_B];
-    tmp_union.buff[DIVSRC_VERSION_B+1] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VERSION_B+1];
-    memcpy(&tmp_union.buff[DIVSRC_HOSTIP_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_HOSTIP_B],4);  
+    memcpy(&g_tmp_union.buff[DIVSRC_MAC_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_MAC_B],6);
+    memcpy(&g_tmp_union.buff[DIVSRC_NAME_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_NAME_B],DIV_NAME_NUM);
+    g_tmp_union.buff[DIVSRC_STATE_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_STATE_B];
+    g_tmp_union.buff[DIVSRC_VOL_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VOL_B];
+    memcpy(&g_tmp_union.buff[DIVSRC_PASSWORD_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_PASSWORD_B],SYS_PASSWORD_NUM);
+    memcpy(&g_tmp_union.buff[DIVSRC_TYPE_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_TYPE_B],DIV_NAME_NUM);
+    g_tmp_union.buff[DIVSRC_VERSION_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VERSION_B];
+    g_tmp_union.buff[DIVSRC_VERSION_B+1] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_VERSION_B+1];
+    memcpy(&g_tmp_union.buff[DIVSRC_HOSTIP_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_HOSTIP_B],4);  
     //
-    tmp_union.buff[DIVSRC_DHCPEN_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DHCPEN_B];
-    memcpy(&tmp_union.buff[DIVSRC_DIVIP_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVIP_B],4);  
-    memcpy(&tmp_union.buff[DIVSRC_DIVMASK_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVMASK_B],4);  
-    memcpy(&tmp_union.buff[DIVSRC_DIVGATE_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVGATE_B],4);  
+    g_tmp_union.buff[DIVSRC_DHCPEN_B] = xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DHCPEN_B];
+    memcpy(&g_tmp_union.buff[DIVSRC_DIVIP_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVIP_B],4);  
+    memcpy(&g_tmp_union.buff[DIVSRC_DIVMASK_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVMASK_B],4);  
+    memcpy(&g_tmp_union.buff[DIVSRC_DIVGATE_B],&xtcp_rx_buf[DIVSRC_DAT_BASE+DIVSRC_DIVGATE_B],4);  
 
     //
-    user_divsrv_write(g_sys_val.search_div_tol,tmp_union.buff);
+    user_divsrv_write(g_sys_val.search_div_tol,g_tmp_union.buff);
     g_sys_val.search_div_tol++;
     // 关闭广播端口
     if(conn.local_port == LISTEN_BROADCAST_LPPORT){

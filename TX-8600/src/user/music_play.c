@@ -7,6 +7,7 @@
 #include "eth_audio.h"
 #include "eth_audio_config.h"
 #include "debug_print.h"
+#include "sys_log.h"
 
 audio_txlist_t t_audio_txlist;
 
@@ -16,15 +17,15 @@ void task_music_send(uint8_t ch){
     div_node_t *div_tmp_p;
     t_audio_txlist.num_info=0;
     // 配置发送目标
-    for(uint8_t i=0;i<tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum;i++){
+    for(uint8_t i=0;i<g_tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum;i++){
         //查找目标设备与IP
-        xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[0],
-                                                tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[1],
-                                                tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[2],
-                                                tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[3],
-                                                tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[4],
-                                                tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[5]);
-        div_tmp_p = get_div_info_p(tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac);
+        xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[0],
+                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[1],
+                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[2],
+                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[3],
+                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[4],
+                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[5]);
+        div_tmp_p = get_div_info_p(g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac);
         if(div_tmp_p==null){
             //i++;
             continue;
@@ -34,12 +35,12 @@ void task_music_send(uint8_t ch){
         //xtcp_debug_printf("div ok\n");
         //
         //获得mac
-        memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,6);
+        memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,6);
         //获得IP
         memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip,div_tmp_p->div_info.ip,4);
         //获得分区控制位
         
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].area_contorl = tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control;
+        t_audio_txlist.t_des_info[t_audio_txlist.num_info].area_contorl = g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control;
         t_audio_txlist.num_info++;
         //
     }
@@ -78,14 +79,14 @@ void task_music_send(uint8_t ch){
     }
     */
     // 配置优先级
-    g_sys_val.audio_type[ch] = tmp_union.task_allinfo_tmp.task_coninfo.task_prio;
+    g_sys_val.audio_type[ch] = g_tmp_union.task_allinfo_tmp.task_coninfo.task_prio;
     //g_sys_val.audio_type[ch] = 0x11;
     //i_ethaud_cfg->set_audio_type(g_sys_val.audio_type);
     set_audio_type(g_sys_val.audio_type);
     // 配置目标
-    user_audio_desip_set(ch,tmp_union.task_allinfo_tmp.task_coninfo.task_prio);
+    user_audio_desip_set(ch,g_tmp_union.task_allinfo_tmp.task_coninfo.task_prio);
     // 配置音量
-    set_audio_vol(ch,tmp_union.task_allinfo_tmp.task_coninfo.task_vol);
+    set_audio_vol(ch,g_tmp_union.task_allinfo_tmp.task_coninfo.task_vol);
     // 发送使能
     user_audio_senden(ch);
 }
@@ -110,17 +111,17 @@ void task_music_play(uint8_t ch,uint8_t num){
         }
     }
     for(i=0;i<(PATCH_NAME_NUM/2);i++){
-        if(((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i]==0)
+        if(((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i]==0)
             break;
-        ((uint16_t *)f_name)[i] = ((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i];
+        ((uint16_t *)f_name)[i] = ((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i];
     }
     ((uint16_t *)f_name)[i] = 0x002F;
     i++;
     // 更新曲目名
     for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
-        if(((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j]==0)
+        if(((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j]==0)
             break;
-        ((uint16_t *)f_name)[i] = ((uint16_t *)tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j];
+        ((uint16_t *)f_name)[i] = ((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j];
 
     }
     ((uint16_t *)f_name)[i] = 0x00;
@@ -129,8 +130,8 @@ void task_music_play(uint8_t ch,uint8_t num){
         memcpy(g_sys_val.disinfo2buf[ch_tmp],playing_char,10);
         uint8_t data_base=10;
         for(j=0; j<(MUSIC_NAME_NUM/2);j++){
-            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2+1];
-            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2];
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2] = g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2+1];
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2];
             if(g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1]==0 && g_sys_val.disinfo2buf[ch_tmp][data_base+j*2]==0)
                 goto music_dispend;
             if(j>16)
