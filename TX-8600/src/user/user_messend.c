@@ -8,9 +8,11 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]){
     // 检查是否重复添加
     for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
 		if(could_f && mes_send_list.messend_conn[i].state && charncmp(could_id,mes_send_list.messend_conn[i].could_id,6)){
+            mes_send_list.messend_conn[i].over_timeinc=0;
             return 0;
         }
         else if(could_f==0 && (mes_send_list.messend_conn[i].conn.id == conn.id) && mes_send_list.messend_conn[i].state){
+            mes_send_list.messend_conn[i].over_timeinc=0;
             return 0;
         }
     }
@@ -22,6 +24,7 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]){
             mes_send_list.messend_conn[i].conn = conn;
             mes_send_list.messend_conn[i].could_f = could_f;
             memcpy(mes_send_list.messend_conn[i].could_id,could_id,6);
+            mes_send_list.messend_conn[i].over_timeinc=0;
             return 1;
         }
     }

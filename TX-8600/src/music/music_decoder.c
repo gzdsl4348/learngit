@@ -240,6 +240,9 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     }
     // MP3 文件头判断 WAV文件头判断
 
+
+
+
     res = f_read(&p_dev->file, tag, 10, &br);
     mp3_tag_offset = get_mp3_datastart(tag, 10);
     if(mp3_tag_offset)

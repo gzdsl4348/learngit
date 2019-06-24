@@ -494,13 +494,23 @@ void conn_overtime_close(){
         if(conn_list_tmp->over_time>CONN_OVERTIME){
             if((conn_list_tmp->conn.id != g_sys_val.debug_conn.id) || (g_sys_val.eth_debug_f==0)){  
                 xtcp_debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
+                mes_list_close(conn_list_tmp->conn.id);               
                 user_xtcp_close(conn_list_tmp->conn);
-                mes_list_close(conn_list_tmp->conn.id);
                 delete_conn_node(conn_list_tmp->conn.stack_conn);
             }
         }    
         //-------------------------------------------------------
         conn_list_tmp = conn_next_p;
+    }
+    // 关闭超时列表更新
+    for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
+      if(mes_send_list.messend_conn[i].state){
+        mes_send_list.messend_conn[i].over_timeinc++;
+        if(mes_send_list.messend_conn[i].over_timeinc>CONN_OVERTIME){
+            mes_send_list.messend_conn[i].over_timeinc=0;
+            mes_send_list.messend_conn[i].state = 0;
+        }
+    }
     }
 }
 #if 1

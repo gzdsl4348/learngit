@@ -622,7 +622,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     dhcp_dis();
     #endif
     //------------------------------------------------------------------------
-    // init fun 
+    // init fun     
     while(if_fl_manage.is_flash_init_complete())delay_milliseconds(50);
 	init_funlist_len();     //系统函数列表初始化
     user_fldat_init();      //初始化flash

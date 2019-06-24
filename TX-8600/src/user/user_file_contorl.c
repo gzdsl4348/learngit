@@ -161,7 +161,10 @@ void music_patchname_config_recive(){
 //====================================================================================================
 void music_busy_chk_recive(){
     xtcp_debug_printf("music chk\n");   
-    user_sending_len = onebyte_ack_build(0,MUSIC_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    uint8_t state=0;
+    if(g_sys_val.file_bat_contorl_s)
+        state=1;
+    user_sending_len = onebyte_ack_build(state,MUSIC_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 

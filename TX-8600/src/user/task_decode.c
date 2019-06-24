@@ -381,23 +381,49 @@ void create_todaytask_list(time_info_t time_info){
 }
 
 //===================================================================================================
+// return 1 失败 0 成功 
+uint8_t tasktime_conflictcmp(uint32_t src_begtime,uint32_t src_endtime,uint32_t begtime,uint32_t endtime){
+    // 24小时内
+    if(begtime<src_begtime && endtime<=src_begtime){
+        ;//待跨日判断
+    }
+    else if(begtime>=src_endtime){
+        return 0;// 不在超时范围
+    }
+    else{
+        return 1;//冲突
+    }
+    // 跨日
+    begtime+=24*3600;
+    if(begtime>src_endtime){
+        return 0;
+    }
+    // 跨日冲突
+    return 1;
+}
+
 // return 1 时间冲突 0 正常
 uint8_t tasktime_decode(uint8_t hour,uint8_t minute,uint8_t second,uint32_t dura_time,uint8_t tasksolu_id,task_dateinfo_t dateinfo[]){
+    unsigned next_tasktime,end_tasktime,beg_time,end_time;
+    uint8_t over_state_inc=0;
+    //
     timetask_t *task_p;
-    uint8_t over_time_inc=0;
-    unsigned next_tasktime,beg_time,end_time;
-    //
+    taskconflict_info_s *p_taskconflict_info;
+    // 使用共享buff 存放时间冲突结构体
+    p_taskconflict_info = (taskconflict_info_s *)(&g_tmp_union.buff[4*1024]);
+    // 初始化结构体
+    memset(p_taskconflict_info,0xFF,sizeof(taskconflict_info_s));
+    // 任务时间初始化
     beg_time = hour*3600+minute*60+second;
-    //
-    end_time = beg_time+dura_time;
-    
-    //
+    end_time = beg_time+dura_time;    
+    // 
     task_p = timetask_list.all_timetask_head;
     while(task_p!=null){
         timer_task_read(&g_tmp_union.task_allinfo_tmp,task_p->id);
         next_tasktime = (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour*3600)+
                         (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute*60)+
                          g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
+        end_tasktime = next_tasktime+g_tmp_union.task_allinfo_tmp.task_coninfo.dura_time;
         // 日期冲突
         uint8_t data_right_flag=0;
         if(tasksolu_id!=0xFF){
@@ -418,12 +444,15 @@ uint8_t tasktime_decode(uint8_t hour,uint8_t minute,uint8_t second,uint32_t dura
                 }
             }    
         }
-        // 时间冲突
-        if((next_tasktime >= beg_time)&&(next_tasktime<=end_time)&&(task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)&&(task_p->task_en) && data_right_flag){
-            over_time_inc++;
-            if(over_time_inc>=SOLU_MAX_PLAYCH){
-                xtcp_debug_printf("task time error\n");
-                return 1;
+        // 方案与日期筛选
+        if((task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)&&(task_p->task_en) && data_right_flag){
+            
+            if(tasktime_conflictcmp(beg_time,end_time,next_tasktime,end_tasktime)){
+                over_state_inc++;
+                if(over_state_inc>(SOLU_MAX_PLAYCH-1)){
+                    xtcp_debug_printf("task time error\n",over_state_inc);
+                    return 1;
+                }
             }
         }
         task_p = task_p->all_next_p;
@@ -1132,6 +1161,7 @@ void task_en_recive(){
     uint16_t id;
     uint8_t state=0;
     id = (xtcp_rx_buf[POL_DAT_BASE+1]<<8)|xtcp_rx_buf[POL_DAT_BASE];
+    g_sys_val.task_con_id = id;
     //
     if(id>MAX_HOST_TASK-1)
         goto task_en_end;
@@ -1179,7 +1209,6 @@ void task_en_recive(){
     if(state=1){
         xtcp_debug_printf("\n\ntask updata\n\n");
 		g_sys_val.task_config_s = 2; //任务编辑
-		g_sys_val.task_con_id = id;
         mes_send_taskinfo(&g_tmp_union.task_allinfo_tmp);
     }
     //--------------------------------------------------------------------------------
@@ -1205,7 +1234,7 @@ void task_playtext_recive(){
                 goto play_text_sucess;
             }
         }
-        goto play_text_fail;
+        goto play_text_sucess;
     }
     xtcp_debug_printf("play id %d\n",id);
     // 读取任务
@@ -1242,10 +1271,9 @@ void task_playtext_recive(){
     play_text_sucess:
     user_sending_len =  id_ack_build(id,1,TASK_PLAYTEXT_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-
-    //---------------------------------------------------------------------------------
-	
     return;
+    //---------------------------------------------------------------------------------
+	//
     play_text_fail:
     user_sending_len =  id_ack_build(id,0,TASK_PLAYTEXT_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    

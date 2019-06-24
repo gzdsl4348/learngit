@@ -411,6 +411,13 @@ typedef struct rttask_lsit_t{
 //-----------------------------------------------------------------
 extern rttask_lsit_t rttask_lsit;
 
+typedef struct taskconflict_info_s{
+    uint32_t bt[100];
+    uint32_t et[100];
+    uint8_t  state[100];
+    uint8_t  next_t[100];
+}taskconflict_info_s;
+
 //=================================================================
 // ÁÙÊ±±äÁ¿
 typedef union{
@@ -619,6 +626,7 @@ typedef struct messend_conn_t{
     uint8_t state;
     uint8_t could_id[6];
     uint8_t could_f;
+    uint8_t over_timeinc;
 }messend_conn_t;
 
 typedef struct mes_send_list_t{
