@@ -446,9 +446,61 @@ uint8_t tasktime_decode(uint8_t hour,uint8_t minute,uint8_t second,uint32_t dura
         }
         // 方案与日期筛选
         if((task_p->id!=g_sys_val.task_con_id)&&(tasksolu_id==task_p->solu_id)&&(task_p->task_en) && data_right_flag){
-            
+            // 在任务时间内 多级任务冲突判断
             if(tasktime_conflictcmp(beg_time,end_time,next_tasktime,end_tasktime)){
-                over_state_inc++;
+                uint8_t info_p;
+                for(uint8_t i=0;i<SOLU_MAX_PLAYCH;i++){
+                    //-------------------------------------------------------------------------------
+                    // 初始化每级状态
+                    if(p_taskconflict_info->state_bg[i]==0xFF){
+                        over_state_inc++;   // 冲突级数加1
+                        // 找空位
+                        for(uint8_t j=0;j<MAX_SOUL_HAVETASK;j++){
+                            if(p_taskconflict_info->state[j]==0xFF){
+                                p_taskconflict_info->state[j]=i; // 赋值当前级数
+                                p_taskconflict_info->state_bg[i] = j; // 赋值当前级头指针
+                                p_taskconflict_info->bt[j] = next_tasktime; 
+                                p_taskconflict_info->et[j] = end_tasktime;
+                                break;
+                            }
+                        }
+                        // 找到当前等级位置 退出本任务等级冲突查找
+                        break;
+                    }
+                    //-------------------------------------------------------------------------------
+                    // 同级冲突判断
+                    else{
+                        uint8_t conflict_flag=0;
+                        // 获取头指针
+                        info_p = p_taskconflict_info->state_bg[i];
+                        //-------------------------------------------------------------------
+                        // 本级任务冲突判断
+                        while(1){
+                            if(tasktime_conflictcmp(p_taskconflict_info->bt[info_p],p_taskconflict_info->et[info_p],next_tasktime,end_tasktime)){
+                                conflict_flag=1;
+                                break;//退出本级任务 进入下一级冲突判断
+                            }
+                            if(p_taskconflict_info->next_t[info_p]==0xFF){
+                                //本级无任务冲突      保存同级任务时间
+                                for(uint8_t j=0;j<MAX_SOUL_HAVETASK;j++){ //找空任务保存
+                                    if(p_taskconflict_info->state[j]==0xFF){
+                                        p_taskconflict_info->state[j]=i; // 赋值当前级数
+                                        p_taskconflict_info->bt[j] = next_tasktime; 
+                                        p_taskconflict_info->et[j] = end_tasktime;
+                                        p_taskconflict_info->next_t[info_p]==j; //新建链
+                                        break;
+                                    }
+                                }
+                                break;// 退出本级任务冲突判断
+                            }
+                            info_p = p_taskconflict_info->next_t[info_p]; // 下个同级任务时间判断
+                        }
+                        //-------------------------------------------------------------------
+                        if(conflict_flag==0){
+                            break; //本级无任务冲突 退出到下个任务
+                        }
+                    }
+                }
                 if(over_state_inc>(SOLU_MAX_PLAYCH-1)){
                     xtcp_debug_printf("task time error\n",over_state_inc);
                     return 1;

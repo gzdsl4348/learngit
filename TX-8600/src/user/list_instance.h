@@ -74,7 +74,7 @@ extern "C" {
 
 // 最大方案数
 #define MAX_TASK_SOULTION   10 //10 //4打铃 
-
+// 每个方案最大任务数
 #define MAX_SOUL_HAVETASK   100
 
 // 任务最大歌曲数
@@ -412,10 +412,11 @@ typedef struct rttask_lsit_t{
 extern rttask_lsit_t rttask_lsit;
 
 typedef struct taskconflict_info_s{
-    uint32_t bt[100];
-    uint32_t et[100];
-    uint8_t  state[100];
-    uint8_t  next_t[100];
+    uint32_t bt[MAX_SOUL_HAVETASK];
+    uint32_t et[MAX_SOUL_HAVETASK];
+    uint8_t  state[MAX_SOUL_HAVETASK];
+    uint8_t  next_t[MAX_SOUL_HAVETASK];
+    uint8_t  state_bg[SOLU_MAX_PLAYCH];
 }taskconflict_info_s;
 
 //=================================================================
