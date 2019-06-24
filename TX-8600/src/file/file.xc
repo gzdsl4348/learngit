@@ -12,6 +12,8 @@
 
 extern kfifo_t upload_fifo;
 
+extern uint8_t file_scaning_flag;
+
 #define FILE_SERVER_TRAINING  (50000)//0.5ms
 
 #define FILE_TRAINING_TICK  (100000)//2ms
@@ -272,7 +274,8 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 memcpy(fopr.data.file.fsrc, new_fname, newlen);
                 memcpy(fopr.data.file.fdes, old_fname, oldlen);
                 fopr.log_event = FOR_LOGMK;
-                c_faction <: (char)1;
+                if(file_scaning_flag==0)
+                    c_faction <: (char)1;
                 break;
             }
             case if_fs.log_loginfo_add(uint8_t log_info[len],unsigned len)-> int res:
@@ -280,8 +283,9 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 res = FOR_SUCCEED;
                 memcpy(fopr.data.file.log_info, log_info, len);
                 fopr.data.file.len =len;
-                fopr.log_event = FOR_LOGADD;   
-                c_faction <: (char)1;
+                fopr.log_event = FOR_LOGADD;               
+                if(file_scaning_flag==0)
+                    c_faction <: (char)1;
                 break;
             }
             case if_fs.get_notify(file_server_notify_data_t &data):

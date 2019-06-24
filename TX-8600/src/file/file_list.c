@@ -23,12 +23,14 @@ extern void fl_erase_flielist(int secoter_index);
 extern void fl_read_flielist(int secoter_index, unsigned char buff[], int br);
 extern void fl_write_flielist(int secoter_index, const unsigned char buff[], int bw);
 
+uint8_t file_scaning_flag=1;
 
 TCHAR ROOT_PATH[] = {0, 0};
 //报告文件的类型
 //fname:文件名
 //返回值:0XFF,表示无法识别的文件类型编号.
 //       1, mp3文件
+//       2, wav文件
 unsigned char mf_typetell(TCHAR *fname)
 {
     const TCHAR mp31[] = {'m','p','3', 0};
@@ -99,6 +101,7 @@ void printfstr(TCHAR *str)
 //返回值:执行结果
 char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, int *num, uint8_t *buff_full)
 {
+    
     int i = 0;
     FRESULT res;
     unsigned char type;
@@ -493,6 +496,9 @@ sector[30]
 //used ram:8*1024+2*2*1024+34 + 3684(mf_scan_files) < 16*1024 
 void sd_scan_music_file(uint8_t *specify_path)
 {
+
+    file_scaning_flag = 1;
+
     int i, j, res;
     int dir_num = 0;
     
@@ -712,6 +718,8 @@ FUN_END:
     myfree(dir_tbl);
     myfree(music_tbl);
     myfree(sector_record);
+    
+    file_scaning_flag = 0;
 }
 
 

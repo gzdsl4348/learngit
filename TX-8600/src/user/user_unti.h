@@ -204,6 +204,7 @@ typedef struct g_sys_val_t{
     // 网关预备模式
     uint8_t gateway_standy;
     uint8_t gateway_time;
+    uint8_t gateresend_inc;
     // SD卡状态
     uint8_t sd_state;
     // sys timer

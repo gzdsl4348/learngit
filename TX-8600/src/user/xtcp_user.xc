@@ -544,6 +544,8 @@ void sys_info_init(){
 void read_link_up_event(){
     unsafe{
     g_sys_val.gateway_standy=1;
+    g_sys_val.gateresend_inc=0;
+    g_sys_val.gateway_time=0;
     //
     //if(g_sys_val.could_conn.id==0)
     //    i_user_xtcp->connect(7002,g_sys_val.could_ip,XTCP_PROTOCOL_TCP);
@@ -829,6 +831,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						dns_couldip_chk_send();
 						#endif
                         //i_xtcp.connect(ETH_COMMUN_PORT,a,XTCP_PROTOCOL_UDP);
+                        // 重新查找网关
+                        g_sys_val.gateway_standy=0;
 						break;
 		  			case XTCP_IFDOWN:
 						g_sys_val.eth_link_state = 0;
@@ -845,8 +849,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 xtcp_debug_printf("could id%d\n\n",g_sys_val.could_conn.id);
                                 g_sys_val.could_conn = conn;
                                 disp_couldstate(1);
+                                //注册查询
                                 register_could_chk();
+                                //时间同步
 								cld_timesysnc_request();
+                                //向云推送账号列表
+                                account_list_updat();
                                 // 日志更新
                                 log_could_online();
                             }
@@ -1147,7 +1155,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 
                   
 void gateway_event(client xtcp_if i_xtcp){
-    static uint8_t gateresend_inc=0;
+    //static uint8_t gateresend_inc=0;
     static xtcp_ipconfig_t ipconfig;
     
     if(g_sys_val.gateway_standy)
@@ -1173,8 +1181,8 @@ void gateway_event(client xtcp_if i_xtcp){
             if(gateway_conn.id == conn.id){
                 user_sending_len =64;
                 user_xtcp_send(conn,0);
-                gateresend_inc++;
-                if(gateresend_inc>5){
+                g_sys_val.gateresend_inc++;
+                if(g_sys_val.gateresend_inc>5){
                     read_link_up_event();
                     memset(gateway_mac,0xFF,6);
                     audio_moudle_set();
