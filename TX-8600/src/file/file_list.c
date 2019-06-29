@@ -18,6 +18,7 @@
 
 
 extern unsigned int get_mp3_totsec(TCHAR *pname);
+extern unsigned int get_wav_totsec(TCHAR *pname);
 
 extern void fl_erase_flielist(int secoter_index);
 extern void fl_read_flielist(int secoter_index, unsigned char buff[], int br);
@@ -190,7 +191,7 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                 if(wstrlen(fn) > (MUSIC_NAME_SIZE/2)) continue;//限制文件名长度
 
                 type=mf_typetell(fn);    //获得类型
-
+                
                 if(type == 1)//mp3文件
                 {
                     if(offset+sizeof(music_info_t) < buff_size)
@@ -203,6 +204,35 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         wstrcat(music_path, g);
                         wstrcat(music_path, (const TCHAR*)fn);
                         pt_mi->totsec = get_mp3_totsec((TCHAR*)music_path);
+                        
+                        if(pt_mi->totsec == 0) continue;
+
+                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
+                        wstrcpy(pt_mi->name, fn);
+                        offset += sizeof(music_info_t);
+                        (*num)++;
+                    }
+                    else
+                    {
+                        if(buff_full) *buff_full = 1;
+                        debug_printf(" buff_size over\n");
+                        break;
+                    }
+                }
+                //#if WAV_FILE_ENABLE
+                else if(type == 2)//wav文件
+                {
+                    if(offset+sizeof(music_info_t) < buff_size)
+                    {
+                        TCHAR g[] = {'/',0};
+                        pt_mi = (music_info_t*)&buff[offset];
+                        //pt_mi->type = type;
+
+                        wstrcpy(music_path, (const TCHAR*)path);
+                        wstrcat(music_path, g);
+                        wstrcat(music_path, (const TCHAR*)fn);
+
+                        pt_mi->totsec = get_wav_totsec((TCHAR*)music_path);
 
                         if(pt_mi->totsec == 0) continue;
 
@@ -218,32 +248,7 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         break;
                     }
                 }
-                #if WAV_FILE_ENABLE
-                else if(type == 2)//wav文件
-                {
-                    if(offset+sizeof(music_info_t) < buff_size)
-                    {
-                        TCHAR g[] = {'/',0};
-                        pt_mi = (music_info_t*)&buff[offset];
-                        //pt_mi->type = type;
-
-                        wstrcpy(music_path, (const TCHAR*)path);
-                        wstrcat(music_path, g);
-                        wstrcat(music_path, (const TCHAR*)fn);
-
-                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
-                        wstrcpy(pt_mi->name, fn);
-                        offset += sizeof(music_info_t);
-                        (*num)++;
-                    }
-                    else
-                    {
-                        if(buff_full) *buff_full = 1;
-                        debug_printf(" buff_size over\n");
-                        break;
-                    }
-                }
-                #endif
+                //#endif
                 else 
                 {
                     continue;  //不需要的类型

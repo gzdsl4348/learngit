@@ -220,6 +220,7 @@ void div_info_set_recive()
             memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[DIVSET_GATEWAY_B],4);    
             memcpy(host_info.ipconfig.netmask,&xtcp_rx_buf[DIVSET_NETMASK_B],4);    
             user_xtcp_ipconfig(host_info.ipconfig);
+            g_sys_val.gateway_standy=0;
             //=================================================================================================
             // 同步主机IP
             div_node_t *node_tmp=null;

@@ -82,7 +82,8 @@ void ds1302_init(){
 	ds1302_get_date();
     g_sys_val.today_date = g_sys_val.date_info;
     // 打开日志记录
-    user_file_mklog();
+    g_sys_val.log_waitmk_f = user_file_mklog();
+    debug_printf("mk flag %d\n",g_sys_val.log_waitmk_f);
 }
 
 uint8_t ds1302_contorl(uint8_t cmd,uint8_t data){

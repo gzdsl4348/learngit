@@ -370,6 +370,8 @@ typedef interface xtcp_if {
 
   void xtcp_arpget(xtcp_ipaddr_t ipaddr,xtcp_mac_t &t_xtcp_mac);
 
+  void xtcp_arpclear(xtcp_ipaddr_t ipaddr);
+
   void set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]);
 
   uint8_t get_autoip_flag(); //1：自动IP, 0：非自动IP

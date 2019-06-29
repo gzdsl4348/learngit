@@ -103,9 +103,11 @@ void debug_conn_colse();
 
 void user_xtcp_debugudpsend(uint8_t buf[],unsigned len);
 
-void user_file_mklog();
+uint8_t user_file_mklog();
 
 void user_loginfo_add(uint8_t mac[],uint8_t ip[]);
+
+void user_arp_clear(xtcp_ipaddr_t ipaddr);
 
 
 #endif //__USER_XCCODE_H_

@@ -484,6 +484,18 @@ xtcp_mac_t uip_arptab_get(uip_ipaddr_t ipaddr){
 	return t_xtcp_mac;
 }
 
+void uip_arptab_clear(uip_ipaddr_t ipaddr){
+	xtcp_mac_t t_xtcp_mac;
+    for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
+      	if(uip_ipaddr_cmp(ipaddr, arp_table[i].ipaddr)) {
+    		memset(arp_table[i].ethaddr.addr,0xFF,6);
+            memset(arp_table[i].ipaddr,0x00,4);
+	    	break;
+      	}
+    }
+}
+
+
 
 /** @} */
 /** @} */

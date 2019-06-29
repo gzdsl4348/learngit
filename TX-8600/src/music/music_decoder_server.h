@@ -12,7 +12,7 @@ pcm´«Êä½Ó¿Ú
 */
 typedef interface music_decoder_output_if
 {
-    void get_mp3_frame(uint8_t ch, uint8_t mp3_frame[], uint32_t &length, uint32_t &frame_num, uint32_t &samplerate);   
+    void get_mp3_frame(uint8_t ch, uint8_t mp3_frame[], uint32_t &length, uint32_t &frame_num, uint32_t &samplerate,uint8_t &music_type,uint8_t wav_format);   
 }music_decoder_output_if;
 
 [[combinable]]

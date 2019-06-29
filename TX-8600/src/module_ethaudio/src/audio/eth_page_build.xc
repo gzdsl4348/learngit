@@ -94,7 +94,6 @@ uint16_t audio_page_build(uint8_t txbuff[],
     txbuff[AUDIO_FORMAT_ADR] = audio_format;
 	// Get Audio Data Base Adr
 	len = AUDIO_CHDATA_BASE_ADR;
-    
 	//
 	txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type ; //音频类型
 	txbuff[len+AUDIO_CHID_ADR] = ch;				    //音频通道ID

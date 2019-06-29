@@ -997,12 +997,27 @@ uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     memcpy(&xtcp_tx_buf[MUS_LIBCHK_PATCHNAME],t_list_connsend[list_num].list_info.musiclist.music_patch_name,PATCH_NAME_NUM);
     //
     data_base = MUS_LIBCHK_DATBASE;
-    for(i=0;(i<MAX_MUSICNUM_SEND)&&(t_list_connsend[list_num].list_info.musiclist.music_inc<*music_tol);i++){
-        memcpy(&xtcp_tx_buf[data_base+MUS_LIBCHK_MUSICNAME],music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name,MUSIC_NAME_NUM);
-        xtcp_tx_buf[data_base+MUS_LIBCHK_DURATIME] = music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].totsec;
-        xtcp_tx_buf[data_base+MUS_LIBCHK_DURATIME+1] = music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].totsec>>8;
+    for(i=0;(i<MAX_MUSICNUM_SEND)&&(t_list_connsend[list_num].list_info.musiclist.music_inc<*music_tol);){
+        uint8_t getname_flag=1;
+        if(host_info.wav_mode==0){
+            for(uint8_t i=0;i<MUSIC_NAME_NUM-4;i++){
+                if(music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name[i]==0x2E &&
+                   music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name[i+1]==0x77 &&
+                   music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name[i+2]==0x61 &&
+                   music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name[i+3]==0x76){
+                       getname_flag=0;
+                       break;
+                   }
+            }
+        }
+        if(getname_flag){
+            memcpy(&xtcp_tx_buf[data_base+MUS_LIBCHK_MUSICNAME],music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].name,MUSIC_NAME_NUM);
+            xtcp_tx_buf[data_base+MUS_LIBCHK_DURATIME] = music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].totsec;
+            xtcp_tx_buf[data_base+MUS_LIBCHK_DURATIME+1] = music_info[t_list_connsend[list_num].list_info.musiclist.music_inc].totsec>>8;
+            data_base += MUS_LIBCHK_DAT_LEN;
+            i++;
+        }
         t_list_connsend[list_num].list_info.musiclist.music_inc++;
-        data_base += MUS_LIBCHK_DAT_LEN;
     }
     xtcp_tx_buf[MUS_LIBCHK_MUSICTOL] = i;
     //

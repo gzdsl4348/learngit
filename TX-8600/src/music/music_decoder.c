@@ -15,12 +15,17 @@
 #include "xassert.h"
 #include "sdram.h"
 #include "sdram_def.h"
+#include "adpcm.h"
 
 static music_decoder_mgr_t gt_mmdm;
 
 static swlock_t g_mp3_lock[MP3DEC_CHANNAL_NUM];
 
 static uint8_t g_file_buff[MUSIC_FILE_BUFF_SZ];
+
+extern struct adpcm_state s_adpcm_state[];
+
+extern unsigned char mf_typetell(TCHAR *fname);
 
 static void read_sdram_file_buff(unsigned c_sdram, s_sdram_state *sdram_state, uint8_t ch, uint8_t flag, uint8_t buff[], uint32_t size)
 {
@@ -48,6 +53,101 @@ static unsigned int get_mp3_datastart(unsigned char *buff, unsigned int buff_siz
         }
     }
     return 0;
+}
+
+static unsigned int get_wav_datastart(unsigned char *buff, unsigned int buff_size)
+{
+    if(buff_size >= 10)
+    {
+        if (memcmp(buff, "ID3",3) == 0)
+        {
+            return ((buff[6] & 0x7F)<< 21)|((buff[7] & 0x7F) << 14) | ((buff[8] & 0x7F) << 7) | (buff[9] & 0x7F);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+static unsigned char wav_get_info(TCHAR *pname, MP3_Info *p_info){
+    FIL*fmp3;
+    unsigned char *buf;
+    unsigned int buf_size;
+    unsigned int br;
+    unsigned char res;
+    //
+    //共用5K内存
+    buf = g_file_buff;
+    buf_size = sizeof(g_file_buff);
+    fmp3=mymalloc(sizeof(FIL));
+    res = f_open(fmp3,(const TCHAR*)pname,FA_READ);//打开文件
+    
+    if(res==0){
+        res = f_read(fmp3, (char*)buf, 36, &br);
+        // 判断是否WAV
+        if(buf[0]!=0x52 || buf[1]!=0x49 || buf[2]!=0x46 || buf[3]!=0x46)
+            br = 0;
+        // 获取位宽
+        p_info->wav_bitwidth = buf[WAV_BITWIDTH];
+        // 获取采样率
+        p_info->samplerate = buf[WAV_SAMPLERATE_ADR] | (buf[WAV_SAMPLERATE_ADR+1]<<8) | (buf[WAV_SAMPLERATE_ADR+2]<<16) | (buf[WAV_SAMPLERATE_ADR+3]<<24);
+        // 获取通道数
+        p_info->wav_chanal_num = buf[WAV_CHANAL_ADR];
+        // 获取音频格式
+        p_info->wav_format = buf[WAV_FROMAT_ADR];
+        // 获取波特率
+        p_info->bitrate = buf[WAV_KBYES_ADR] | (buf[WAV_KBYES_ADR+1]<<8) | (buf[WAV_KBYES_ADR+2]<<16) | (buf[WAV_KBYES_ADR+3]<<24); 
+        //-------------------------------------------------------------------------------------------
+        // 找wav文件数据头
+        uint8_t offset;
+        unsigned error=0;
+        while(br){
+            f_read(fmp3, (char*)buf, 4, &br); //找data数据段
+            // 找到data头
+            if(buf[0]==0x64 && buf[1]==0x61 && buf[2]==0x74 && buf[3]==0x61)
+                break;
+            // 找不到data头
+            for(offset=1;offset<4;offset++){
+                if(buf[offset]==0x64){
+                    break;
+                }
+            }
+            res = f_lseek(fmp3, fmp3->fptr-(4-offset));
+            // 前2K数据找不到data头当错误文件 避免长时间读取文件
+            error++;
+            if(error>2048){
+                br=0;
+                break;
+            }
+        }
+        if(br==0 && p_info->wav_format!=1){ // 没有data头 格式不是PCM
+            res=0XFF;
+        }
+        //----------------------------------------------------------------------------------------------------
+        // 获取数据长度
+        else{
+            f_read(fmp3, buf, 4, &br); //找data数据段
+            p_info->wav_datlen = (buf[0]|(buf[1]<<8)|(buf[2]<<16)|(buf[3]<<24));
+            if(br==0 || p_info->wav_datlen==0){ 
+                res=0XFF;
+            }
+        }
+        //----------------------------------------------------------------------------------------------------
+        // 计算文件时长
+        unsigned tmp;
+        // 计算单通道字节长度 总字节/通道数
+        tmp = p_info->wav_datlen/p_info->wav_chanal_num;
+        // 计算多少个采样点       字节数/位宽
+        tmp = tmp/(p_info->wav_bitwidth/8);
+        // 计算时长 采样点总数/采样率
+        p_info->totsec = tmp/p_info->samplerate;
+    }
+    else res=0XFF;
+    //
+    myfree(fmp3);
+    return res;
 }
 
 //获取MP3基本信息
@@ -194,6 +294,26 @@ unsigned int get_mp3_totsec(TCHAR *pname)
         return mp3_info.totsec;
 }
 
+//pname:文件名
+//返回值:0 - 文件无效或失败
+//       其他值为wav文件总时长
+unsigned int get_wav_totsec(TCHAR *pname)
+{
+    MP3_Info mp3_info;
+    int res = wav_get_info(pname, &mp3_info);
+    //debug_printf("mp3_get_info %d\n", res);
+    if(res != 0)
+    {
+        return 0;
+    }
+
+    if(mp3_info.samplerate!=48000 && mp3_info.samplerate!=44100 && mp3_info.samplerate!=16000) //&& mp3_info.samplerate!=24000 && mp3_info.samplerate!=22050 && mp3_info.samplerate!=11025 && mp3_info.samplerate!=32000 && mp3_info.samplerate!=8000)
+        return 0;
+    else
+        return mp3_info.totsec;
+}
+
+
 /*********************************************************************************************************************************/
 #define _USE_IN_FILE_SYSTEM_TASK_
 
@@ -211,7 +331,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
 {
     int res = 0;
     int mp3_tag_offset = 0;
-    unsigned char tag[10];
+    unsigned char tag[36];
     music_decoderdev_t * p_dev = NULL;
 
     UINT br;
@@ -239,27 +359,86 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
         return res;
     }
     // MP3 文件头判断 WAV文件头判断
+    unsigned char music_type = mf_typetell((const TCHAR*)f_name);
+    // MP3 文件
+    if(music_type==1){
+        res = f_read(&p_dev->file, tag, 10, &br);
+        mp3_tag_offset = get_mp3_datastart(tag, 10);
+        if(mp3_tag_offset)
+        {
+            f_offset += (mp3_tag_offset+10);
+        }
 
-
-
-
-    res = f_read(&p_dev->file, tag, 10, &br);
-    mp3_tag_offset = get_mp3_datastart(tag, 10);
-    if(mp3_tag_offset)
-    {
-        f_offset += (mp3_tag_offset+10);
+        res = f_lseek(&p_dev->file, f_offset);
+        if(res != FR_OK)
+        {
+            return res;
+        }
+        debug_printf("MP3 music_decode_start [%d] succeed\n", ch);
+        p_dev->decoder_status = MUSIC_DECODER_START;
+        // MP3模式
+        p_dev->file_type = 0;
     }
-
-    res = f_lseek(&p_dev->file, f_offset);
-    if(res != FR_OK)
-    {
-        return res;
+    // wav文件
+    else if(music_type==2){
+        // 读wav文件头 获取wav头文件信息
+        res = f_read(&p_dev->file, tag, 36, &br);
+        // 判断是否WAV
+        if(tag[0]!=0x52 || tag[1]!=0x49 || tag[2]!=0x46 || tag[3]!=0x46)
+            return FR_NO_FILE;
+        // 获取位宽
+        p_dev->wav_bitwith = tag[WAV_BITWIDTH];
+        // 获取采样率
+        p_dev->wav_samplerate = tag[WAV_SAMPLERATE_ADR] | (tag[WAV_SAMPLERATE_ADR+1]<<8) | (tag[WAV_SAMPLERATE_ADR+2]<<16) | (tag[WAV_SAMPLERATE_ADR+3]<<24);
+        // 获取通道数
+        p_dev->wav_nchanal = tag[WAV_CHANAL_ADR];
+        // 获取音频格式
+        p_dev->wav_format = tag[WAV_FROMAT_ADR];
+        //-------------------------------------------------------------------------------------------
+        // 找wav文件数据头
+        uint8_t offset;
+        unsigned error=0;
+        while(br){
+            f_read(&p_dev->file, tag, 4, &br); //找data数据段
+            // 找到data头
+            if(tag[0]==0x64 && tag[1]==0x61 && tag[2]==0x74 && tag[3]==0x61)
+                break;
+            // 找不到data头
+            for(offset=1;offset<4;offset++){
+                if(tag[offset]==0x64){
+                    break;
+                }
+            }
+            res = f_lseek(&p_dev->file, p_dev->file.fptr-(4-offset));
+            // 前2K数据找不到data头当错误文件 避免长时间读取文件
+            error++;
+            if(error>2048){
+                br=0;
+                p_dev->decoder_status = MUSIC_DECODER_ERROR1;
+                return FR_NO_FILE;
+            }
+        }
+        if(br==0){ // 没有data头
+            p_dev->decoder_status = MUSIC_DECODER_ERROR1;
+            return FR_NO_FILE;
+        }
+        //----------------------------------------------------------------------------------------------------
+        // 获取数据长度
+        f_read(&p_dev->file, tag, 4, &br); //找data数据段
+        p_dev->wav_datlen = (tag[0]|(tag[1]<<8)|(tag[2]<<16)|(tag[3]<<24));
+        if(br==0 || p_dev->wav_datlen==0){ 
+            p_dev->decoder_status = MUSIC_DECODER_FILE_END;
+            return FR_NO_FILE;
+        }
+        //----------------------------------------------------------------------------------------------------
+        s_adpcm_state[ch].index=0;
+        s_adpcm_state[ch].valprev=0;
+        debug_printf("\n\nWAV music_decode_start [%d] succeed\n", ch);
+        p_dev->decoder_status = MUSIC_DECODER_START;
+        // WAV模式
+        p_dev->file_type = 1;
     }
-
-    debug_printf("music_decode_start [%d] succeed\n", ch);
-    
-    p_dev->decoder_status = MUSIC_DECODER_START;
-    
+    else{;}
     return FR_OK;
 }
 
@@ -320,9 +499,6 @@ int update_music_decoder_status(music_decoder_status_t s[])
     return need2notify;
 }
 
-
-
-
 void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state, p_sdram_state))
 {
     UINT br = 0;
@@ -379,17 +555,13 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
                     else
                         p_dev->file_buff_for_used = 0;                
                 }
-
                 // 出同步锁
                 swlock_release(&g_mp3_lock[ch]);
-                
-                
             }
-
         }
 
         
-        if(p_dev->file_over_flag    == 1 &&
+        if(p_dev->file_over_flag == 1 &&
            p_dev->file_buff_size[0] == 0 &&
            p_dev->file_buff_size[1] == 0)
         {
@@ -411,7 +583,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
 
 /*********************************************************************************************************************************/
 #define _USE_IN_MUSIC_DECOEDR_SERVER_TASK_
-uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, uint32_t *samplerate)
+uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, uint32_t *samplerate,uint32_t *music_type)
 {
     if(ch >= gt_mmdm.ch_num || gt_mmdm.ch_dev[ch].mp3_frame_full==0) 
     {  
@@ -424,8 +596,12 @@ uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, 
     //debug_printf("get_mp3_frame[%d] length:%d\n", ch, *length);
 
     *length     = gt_mmdm.ch_dev[ch].mp3_frame_size;
-    *frame_num  = gt_mmdm.ch_dev[ch].mp3_frame_num;
-    *samplerate = gt_mmdm.ch_dev[ch].samplerate;
+    *frame_num  = gt_mmdm.ch_dev[ch].mp3_frame_num;    
+    *music_type = gt_mmdm.ch_dev[ch].file_type;
+    if(gt_mmdm.ch_dev[ch].file_type)
+        *samplerate = gt_mmdm.ch_dev[ch].wav_samplerate;
+    else
+        *samplerate = gt_mmdm.ch_dev[ch].samplerate;    
     
     return (uint32_t)gt_mmdm.ch_dev[ch].mp3_frame;
 }
@@ -472,14 +648,13 @@ static int get_mp3_frame_size(MP3DecInfo *mp3DecInfo)
 
 static void set_file_buff_offset(music_decoderdev_t * p_dev, int offset)
 {
+        
     if((p_dev->file_buff_offset[p_dev->file_buff_for_used]+offset) < MUSIC_FILE_BUFF_SZ)
     {
         p_dev->file_buff_offset[p_dev->file_buff_for_used] += offset;
     }
     else
-    {
-        //debug_printf("file_buff switch %d %d\n", offset, p_dev->file_buff_offset[p_dev->file_buff_for_used]);
-        
+    {        
         offset = offset - (p_dev->file_buff_size[p_dev->file_buff_for_used] - p_dev->file_buff_offset[p_dev->file_buff_for_used]);
         
         p_dev->file_buff_size[p_dev->file_buff_for_used] = 0;
@@ -495,6 +670,7 @@ static void set_file_buff_offset(music_decoderdev_t * p_dev, int offset)
 void music_decoder(STREAMING_CHANEND(c_sdram))
 {
     music_decoderdev_t * p_dev = NULL;
+    unsigned i=0,j=0;
     uint8_t ch = 0;
     uint8_t file_buff[MUSIC_FILE_BUFF_SZ*2];
     uint32_t file_buff_left = 0;
@@ -517,81 +693,143 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
         for(ch=0; ch<MUSIC_CHANNEL_NUM; ch++)
         {
             p_dev = &gt_mmdm.ch_dev[ch];
-
-            if(p_dev->decoder_status != MUSIC_DECODER_START) continue;
-
-            //mp3 frame需要填充时才调用
-            if(p_dev->mp3_frame_full) continue;
-
-            if(p_dev->file_buff_size[0]==0 && p_dev->file_buff_size[1]==0) continue;
-
-            // 进出同步锁间操作, 耗时0.1ms
-            // 进同步锁
-            swlock_acquire(&g_mp3_lock[ch]);
-
-            //读SDRAN MUSIC_FILE_BUFF_SZ*2
-            read_sdram_file_buff(c_sdram, &sdram_state, ch, p_dev->file_buff_for_used, file_buff, MUSIC_FILE_BUFF_SZ);
-            file_buff_left = p_dev->file_buff_size[p_dev->file_buff_for_used]-p_dev->file_buff_offset[p_dev->file_buff_for_used];
-            
-            if(p_dev->file_buff_for_used==1 && p_dev->file_buff_size[0])
-            {
-                read_sdram_file_buff(c_sdram, &sdram_state, ch, 0, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
-                file_buff_left += (p_dev->file_buff_size[0]-p_dev->file_buff_offset[0]);
-            }
-            else if(p_dev->file_buff_for_used==0 && p_dev->file_buff_size[1])
-            {
-                read_sdram_file_buff(c_sdram, &sdram_state, ch, 1, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
-                file_buff_left += (p_dev->file_buff_size[1]-p_dev->file_buff_offset[1]);
-            }
-#if 0
-            if(p_dev->mp3_frame_num>=30 && p_dev->mp3_frame_num<33)
-            {
-                debug_printf("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
-                             p_dev->mp3_frame_num, p_dev->file_buff_for_used,
-                             p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
-                             p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
-                             file_buff_left);
-            }
-#endif
-            readptr = file_buff + p_dev->file_buff_offset[p_dev->file_buff_for_used];
-
-            offset = MP3FindSyncWord(readptr, file_buff_left);//在readptr位置,开始查找同步字符
-            if(offset < 0)//没有找到同步字符,跳出帧解码循环
-			{
-                //没找到帧同步字符
-                //TUDO:设置状态标志，可以找下一帧
-                debug_printf("MP3FindSyncWord failed [%d]\n", ch);
-                debug_printf("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
-                             p_dev->mp3_frame_num, p_dev->file_buff_for_used,
-                             p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
-                             p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
-                             file_buff_left);
-
-                if(p_dev->file_over_flag)
+            //------------------------------------------------------------------------------------------------------------
+            // WAV 解码模式
+            if(p_dev->file_type){
+                //-----------------------------------------------------------------------------------
+                if(p_dev->decoder_status != MUSIC_DECODER_START) continue;
+                
+                //mp3 frame需要填充时才调用
+                if(p_dev->mp3_frame_full) continue;
+                
+                if(p_dev->file_buff_size[0]==0 && p_dev->file_buff_size[1]==0) continue;
+                //-----------------------------------------------------------------------------------
+                // 进出同步锁间操作, 耗时0.1ms
+                // 进同步锁
+                swlock_acquire(&g_mp3_lock[ch]);
+                //                
+                //-----------------------------------------------------------------------------------
+                //读SDRAN MUSIC_FILE_BUFF_SZ*2
+                read_sdram_file_buff(c_sdram, &sdram_state, ch, p_dev->file_buff_for_used, file_buff, MUSIC_FILE_BUFF_SZ);
+                file_buff_left = p_dev->file_buff_size[p_dev->file_buff_for_used]-p_dev->file_buff_offset[p_dev->file_buff_for_used];
+                
+                if(p_dev->file_buff_for_used==1 && p_dev->file_buff_size[0])
+                {
+                    read_sdram_file_buff(c_sdram, &sdram_state, ch, 0, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
+                    file_buff_left += (p_dev->file_buff_size[0]-p_dev->file_buff_offset[0]);
+                }
+                else if(p_dev->file_buff_for_used==0 && p_dev->file_buff_size[1])
+                {
+                    read_sdram_file_buff(c_sdram, &sdram_state, ch, 1, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
+                    file_buff_left += (p_dev->file_buff_size[1]-p_dev->file_buff_offset[1]);
+                }
+                readptr = file_buff + p_dev->file_buff_offset[p_dev->file_buff_for_used];
+                //-----------------------------------------------------------------------------------
+                // 计算位宽
+                uint8_t byetwidth = p_dev->wav_bitwith/8;
+                // 计算每点字节数
+                unsigned sample_offset = p_dev->wav_nchanal*byetwidth;
+                // 计算每包字节数     
+                unsigned pack_allsample_len = sample_offset*WAV_PACK_SAMPLENUM;
+                // 计算最大取点字节数
+                unsigned dat_len = (file_buff_left<pack_allsample_len)?file_buff_left:pack_allsample_len;      
+                // 取采样点数据
+                i=0;
+                j=0;
+                while(i<dat_len){
+                    //------------------------------------------------
+                    // 通道  默认取左声道 固定只取16bit数据
+                    if(byetwidth==1){
+                        p_dev->mp3_frame[j] = 0;
+                        p_dev->mp3_frame[j+1] = readptr[i];
+                    }
+                    else if(byetwidth==2){
+                        p_dev->mp3_frame[j] = readptr[i];
+                        p_dev->mp3_frame[j+1] = readptr[i+1];
+                    }
+                    else if(byetwidth==3){
+                        p_dev->mp3_frame[j] = readptr[i+1];
+                        p_dev->mp3_frame[j+1] = readptr[i+2];
+                    }
+                    else if(byetwidth==4){
+                        p_dev->mp3_frame[j] = readptr[i+2];
+                        p_dev->mp3_frame[j+1] = readptr[i+3];
+                    }
+                    else{;}
+                    //------------------------------------------------
+                    // 采样点加1 通道数*位宽
+                    i +=sample_offset;
+                    j +=2;
+                }
+                // 获取实际发送长度
+                p_dev->mp3_frame_size = j;
+                //                
+                offset = dat_len;
+                set_file_buff_offset(p_dev, offset);
+                //
+                if(file_buff_left<pack_allsample_len && p_dev->file_over_flag)
                 {
                     p_dev->file_over_flag = 0;
                     p_dev->decoder_status = MUSIC_DECODER_FILE_END;
                 }
-                else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
-                {
-                    p_dev->decoder_status = MUSIC_DECODER_ERROR1;  
-                }
-                else
-                {
-                    // 处理file_buff_offset数据
-                    set_file_buff_offset(p_dev, file_buff_left/2);
-                }
+                // 取帧完成
+                p_dev->mp3_frame_num++;
+                p_dev->mp3_frame_full = 1;
+                // 出同步锁
+                swlock_release(&g_mp3_lock[ch]);
+            }
+            //------------------------------------------------------------------------------------------------------------
+            // MP3 解码模式
+            else{
+                if(p_dev->decoder_status != MUSIC_DECODER_START) continue;
+
+                //mp3 frame需要填充时才调用
+                if(p_dev->mp3_frame_full) continue;
+
+                if(p_dev->file_buff_size[0]==0 && p_dev->file_buff_size[1]==0) continue;
+
+                // 进出同步锁间操作, 耗时0.1ms
+                // 进同步锁
+                swlock_acquire(&g_mp3_lock[ch]);
+
+                //读SDRAN MUSIC_FILE_BUFF_SZ*2
+                read_sdram_file_buff(c_sdram, &sdram_state, ch, p_dev->file_buff_for_used, file_buff, MUSIC_FILE_BUFF_SZ);
+                file_buff_left = p_dev->file_buff_size[p_dev->file_buff_for_used]-p_dev->file_buff_offset[p_dev->file_buff_for_used];
                 
-			}
-            else//找到同步字符了
-			{
-                readptr += offset;//MP3读指针偏移到同步字符处.
-                
-                if((UnpackFrameHeader(&mp3decinfo, readptr)==-1) || (mp3decinfo.layer!=3))
+                if(p_dev->file_buff_for_used==1 && p_dev->file_buff_size[0])
                 {
-                    debug_printf("UnpackFrameHeader failed [%d] %d\n", ch, mp3decinfo.layer);
-                    debug_printf("file_buff_offset:%d offset:%d frame_num:%d %d\n", p_dev->file_buff_offset[p_dev->file_buff_for_used], offset, p_dev->mp3_frame_num, p_dev->file_over_flag);
-                                            
+                    read_sdram_file_buff(c_sdram, &sdram_state, ch, 0, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
+                    file_buff_left += (p_dev->file_buff_size[0]-p_dev->file_buff_offset[0]);
+                }
+                else if(p_dev->file_buff_for_used==0 && p_dev->file_buff_size[1])
+                {
+                    read_sdram_file_buff(c_sdram, &sdram_state, ch, 1, file_buff+MUSIC_FILE_BUFF_SZ, MUSIC_FILE_BUFF_SZ);
+                    file_buff_left += (p_dev->file_buff_size[1]-p_dev->file_buff_offset[1]);
+                }
+#if 0
+                if(p_dev->mp3_frame_num>=30 && p_dev->mp3_frame_num<33)
+                {
+                    debug_printf("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
+                                 p_dev->mp3_frame_num, p_dev->file_buff_for_used,
+                                 p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
+                                 p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
+                                 file_buff_left);
+                }
+#endif
+                readptr = file_buff + p_dev->file_buff_offset[p_dev->file_buff_for_used];
+
+                offset = MP3FindSyncWord(readptr, file_buff_left);//在readptr位置,开始查找同步字符
+                if(offset < 0)//没有找到同步字符,跳出帧解码循环
+    			{
+                    //没找到帧同步字符
+                    //TUDO:设置状态标志，可以找下一帧
+                    debug_printf("MP3FindSyncWord failed [%d]\n", ch);
+                    debug_printf("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
+                                 p_dev->mp3_frame_num, p_dev->file_buff_for_used,
+                                 p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
+                                 p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
+                                 file_buff_left);
+
                     if(p_dev->file_over_flag)
                     {
                         p_dev->file_over_flag = 0;
@@ -599,47 +837,72 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                     }
                     else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
                     {
-                        p_dev->decoder_status = MUSIC_DECODER_ERROR2;  
-                        debug_printf("MP3 MUSIC_DECODER_ERROR2\n");
+                        p_dev->decoder_status = MUSIC_DECODER_ERROR1;  
                     }
                     else
                     {
                         // 处理file_buff_offset数据
-                        set_file_buff_offset(p_dev, offset+2);
+                        set_file_buff_offset(p_dev, file_buff_left/2);
                     }
-                }
-                else
-                {
-                    p_dev->mp3_frame_size = get_mp3_frame_size(&mp3decinfo);
-                    if(file_buff_left >= p_dev->mp3_frame_size)
+                    
+    			}
+                else//找到同步字符了
+    			{
+                    readptr += offset;//MP3读指针偏移到同步字符处.
+                    
+                    if((UnpackFrameHeader(&mp3decinfo, readptr)==-1) || (mp3decinfo.layer!=3))
                     {
-                        offset += p_dev->mp3_frame_size;
-                        
-                        // 处理file_buff_offset数据
-                        set_file_buff_offset(p_dev, offset);
-                        
-                        if(p_dev->bitrate != mp3decinfo.bitrate)//更新码率
+                        debug_printf("UnpackFrameHeader failed [%d] %d\n", ch, mp3decinfo.layer);
+                        debug_printf("file_buff_offset:%d offset:%d frame_num:%d %d\n", p_dev->file_buff_offset[p_dev->file_buff_for_used], offset, p_dev->mp3_frame_num, p_dev->file_over_flag);
+                                                
+                        if(p_dev->file_over_flag)
                         {
-                            p_dev->bitrate = mp3decinfo.bitrate; 
-                            p_dev->samplerate = mp3decinfo.samprate;
+                            p_dev->file_over_flag = 0;
+                            p_dev->decoder_status = MUSIC_DECODER_FILE_END;
                         }
-                        
-                        // put mp3 frame buff
-                        memcpy(p_dev->mp3_frame, readptr, p_dev->mp3_frame_size);
-                        p_dev->mp3_frame_num++;
-                        p_dev->mp3_frame_full = 1;
+                        else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
+                        {
+                            p_dev->decoder_status = MUSIC_DECODER_ERROR2;  
+                            debug_printf("MP3 MUSIC_DECODER_ERROR2\n");
+                        }
+                        else
+                        {
+                            // 处理file_buff_offset数据
+                            set_file_buff_offset(p_dev, offset+2);
+                        }
                     }
-                    else if(p_dev->file_over_flag)
+                    else
                     {
-                        p_dev->file_over_flag = 0;
-                        p_dev->decoder_status = MUSIC_DECODER_FILE_END;
+                        p_dev->mp3_frame_size = get_mp3_frame_size(&mp3decinfo);
+                        if(file_buff_left >= p_dev->mp3_frame_size)
+                        {
+                            offset += p_dev->mp3_frame_size;
+                            
+                            // 处理file_buff_offset数据
+                            set_file_buff_offset(p_dev, offset);
+                            
+                            if(p_dev->bitrate != mp3decinfo.bitrate)//更新码率
+                            {
+                                p_dev->bitrate = mp3decinfo.bitrate; 
+                                p_dev->samplerate = mp3decinfo.samprate;
+                            }
+                            
+                            // put mp3 frame buff
+                            memcpy(p_dev->mp3_frame, readptr, p_dev->mp3_frame_size);
+                            p_dev->mp3_frame_num++;
+                            p_dev->mp3_frame_full = 1;
+                        }
+                        else if(p_dev->file_over_flag)
+                        {
+                            p_dev->file_over_flag = 0;
+                            p_dev->decoder_status = MUSIC_DECODER_FILE_END;
+                        }
                     }
                 }
+                // 出同步锁
+                swlock_release(&g_mp3_lock[ch]);
             }
-            // 出同步锁
-            swlock_release(&g_mp3_lock[ch]);
         }
-
     }
 }
 

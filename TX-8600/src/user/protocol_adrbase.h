@@ -168,6 +168,8 @@
 
 #define ETH_CONTOL_DEBUG_CMD    0xC002
 
+#define ETH_WAV_OPEN_CMD        0xC003
+
 //---------------------------------------------------------------------
 // 云包头
 #define CLH_TYPE_BASE           0                                   // 4 云包头类型

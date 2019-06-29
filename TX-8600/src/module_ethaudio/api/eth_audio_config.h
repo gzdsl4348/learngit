@@ -117,6 +117,7 @@ enum AUDIO_CASTMODE_E{
 #define AUDIOWIDTH_32BIT    3
 #define AUDIOWIDTH_ADPCM    4
 #define AUDIOWIDTH_MP3      5
+#define AUDIOWIDTH_WAV      6
 
 //Sample Rate
 #define SAMPLE_RATE_8K       0

@@ -195,6 +195,12 @@ void user_could_send(uint8_t pol_type){
     }//unsafe
 }
 
+void user_arp_clear(xtcp_ipaddr_t ipaddr){
+    unsafe{
+    i_user_xtcp->xtcp_arpclear(ipaddr);
+    }
+}
+
 void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
 	unsafe{
         if(user_sending_len>1472)
@@ -476,20 +482,22 @@ void user_xtcp_debugudpsend(uint8_t buf[],unsigned len){
 	}
 }
 
-void user_file_mklog(){
+uint8_t user_file_mklog(){
     unsafe{
+        uint8_t res;
         if(host_info.log_daycnt>=MAX_LOGDATE_NUM){
             host_info.log_daycnt=0;
         }
         // 建立日志 取日志文件名字符串
         g_sys_val.log_info_p = log_info_chang("syslog_%d-%d-%d.txt\n",2000+g_sys_val.date_info.year,g_sys_val.date_info.month,g_sys_val.date_info.date);
         // 删旧日志，建新日志
-        i_fs_user->log_mklog(g_sys_val.log_info_p->buff,g_sys_val.log_info_p->len,host_info.log_filename[host_info.log_daycnt],64);
+        res = i_fs_user->log_mklog(g_sys_val.log_info_p->buff,g_sys_val.log_info_p->len,host_info.log_filename[host_info.log_daycnt],64);
         // 保存日志名
         memcpy(host_info.log_filename[host_info.log_daycnt],g_sys_val.log_info_p->buff,64);
         //
         host_info.log_daycnt++;
         hostinfo_fl_write();    //烧写主机信息
+        return res;
     }
 }
 
@@ -523,7 +531,7 @@ void user_loginfo_add(uint8_t mac[],uint8_t ip[]){
     }
     // ip
     for(uint8_t i=0;i<4;i++){
-        p += itoa_forutf16(ip[i],p,16,2);
+        p += itoa_forutf16(ip[i],p,10,2);
         *p = '.';
         p++;
         *p = 0x00;

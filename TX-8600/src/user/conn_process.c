@@ -470,6 +470,7 @@ void broadcast_for_minute(){
 void ipconflict_for_15s(){
     g_sys_val.ipchk_timecnt++;
     if(g_sys_val.ipchk_timecnt>15){
+        user_arp_clear(g_sys_val.ipchk_conn.remote_addr);
 		g_sys_val.ipchk_timecnt=0;
         memset(xtcp_tx_buf,0,64);
         user_sending_len = 64;

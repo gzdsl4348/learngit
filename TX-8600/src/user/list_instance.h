@@ -10,17 +10,17 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x20)
+#define VERSION_L    (0x21)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (20)
+#define VERSION_TEN_L    (21)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
-#define LIST_TEXT_DEBUG 0
+#define LIST_TEXT_DEBUG 1
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -166,6 +166,7 @@ typedef struct host_info_t{
     uint8_t sys_dhcp_state;
     uint8_t log_daycnt;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];
+    uint8_t wav_mode;
 }host_info_t;
 
 extern host_info_t host_info;

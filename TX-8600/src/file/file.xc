@@ -270,12 +270,15 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             }
             case if_fs.log_mklog(uint8_t new_fname[newlen],unsigned newlen,uint8_t old_fname[oldlen],unsigned oldlen)-> int res:
             {
-                res = FOR_SUCCEED;
+                res = FOR_FAILED;
                 memcpy(fopr.data.file.fsrc, new_fname, newlen);
                 memcpy(fopr.data.file.fdes, old_fname, oldlen);
                 fopr.log_event = FOR_LOGMK;
-                if(file_scaning_flag==0)
+                debug_printf("scan flag %d\n",file_scaning_flag);
+                if(file_scaning_flag==0){
                     c_faction <: (char)1;
+                    res = FOR_SUCCEED;
+                }
                 break;
             }
             case if_fs.log_loginfo_add(uint8_t log_info[len],unsigned len)-> int res:
@@ -283,7 +286,8 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 res = FOR_SUCCEED;
                 memcpy(fopr.data.file.log_info, log_info, len);
                 fopr.data.file.len =len;
-                fopr.log_event = FOR_LOGADD;               
+                fopr.log_event = FOR_LOGADD;                  
+                //debug_printf("scan flag %d\n",file_scaning_flag);
                 if(file_scaning_flag==0)
                     c_faction <: (char)1;
                 break;

@@ -707,6 +707,13 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 		t_xtcp_mac = uip_arptab_get(ip_addr);
 		break;
 
+    case i_xtcp[unsigned i].xtcp_arpclear(xtcp_ipaddr_t ipaddr):
+        uip_ipaddr_t ip_addr;
+        ip_addr[0] = (ipaddr[1]<<8)|ipaddr[0];
+        ip_addr[1] = (ipaddr[3]<<8)|ipaddr[2];
+        uip_arptab_clear(ip_addr);
+        break;
+
     case i_xtcp[unsigned i].set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]):
         memcpy(g_static_route.dst_ip, dst_ip, 4);
         memcpy(g_static_route.dst_mask, dst_mask, 4);

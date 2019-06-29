@@ -527,6 +527,12 @@ void sys_info_init(){
 	//----------------------------------------------------------------------------------------------------
 	i_user_flash->flash_sector_read(SOLUSION_DAT_SECTOR,g_tmp_union.buff);
 	sys_dat_read((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
+	//无效方案过滤
+	for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
+        if(solution_list.solu_info[i].state!=0xFF && solution_list.solu_info[i].id!=i){
+            solution_list.solu_info[i].state=0xFF;
+        }
+    }
     area_fl_read();    //分区表读取
     divlist_fl_read(); //列表读取
     account_list_read();//账户列表读取
@@ -982,6 +988,11 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 time_count=0;
 				//
 				second_process();
+                //
+                if(g_sys_val.log_waitmk_f){
+                    debug_printf("delay mk log\n");
+                    g_sys_val.log_waitmk_f = user_file_mklog();
+                }
 				// 广播连接关闭处理
                 if(g_sys_val.brocast_rec_conn.id!=0){
                     g_sys_val.brocast_rec_timinc++;
@@ -1018,6 +1029,16 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         read_link_up_event();
                         memset(gateway_mac,0xFF,6);
                         audio_moudle_set();
+                    }
+                }
+                // 网关重查
+                if(g_sys_val.gateway_standy){
+                    g_sys_val.gateway_time++;
+                    if(g_sys_val.gateway_time>15){
+                        g_sys_val.gateway_time = 0;
+                        if(gateway_mac[0]==0xFF && gateway_mac[1]==0xFF && gateway_mac[2]==0xFF && 
+                           gateway_mac[3]==0xFF && gateway_mac[4]==0xFF && gateway_mac[5]==0xFF)
+                            g_sys_val.gateway_standy==0;
                     }
                 }
                 //--------------------------------------

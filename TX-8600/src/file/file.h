@@ -10,7 +10,7 @@
 #include "sdram.h"
 #endif
 
-#define WAV_FILE_ENABLE 0
+#define WAV_FILE_ENABLE 1
 
 typedef enum
 {

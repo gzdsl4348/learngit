@@ -302,6 +302,7 @@ typedef struct g_sys_val_t{
 
     // 日志处理
     log_info_t *log_info_p;
+    uint8_t log_waitmk_f;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

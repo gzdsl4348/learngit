@@ -6,6 +6,18 @@
 #include "ff.h"	
 #include "music_decoder_types.h"
 
+#define WAV_HEADER_ADR      0x00
+#define WAV_ALLLEN_ADR      0x04
+#define WAV_WAVNAME_ADR     0x08
+#define WAV_WAVENAME_ADR    0x0C
+#define WAV_FILTER_ADR      0x10
+#define WAV_FROMAT_ADR      0x14
+#define WAV_CHANAL_ADR      0x16
+#define WAV_SAMPLERATE_ADR  0x18
+#define WAV_KBYES_ADR       0x1C
+#define WAV_DWORD_ADR       0x20
+#define WAV_BITWIDTH        0x22
+
 #if defined(__XC__)
 extern "C" {
 #endif
@@ -20,10 +32,21 @@ extern "C" {
 
 #define MP3_DECODER_ERROR_MAX_CNT   50
 
+// 每个WAV数据包长度
+#define WAV_PACK_SAMPLENUM      512
+
 typedef struct
 {
     int decoder_status;
     int decoder_error_cnt;
+    // 文件格式
+    uint8_t file_type; // 0=mp3文件 1=wav文件
+    // waw 格式
+    uint32_t wav_samplerate;
+    uint8_t  wav_format;
+    uint8_t  wav_bitwith;
+    uint8_t  wav_nchanal;
+    uint32_t wav_datlen;
     
     // mp3文件解码 
     FIL file;    

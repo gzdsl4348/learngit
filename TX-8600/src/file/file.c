@@ -14,6 +14,7 @@
 extern uint8_t disk_status(uint8_t ch_num);
 extern void sd_scan_music_file(uint8_t *specify_path);
 extern void update_music_filelist(uint8_t path[], uint8_t is_del);
+extern unsigned char mf_typetell(TCHAR *fname);
 static int file_upload_start(uint8_t *fname);
 
 static FATFS fatfs;

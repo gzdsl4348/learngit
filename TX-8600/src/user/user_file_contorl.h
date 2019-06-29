@@ -51,5 +51,7 @@ void bat_filecontorl_resend_tim();
 */
 void music_batrechk_recive();
 
+void wav_modeset_recive();
+
 #endif
 

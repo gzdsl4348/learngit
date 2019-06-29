@@ -11,6 +11,7 @@
 #include "conn_process.h"
 #include "sys_log.h"
 #include "user_log.h"
+#include "fl_buff_decode.h"
 
 #include "debug_print.h"
 
@@ -658,6 +659,13 @@ void bat_filecontorl_resend_tim(){
             }
         }
     }
+}
+
+//------------------------------------------------------
+void wav_modeset_recive(){
+    host_info.wav_mode = xtcp_rx_buf[POL_DAT_BASE];
+    hostinfo_fl_write();    //烧写主机信息
+    debug_printf("set wav %d\n",host_info.wav_mode);
 }
 
 

@@ -27,12 +27,16 @@ typedef struct
 //MP3_INFO
 typedef struct 
 {
-
     unsigned int totsec ;                   //整首歌时长,单位:秒
 
     unsigned int bitrate;                   //比特率
     unsigned int samplerate;                //采样率
     unsigned short outsamples;              //PCM输出数据量大小(以16位为单位),单声道MP3,则等于实际输出*2(方便DAC输出)
+
+    unsigned char wav_bitwidth;
+    unsigned char wav_chanal_num;
+    unsigned char wav_format;
+    unsigned wav_datlen;
     
     unsigned int datastart;                 //数据帧开始的位置(在文件里面的偏移)
 }MP3_Info;

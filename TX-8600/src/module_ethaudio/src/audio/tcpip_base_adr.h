@@ -59,5 +59,19 @@
 //
 #define AUDIO_DATABASE_ADR		(AUDIO_DATALEN_ADR+2) 	//Nbyte     //采样数据
 //
+// 包头定义
+#define WAV_PAGE_HEAD       (0)  // 4字节 包头
+#define WAV_PAGE_FORMAT     (WAV_PAGE_HEAD+4)   // 1字节 格式
+#define WAV_PAGE_SAMPLERATE (WAV_PAGE_FORMAT+1) // 4字节 采样率
+#define WAV_PAGE_DATLEN     (WAV_PAGE_SAMPLERATE+4) //2 字节 数据长度     
+#define WAV_PAGE_ADPCMINDEX (WAV_PAGE_DATLEN+2) // 1字节
+#define WAV_PAGE_DATBASE    (WAV_PAGE_ADPCMINDEX+1) // 数据起始
+
+// 包头长度
+#define WAV_PAGEREAD_SIZE   (WAV_PAGE_DATBASE-WAV_PAGE_HEAD)
+
+#define WAV_FORMAT_PCM      0
+#define WAV_FORMAT_ADPCM    1
+
 //===========================================================================================
 #endif
