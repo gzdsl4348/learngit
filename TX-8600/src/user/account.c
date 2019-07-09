@@ -335,7 +335,7 @@ void account_sys_register_recive(){
         else if(host_info.regiser_state==1){
             host_info.regiser_state = 2;
         }
-        else if((host_info.regiser_state==2)&&(host_info.regiser_days==0)){
+        else if((host_info.regiser_state==2)&&((host_info.regiser_days==0)||(host_info.regiser_days >365*3))){
             host_info.regiser_state = 0;
         }
         else{

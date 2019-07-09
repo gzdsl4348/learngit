@@ -45,22 +45,39 @@ void task_music_send(uint8_t ch){
         //
     }
     
-    // text
-    /*
-    for(;t_audio_txlist.num_info<2;t_audio_txlist.num_info++){
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[0] = 0x10;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[1] = 0x7B;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[2] = 0x44;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[3] = 0x51;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[4] = 0x2C;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[5] = 0x30;
+    // text    
+    #if 0
+    t_audio_txlist.num_info = 99; 
+    for(uint8_t i=0;i<99;i++){
+        if(i==0){
+            t_audio_txlist.t_des_info[0].mac[0] = 0x42;
+            t_audio_txlist.t_des_info[0].mac[1] = 0x4C;
+            t_audio_txlist.t_des_info[0].mac[2] = 0x45;
+            t_audio_txlist.t_des_info[0].mac[3] = 0x00;
+            t_audio_txlist.t_des_info[0].mac[4] = 0x72;
+            t_audio_txlist.t_des_info[0].mac[5] = 0x7D;
 
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip[0] = 172;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip[1] = 16;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip[2] = 13;
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip[3] = 224;
+            t_audio_txlist.t_des_info[0].ip[0] = 172;
+            t_audio_txlist.t_des_info[0].ip[1] = 16;
+            t_audio_txlist.t_des_info[0].ip[2] = 13;
+            t_audio_txlist.t_des_info[0].ip[3] = 225;
+        }
+        else{
+            t_audio_txlist.t_des_info[i].mac[0] = 0x10;
+            t_audio_txlist.t_des_info[i].mac[1] = 0x7B;
+            t_audio_txlist.t_des_info[i].mac[2] = 0x44;
+            t_audio_txlist.t_des_info[i].mac[3] = 0x51;
+            t_audio_txlist.t_des_info[i].mac[4] = 0x2C;
+            t_audio_txlist.t_des_info[i].mac[5] = 0x30;
+
+            t_audio_txlist.t_des_info[i].ip[0] = 172;
+            t_audio_txlist.t_des_info[i].ip[1] = 16;
+            t_audio_txlist.t_des_info[i].ip[2] = 13;
+            t_audio_txlist.t_des_info[i].ip[3] = 111;
+
+        }
     }
-    */
+    #endif
     /*
     if(ch==1){
         t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac[0] = 0x42;

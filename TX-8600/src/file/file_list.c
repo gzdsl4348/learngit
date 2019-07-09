@@ -828,7 +828,14 @@ filelist_layer_2:   //二层路径处理逻辑
         }
     }
     
-    music_totsec = get_mp3_totsec((TCHAR*)path);
+    unsigned char type=mf_typetell(path);    //获得类型
+    if(type==1){
+        music_totsec = get_mp3_totsec((TCHAR*)path);
+    }else if(type==2){
+        music_totsec = get_wav_totsec((TCHAR*)path);
+    }else{
+        music_totsec=0;
+    }
     DBG_PRINTF("music_totsec[%d] music_index[%d]\n", music_totsec, music_index);
     //音乐列表中找不到该音乐信息
     if(music_index == -1)

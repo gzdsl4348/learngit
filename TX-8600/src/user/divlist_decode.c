@@ -647,4 +647,11 @@ void divresearch_hostset_recive(){
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
+// 
+void divlist_ipchk_recive(){
+    user_sending_len = divlist_ipchk_ack_build();
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+}
+
+
 

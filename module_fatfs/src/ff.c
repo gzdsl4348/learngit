@@ -94,7 +94,7 @@
 
 #include "ff.h"      /* FatFs configurations and declarations */
 #include "diskio.h"    /* Declarations of low level disk I/O functions */
-
+#include "debug_print.h"
 
 /*--------------------------------------------------------------------------
 
@@ -2036,11 +2036,12 @@ FRESULT chk_mounted (  /* FR_OK(0): successful, !=0: any error occurred */
     return FR_INVALID_DRIVE;
   *rfs = fs = FatFs[vol];        /* Return pointer to the corresponding file system object */
   if (!fs) return FR_NOT_ENABLED;    /* Is the file system object available? */
-
   ENTER_FF(fs);            /* Lock file system */
 
   if (fs->fs_type) {          /* If the logical drive has been mounted */
+    
     stat = disk_status(fs->drv);
+  
     if (!(stat & STA_NOINIT)) {    /* and the physical drive is kept initialized (has not been changed), */
       if (!_FS_READONLY && chk_wp && (stat & STA_PROTECT))  /* Check write protection if needed */
         return FR_WRITE_PROTECTED;
@@ -2055,6 +2056,7 @@ FRESULT chk_mounted (  /* FR_OK(0): successful, !=0: any error occurred */
   fs->drv = LD2PD(vol);        /* Bind the logical drive and a physical drive */
 
   stat = disk_initialize(fs->drv);  /* Initialize low level disk I/O layer */
+
 
   if (stat & STA_NOINIT)        /* Check if the initialization succeeded */
     return FR_NOT_READY;      /* Failed to initialize due to no media or hard error */
@@ -3090,7 +3092,9 @@ FRESULT f_getfree (
 
 
   /* Get drive number */
+  
   res = chk_mounted(&path, fatfs, 0);
+  
   if (res == FR_OK) {
     /* If free_clust is valid, return it without full cluster scan */
     if ((*fatfs)->free_clust <= (*fatfs)->n_fatent - 2) {

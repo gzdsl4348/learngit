@@ -211,13 +211,13 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
         #endif 
         if(colud_f){
              //云包头    
-            xtcp_debug_printf("could cmd send %2x%2x id %x %x %x %x %x %x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE],
-                                                       xtcp_tx_buf[POL_ID_BASE],xtcp_tx_buf[POL_ID_BASE+1],xtcp_tx_buf[POL_ID_BASE+2],
-                                                       xtcp_tx_buf[POL_ID_BASE+3],xtcp_tx_buf[POL_ID_BASE+4],xtcp_tx_buf[POL_ID_BASE+5]);
+            //xtcp_debug_printf("could cmd send %2x%2x id %x %x %x %x %x %x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE],
+            //                                           xtcp_tx_buf[POL_ID_BASE],xtcp_tx_buf[POL_ID_BASE+1],xtcp_tx_buf[POL_ID_BASE+2],
+            //                                           xtcp_tx_buf[POL_ID_BASE+3],xtcp_tx_buf[POL_ID_BASE+4],xtcp_tx_buf[POL_ID_BASE+5]);
             user_could_send(0);
         }
         else{
-            //xtcp_debug_printf("send dat\n");
+            //xtcp_debug_printf("send dat %x%x\n",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
             if(conn.id != g_sys_val.could_conn.id)
                 i_user_xtcp->send(conn,&all_tx_buf[CLH_HEADEND_BASE],user_sending_len);
         }
@@ -498,6 +498,15 @@ uint8_t user_file_mklog(){
         host_info.log_daycnt++;
         hostinfo_fl_write();    //烧写主机信息
         return res;
+    }
+}
+
+void user_getsdcard_state(unsigned *tol_mb,unsigned *free_mb){
+    unsafe{
+    unsigned tol_mb_tmp,free_mb_tmp;
+    i_fs_user->get_sdcard_size(tol_mb_tmp,free_mb_tmp);
+    *tol_mb = tol_mb_tmp;
+    *free_mb = free_mb_tmp;
     }
 }
 

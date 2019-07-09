@@ -7,6 +7,8 @@
 
 extern void printfstr(TCHAR *str);
 
+extern FATFS fatfs;
+
 //fwmode : bit0 - 0 不覆盖
 //                1 覆盖
 static uint8_t f_copy(uint8_t *psrc,uint8_t *pdst, uint8_t *pcurpct, uint8_t *pexit, uint32_t totsize,uint32_t cpdsize,uint8_t fwmode)
@@ -33,9 +35,7 @@ static uint8_t f_copy(uint8_t *psrc,uint8_t *pdst, uint8_t *pcurpct, uint8_t *pe
             fwmode=FA_CREATE_NEW;//不覆盖
 
         res=f_open(fsrc,(const TCHAR*)psrc,FA_READ|FA_OPEN_EXISTING);   //打开只读文件
-        debug_printf("mf_copy f_open src %d\n",res);
         if(res==0)res=f_open(fdst,(const TCHAR*)pdst,FA_WRITE|fwmode);  //第一个打开成功,才开始打开第二个
-        debug_printf("mf_copy f_open dst %d\n",res);
         if(res==0)//两个都打开成功了
         {
             if(totsize==0)//仅仅是单个文件复制
@@ -46,7 +46,12 @@ static uint8_t f_copy(uint8_t *psrc,uint8_t *pdst, uint8_t *pcurpct, uint8_t *pe
             }
             else
                 curpct=(cpdsize*100)/totsize;  //得到新百分比
-
+            // 文件容量判断
+            //debug_printf("cl tol %d size %d\n",fatfs.n_fatent-2,fsrc->fsize/512/64);
+            if((fatfs.free_clust+(fsrc->fsize/512/64))>(fatfs.n_fatent-2)){
+                return 0xFF;
+            }
+            
             *pcurpct = curpct;          //更新百分比
             while(res==0)//开始复制
             {

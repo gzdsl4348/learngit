@@ -90,7 +90,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                     for(uint8_t ch=0; ch<NUM_MEDIA_INPUTS; ch++)
                     {
                         static uint32_t cnt = 0;
-                        uint32_t t1,t2,t3,t4;
+                        uint32_t t1,t2,t3,t4,t5,t6;
                         
                         // 通道是否使能
                         if(g_t_val->audio_txen[ch]==0) continue;
@@ -140,6 +140,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                         // 清buff标志位
                         if(num == 0) ;
                         
+                        //sys_timer :> t2;
                         len = audio_page_build(txbuff,g_t_val->ipaddr,
                                                          g_t_val->audio_format,
                                                          g_t_val->audio_type[ch],
@@ -147,26 +148,25 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                                          g_t_val->aux_timestamp[ch],
                                                          iptmp,udptmp,
                                                          len,ch);
-                        sys_timer :> t3;
+                        //sys_timer :> t3;
 #if NEW_SEND_LIST_MODE_ENABLE
-                        for(uint8_t i=0; i<MAX_SENDCHAN_NUM; i++){
+                        for(uint8_t i=0; i<MAX_SENDCHAN_NUM; i++){ //MAX_SENDCHAN_NUM
                             if(g_t_val->audio_devlist[i].channel_num==0 || 
                                g_t_val->audio_devlist[i].media_list[0].channel!=(ch+1)) continue;
-#if 0
-                            static int send_cnt = 0;
-                            if(send_cnt++ > 500) debug_printf("mp3_frame_send[%d]\n", send_cnt);
-#endif
+                            //sys_timer :> t5;
                             audpage_sum_build(txbuff,
                                               g_t_val->audio_devlist[i].ip,
                                               g_t_val->audio_devlist[i].mac,
-                                              g_t_val->audio_devlist[i].media_list[0].area_contorl);
+                                              g_t_val->audio_devlist[i].media_list[0].area_contorl);                          
+                            //sys_timer :> t6;
+                            //debug_printf("page build %d\n",t6-t5);
                             // Send Packet
                             g_t_val->audio_tx_cnt++;
                             if(!isnull(c_tx_hp))
                                 ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
                             else if(!isnull(i_eth_tx_lp))
-        					    i_eth_tx_lp.send_packet(txbuff,len,ETHERNET_ALL_INTERFACES);                         
-                        }// for end ip info build          
+        					    i_eth_tx_lp.send_packet(txbuff,len,ETHERNET_ALL_INTERFACES);   
+                        }// for end ip info build 
 #else
                         for(uint8_t i=0; i<g_t_val->t_audio_txlist[ch].num_info; i++){
                             audpage_sum_build(txbuff,
@@ -181,12 +181,12 @@ void audio_tx(  client music_decoder_output_if if_mdo,
         					    i_eth_tx_lp.send_packet(txbuff,len,ETHERNET_ALL_INTERFACES);                         
                         }// for end ip info build
 #endif
-                        sys_timer :> t4;
-                        if(cnt++ == 20000 || cnt == 30000)
+                        //sys_timer :> t4;
+                        //if(cnt++ == 20000 || cnt == 30000)
                         //if(cnt++ > 500)
-                        {
-                            debug_printf("mp3_frame_send[%d]:%d %d %d\n", cnt, t2-t1, t3-t2, t4-t3);
-                        }
+                        //{
+                        //    debug_printf("mp3_frame_send[%d]:tol %d pagebuild %d get time %d\n", cnt, t4-t1,t3-t2,t2-t1);
+                        //}
                     }
 			        for(uint8_t ch=0; ch<NUM_MEDIA_INPUTS; ch++){
 						if(sample_error_f[ch]>=2){

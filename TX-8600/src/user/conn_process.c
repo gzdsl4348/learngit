@@ -57,6 +57,10 @@ void udp_xtcp_recive_decode(uint16_t data_len){
         return;
     }
     //
+    //if(xtcp_rx_buf[POL_COM_BASE]==0x06 && xtcp_rx_buf[POL_COM_BASE+1]==0xB4 ){
+    //    debug_printf("\n\nB406 vol %d\n\n",xtcp_rx_buf[POL_DAT_BASE+4+6+32]);
+    //}
+    
     if(((uint16_t *)xtcp_rx_buf)[0]!=0x55AA)
         return;
     //是否透传云命令
@@ -175,6 +179,11 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
         xtcp_rx_buf[POL_COULD_S_BASE] = 1;
         // 云ID转移
         memcpy(&xtcp_rx_buf[POL_ID_BASE],&g_sys_val.tcp_buff_tmp[CLH_CONTORL_ID_BASE],6);
+        //
+        //if(xtcp_rx_buf[POL_COM_BASE]==0x05 && xtcp_rx_buf[POL_COM_BASE+1]==0xB4 ){
+        //    debug_printf("\n\nB405 vol %d %d\n\n",xtcp_rx_buf[POL_DAT_BASE+4+1],xtcp_rx_buf[POL_DAT_BASE+4+2]);
+        //}
+        
         //判断是否透传
         if(!ip_cmp(&g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE],host_info.ipconfig.ipaddr)){
             //透传数据

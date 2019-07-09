@@ -172,8 +172,8 @@ typedef interface file_server_if
     int file_mkdir(uint8_t f_name[n], unsigned n);
     int file_delete(uint8_t f_name[n], unsigned n);
     int file_rename(uint8_t fsrc[n1], unsigned n1, uint8_t fdes[n2], unsigned n2);
-    
-    
+
+    int get_sdcard_size(unsigned     &tol_mb,unsigned &free_mb);
   
     // for file_copy file_move
     int get_fcopy_progress(uint8_t &progress);
@@ -203,6 +203,7 @@ void file_server(server file_server_if if_fs, chanend c_faction);
 
 void file_process(streaming chanend c_sdram, chanend c_faction);
 
+void get_sdcard_size(unsigned     *unsafe tol_mb,unsigned *unsafe free_mb);
 
 #endif
 

@@ -465,13 +465,14 @@ void music_bat_info_recive(){
 //==================================================================================================
 void file_contorl_ack_decode(uint8_t error_code){
     if(g_sys_val.file_ack_cmd!=0){ 
-        xtcp_debug_printf("folar error %d\n",error_code);
+        xtcp_debug_printf("folar ack / error %d\n",error_code);
         if(error_code!=0)
         {
             user_sending_len = onebyte_ack_build(0,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
             user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);    
         }
-        else{
+        else{            
+            xtcp_debug_printf("scuss state \n");
             mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
             user_sending_len = onebyte_ack_build(1,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
             user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);
@@ -508,6 +509,14 @@ void file_bat_contorl_event(uint8_t error_code){
         g_sys_val.file_bat_tim = 0;
         //---------------------------------------------------------------------------------------------------
         contorl = g_sys_val.file_bat_contorl;
+        // 超出容量
+        if(error_code==0xFF){
+            g_sys_val.file_bat_contorl_s = 0;
+            user_sending_len = file_batinfo_build(g_sys_val.file_bat_despatch,music_tmp,2,2,g_sys_val.file_bat_contorl);
+            user_xtcp_send(g_sys_val.file_bat_conn,xtcp_rx_buf[POL_COULD_S_BASE]);            
+            bat_contorlobj_end();
+            return;
+        }
         //批量操作完成
         if(g_sys_val.file_bat_musicinc >= g_sys_val.file_bat_tolnum){
             g_sys_val.file_bat_contorl_s = 0;
@@ -523,6 +532,7 @@ void file_bat_contorl_event(uint8_t error_code){
             g_sys_val.file_bat_resend_tmp[0] = bat_state;
             g_sys_val.file_bat_resend_tmp[1] = file_state;
             g_sys_val.file_bat_resend_tmp[2] = contorl;
+            debug_printf("b807,error state %d\n",file_state);
             user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,music_tmp,bat_state,file_state,contorl);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
             bat_contorlobj_add(file_state);
@@ -659,6 +669,12 @@ void bat_filecontorl_resend_tim(){
             }
         }
     }
+}
+
+// SD卡容量查询 B809
+void sdcard_sizechk_recive(){
+    user_sending_len = sdcard_sizechk_build();
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);   
 }
 
 //------------------------------------------------------

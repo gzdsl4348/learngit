@@ -51,7 +51,9 @@ void sysset_divfound_recive();
 // 配置所选搜索设备 目标主机IP
 void divresearch_hostset_recive();
 //-----------------------------------------------------
-//
+// 查找指定mac的IP
+void divlist_ipchk_recive();
+
 void divfound_over_timeinc();
 //
 void divsrc_sending_decode(uint8_t list_num);

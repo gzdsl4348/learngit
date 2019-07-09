@@ -1046,6 +1046,19 @@ uint16_t file_batinfo_build(uint8_t *patch,uint8_t *file,uint8_t contorl,uint8_t
 }
 
 //==========================================================================================
+// sd卡容量查询 B809
+//==========================================================================================
+uint16_t sdcard_sizechk_build(){
+    unsigned tol_mb,free_mb;
+    user_getsdcard_state(&tol_mb,&free_mb);
+    xtcp_tx_buf[SDCARD_CHK_STATE] = g_sys_val.sd_state;
+    memcpy(&xtcp_tx_buf[SDCARD_CHK_TOLMB],&tol_mb,4);
+    memcpy(&xtcp_tx_buf[SDCARD_CHK_FREEMB],&free_mb,4);
+    //
+    return build_endpage_decode(SDCARD_CHK_LEN,SDCARD_SIZECHK_B809_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
+
+//==========================================================================================
 // 系统进度条回复 B805
 //==========================================================================================
 uint16_t file_progress_build(uint8_t state,uint8_t progress,uint8_t id[],uint8_t *name,uint8_t *patch)
@@ -1056,8 +1069,6 @@ uint16_t file_progress_build(uint8_t state,uint8_t progress,uint8_t id[],uint8_t
     memcpy(&xtcp_tx_buf[POL_DAT_BASE+2+PATCH_NAME_NUM],name,MUSIC_NAME_NUM);
     return build_endpage_decode(POL_DAT_BASE+2+PATCH_NAME_NUM+MUSIC_NAME_NUM,MUSIC_PROCESS_BAR_CMD,id);
 }
-
-
 
 //==========================================================================================
 // 系统状态在线查询回复
@@ -1509,4 +1520,33 @@ uint16_t music_batrechk_build(){
     }
     return build_endpage_decode(POL_DAT_BASE+4,MUSIC_B807_BATRECHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
+
+// 获取指定IP列表
+uint16_t divlist_ipchk_ack_build(){
+    uint8_t tol_num;
+    div_node_t *div_tmp_p;
+    tol_num = xtcp_rx_buf[POL_DAT_BASE];
+    xtcp_tx_buf[POL_DAT_BASE] = tol_num;
+    uint16_t dat_base=POL_DAT_BASE+1;
+    for(uint8_t i=0;i<tol_num;i++){
+        memcpy(&xtcp_tx_buf[dat_base],&xtcp_rx_buf[dat_base],6);
+        //找设备
+        div_tmp_p = get_div_info_p(&xtcp_rx_buf[dat_base]);
+        dat_base+=6;
+        if(div_tmp_p==null){
+            xtcp_tx_buf[dat_base] = 0;
+            dat_base++;
+            memset(&xtcp_tx_buf[dat_base],0x00,4);
+            dat_base +=4;
+        }
+        else{
+            xtcp_tx_buf[dat_base]= div_tmp_p->div_info.div_state;
+            dat_base++;
+            memcpy(&xtcp_tx_buf[dat_base],div_tmp_p->div_info.ip,4);
+            dat_base +=4;
+        }
+    }
+    return build_endpage_decode(dat_base,DIVLIST_IPCHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
+
 

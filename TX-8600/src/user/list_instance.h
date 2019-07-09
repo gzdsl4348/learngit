@@ -10,17 +10,17 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x21)
+#define VERSION_L    (0x22)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (21)
+#define VERSION_TEN_L    (22)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
 #define LIST_TEXT_DEBUG 0
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

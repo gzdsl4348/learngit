@@ -98,6 +98,9 @@
 #define MUSIC_BAT_STATE_CMD     0xB807
 
 #define MUSIC_B807_BATRECHK_CMD 0xB808
+
+#define SDCARD_SIZECHK_B809_CMD 0xB809
+
 //----------------------------------------------------
 // 列表更新消息
 #define LISTINFO_UPDATA_CMD     0xBF02
@@ -162,6 +165,9 @@
 #define APP_CONNECTHAND_CMD     0xB90C
 
 #define APP_REGISTER_CONTORL    0xB90D
+
+// 控制面板
+#define DIVLIST_IPCHK_CMD       0xBA04      
 
 // 内部测试指令
 #define TEXT_TXPAGE_GET_CMD		0xC001
@@ -756,6 +762,14 @@
 #define MUSIC_BATINFO_FILE               (MUSIC_BATINFO_PATCH+PATCH_NAME_NUM)   //64 文件名
 #define MUSIC_BATINFO_LEN_END            (MUSIC_BATINFO_FILE+MUSIC_NAME_NUM)
 
+//====================================================================================================
+// 音乐 批量操作应答                      0xB809
+//====================================================================================================
+#define SDCARD_CHK_STATE                 (POL_DAT_BASE)                 //1 sd卡状态
+#define SDCARD_CHK_TOLMB                 (SDCARD_CHK_STATE+1)           //4 sd卡总mb
+#define SDCARD_CHK_FREEMB                (SDCARD_CHK_TOLMB+4)           //4 sd卡剩余mb
+
+#define SDCARD_CHK_LEN                   (SDCARD_CHK_FREEMB+4)   
 //====================================================================================================
 // 账户登录设置 地址
 //====================================================================================================

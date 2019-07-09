@@ -112,7 +112,7 @@ static SD_DRESULT send_cmd(BYTE ch_num, BYTE cmd, DWORD arg, RESP_TYPE resp_type
     unsigned int dat_stat, datbytes_len, datbyte_cnt, dat;
     unsigned char R;
     crc0 = 0;
-TRY{    
+//TRY{    
     fl = __LINE__;
     //ch_num = 0;
     //发送CMD指令,在每个CMD_BIT宏定义之间进行参数初始化
@@ -377,10 +377,11 @@ TRY{
     }
     fl = __LINE__;
     return RES_OK;
-} CATCH(e) {
+//} 
+/*CATCH(e) {
     debug_printf("SDIO exception: type=%d data=%d %d %d\n",e.type, e.data, fl, i);
     return 1;
-}
+}*/
     return 1;
 }
 

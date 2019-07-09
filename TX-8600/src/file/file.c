@@ -17,11 +17,10 @@ extern void update_music_filelist(uint8_t path[], uint8_t is_del);
 extern unsigned char mf_typetell(TCHAR *fname);
 static int file_upload_start(uint8_t *fname);
 
-static FATFS fatfs;
+FATFS fatfs;
 int my_fatfs_init()
 {
     int res= f_mount(0, &fatfs);
-    
     if(res != FR_OK)
     {
         g_fopr_mgr.sdcard_status = SD_CARD_NO_FOUND;
@@ -34,7 +33,6 @@ int my_fatfs_init()
         sd_scan_music_file(NULL);
         debug_printf("end sd_scan_music_file\n");
         g_fopr_mgr.sdcard_status = SD_CARD_OK;
-
 #if 0
         TCHAR name[4] = {'1','/','1',0};
         
@@ -56,6 +54,11 @@ int my_fatfs_init()
 
 }
 
+void get_sdcard_size(unsigned long *tol_mb,unsigned long *free_mb){
+    *tol_mb = (fatfs.n_fatent-2)*fatfs.csize/2048;  // 族总数*族块数*块字节数 = byte， byte/1024/1024= mb
+    *free_mb =  (fatfs.free_clust-2)*fatfs.csize/2048;   
+}
+
 void sdcard_hot_swap_check()
 {
     if(disk_status(0) != 0)
@@ -69,8 +72,6 @@ void sdcard_hot_swap_check()
         my_fatfs_init();
     }
 }
-
-
 
 f_opr_mgr_t g_fopr_mgr = {SD_CARD_NO_FOUND};
 
@@ -120,16 +121,16 @@ void fopr_handle()
             error = mf_open_log(p_fopr_file->fsrc,p_fopr_file->fdes);
             // 日志信息无需返回提示
             pitem->log_event = FOR_LOGIDLE;
-            return; 
+            break; 
         }
         case FOR_LOGADD:{
             error = mf_add_loginfo(p_fopr_file->log_info,p_fopr_file->len);
             // 日志信息无需返回提示
             pitem->log_event = FOR_LOGIDLE;
-            return;  
+            break;  
         }
     }
-        
+    
     if(pitem->result != FOR_IDLE)
         return;
 

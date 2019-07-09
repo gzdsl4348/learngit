@@ -90,9 +90,18 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 res = FOR_SUCCEED;
                 break;
             }
+            case if_fs.get_sdcard_size(unsigned &tol_mb,unsigned &free_mb)-> int res:
+                unsafe{
+                unsigned long tol_mb_tmp,free_mb_tmp;
+                get_sdcard_size(&tol_mb_tmp,&free_mb_tmp);
+                tol_mb = tol_mb_tmp;
+                free_mb = free_mb_tmp;
+                }
+                break;
             case if_fs.file_mkdir(uint8_t f_name[n], unsigned n) -> int res:
             {
                 res = FOR_SUCCEED;
+                debug_printf("mkdit event %d\n",fopr.event);
                 if(fopr.event != FOE_IDLE)
                 {
                     res = FILE_BUSY_DECODE;
@@ -275,7 +284,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 memcpy(fopr.data.file.fdes, old_fname, oldlen);
                 fopr.log_event = FOR_LOGMK;
                 debug_printf("scan flag %d\n",file_scaning_flag);
-                if(file_scaning_flag==0){
+                if(file_scaning_flag==0 && sdcard_status==0){
                     c_faction <: (char)1;
                     res = FOR_SUCCEED;
                 }
@@ -288,8 +297,9 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 fopr.data.file.len =len;
                 fopr.log_event = FOR_LOGADD;                  
                 //debug_printf("scan flag %d\n",file_scaning_flag);
-                if(file_scaning_flag==0)
-                    c_faction <: (char)1;
+                if(file_scaning_flag==0 && sdcard_status){                    
+                    c_faction <: (char)1;        
+                }
                 break;
             }
             case if_fs.get_notify(file_server_notify_data_t &data):
@@ -366,6 +376,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
 
                 if(need2action)
                 {
+                    //debug_printf("event in\n");
                     c_faction <: (char)1;
                     need2action = 0;
                 }

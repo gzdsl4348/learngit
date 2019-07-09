@@ -103,6 +103,9 @@ uint16_t file_progress_build(uint8_t state,uint8_t progress,uint8_t id[],uint8_t
 // 批量处理回复
 uint16_t file_batinfo_build(uint8_t *patch,uint8_t *file,uint8_t contorl,uint8_t bat_state,uint8_t state);
 
+// sd卡容量查询 B809
+uint16_t sdcard_sizechk_build();
+
 //注册回复
 uint16_t host_resiged_ack_build(uint8_t state);
 
@@ -154,6 +157,9 @@ uint16_t dns_couldip_chk_build();
 
 //批量处理恢复
 uint16_t music_batrechk_build();
+
+// 获取指定IP列表
+uint16_t divlist_ipchk_ack_build();
 
 #if defined(__cplusplus) || defined(__XC__)
 }

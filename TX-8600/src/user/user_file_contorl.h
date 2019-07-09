@@ -39,6 +39,8 @@ void file_bat_contorl_event(uint8_t error_code);
 
 void bat_filecontorl_resend_tim();
 
+void sdcard_sizechk_recive();
+
 /*
 *@description: 批量处理音乐断线查询
 *@Author: ljh

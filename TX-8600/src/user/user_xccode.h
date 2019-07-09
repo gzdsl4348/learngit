@@ -109,6 +109,8 @@ void user_loginfo_add(uint8_t mac[],uint8_t ip[]);
 
 void user_arp_clear(xtcp_ipaddr_t ipaddr);
 
+void user_getsdcard_state(unsigned *tol_mb,unsigned *free_mb);
+
 
 #endif //__USER_XCCODE_H_
 

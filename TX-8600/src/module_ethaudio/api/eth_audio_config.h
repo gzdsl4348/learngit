@@ -13,7 +13,7 @@ extern "C" {
 #define NUM_MEDIA_INPUTS    48
 
 //--------Audio Eth MAX TX Chanend---------
-#define MAX_SENDCHAN_NUM    64
+#define MAX_SENDCHAN_NUM    100
 
 //--------Audio Eth Wait Packet--------
 #define AUDIO_WAIT_PAGE     2

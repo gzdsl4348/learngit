@@ -894,6 +894,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 		 			case XTCP_RECV_DATA:
                         //===================================================================================
+
+                        
                         #if 0
                         //获取真实数据
                         xtcp_debug_printf("could rec len %d\n",data_len);
@@ -987,7 +989,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             if(time_count>(10-1)){
                 time_count=0;
 				//
-				second_process();
+		    	second_process();
                 //
                 if(g_sys_val.log_waitmk_f){
                     debug_printf("delay mk log\n");
