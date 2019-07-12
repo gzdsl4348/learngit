@@ -920,17 +920,21 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 					case XTCP_RESEND_DATA:	
 						if(g_sys_val.ipchk_conn.id==conn.id){
-							g_sys_val.ipchk_ipconflict_f = 0;
-							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
+                            if(g_sys_val.ipchk_ipconflict_f){
+    							g_sys_val.ipchk_ipconflict_f--;
+    							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
+                            }
 						}
-                        //user_xtcp_send(conn);
-                        xtcp_resend_decode();
-						xtcp_debug_printf("resend_data:%x\n",conn.id);
-						break;
+                        else{
+                            //user_xtcp_send(conn);
+                            xtcp_resend_decode();
+                        }                        
+                        xtcp_debug_printf("resend_data:%x\n",conn.id);
+                        break;
 					case XTCP_SENT_DATA:
 						// ip ³åÍ»
 						if(g_sys_val.ipchk_conn.id==conn.id){
-							g_sys_val.ipchk_ipconflict_f = 1;
+							g_sys_val.ipchk_ipconflict_f = 2;
 							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
 						}
                         //-------------------------------------------------

@@ -37,8 +37,10 @@ void conn_decoder(){
     for(uint16_t i=0;i<fun_list_len;i++){
         if(((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]==rec_fun_lis[i].cmd){
             conn_list_tmp = get_conn_info_p(conn.id);
-            if((conn_list_tmp != null)&&(ip_cmp(conn_list_tmp->conn.remote_addr,conn.remote_addr))){
-                conn_list_tmp->over_time=0;
+            if(conn_list_tmp!=null){
+                if(ip_cmp(conn_list_tmp->conn.remote_addr,conn.remote_addr)){
+                    conn_list_tmp->over_time=0;
+                }
             }
             rec_fun_lis[i].cmd_fun();
         }
@@ -478,8 +480,9 @@ void broadcast_for_minute(){
 //Ã¿15Ãë¼ì²âIP³åÍ»
 void ipconflict_for_15s(){
     g_sys_val.ipchk_timecnt++;
-    if(g_sys_val.ipchk_timecnt>15){
-        user_arp_clear(g_sys_val.ipchk_conn.remote_addr);
+    if(g_sys_val.ipchk_timecnt>10){
+        if(g_sys_val.ipchk_ipconflict_f==2)
+            user_arp_clear(g_sys_val.ipchk_conn.remote_addr);
 		g_sys_val.ipchk_timecnt=0;
         memset(xtcp_tx_buf,0,64);
         user_sending_len = 64;

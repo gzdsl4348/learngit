@@ -444,7 +444,7 @@ void file_process(streaming chanend c_sdram, chanend c_faction)
     
     tmr :> timeout;
     timeout += FILE_TRAINING_TICK;
-    
+    unsigned t1,t2;
     while(1)
     {
         select{
@@ -452,10 +452,13 @@ void file_process(streaming chanend c_sdram, chanend c_faction)
             {
 
                 sdcard_hot_swap_check();
-                
                 music_file_handle(c_sdram, sdram_state);
 
+                tmr :>t1;
                 upload_handle(1);
+                tmr :>t2;
+                if(t2-t1>1000)
+                    debug_printf("\n\nsd tim %d\n\n",t2-t1);
                 
                 tmr :> timeout;
                 timeout += FILE_TRAINING_TICK;

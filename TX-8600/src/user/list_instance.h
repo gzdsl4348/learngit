@@ -10,17 +10,17 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x22)
+#define VERSION_L    (0x23)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (22)
+#define VERSION_TEN_L    (23)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
 #define LIST_TEXT_DEBUG 0
 
-#define NO_NEED_REGISTER 1
+#define NO_NEED_REGISTER 0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -43,9 +43,9 @@ extern "C" {
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
 // 最大UDP连接数
-#define MAX_UDP_CONNET	200
+#define MAX_UDP_CONNET	180
 
-#define MAX_CONNET_LIST	(20) //支持同时20部机建立任务
+#define MAX_CONNET_LIST	(10) //支持同时20部机建立任务
 
 #define MAX_ACCOUNT_CONNET (MAX_ACCOUNT_NUM) //同时支持30个控制机
 
@@ -54,7 +54,7 @@ extern "C" {
 
 #define DIV_SEND_NUM    10  //每包发送设备列表数
 //最大分区
-#define MAX_AREA_NUM    64
+#define MAX_AREA_NUM    100
 // 设备所属最大分区
 #define MAX_DIV_AREA    10
 //
