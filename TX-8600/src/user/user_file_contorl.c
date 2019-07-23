@@ -681,6 +681,7 @@ void sdcard_sizechk_recive(){
 void wav_modeset_recive(){
     host_info.wav_mode = xtcp_rx_buf[POL_DAT_BASE];
     hostinfo_fl_write();    //烧写主机信息
+    user_set_wavmode();
     debug_printf("set wav %d\n",host_info.wav_mode);
 }
 

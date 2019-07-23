@@ -17,6 +17,9 @@ extern void update_music_filelist(uint8_t path[], uint8_t is_del);
 extern unsigned char mf_typetell(TCHAR *fname);
 static int file_upload_start(uint8_t *fname);
 
+extern void scan_musictosec_init();
+extern void scan_musictosec_clear();
+
 FATFS fatfs;
 int my_fatfs_init()
 {
@@ -24,6 +27,7 @@ int my_fatfs_init()
     if(res != FR_OK)
     {
         g_fopr_mgr.sdcard_status = SD_CARD_NO_FOUND;
+        scan_musictosec_clear();
         //debug_printf("f_mount error:%d\n", res);
     }
     else
@@ -32,7 +36,8 @@ int my_fatfs_init()
         debug_printf("start sd_scan_music_file\n");
         sd_scan_music_file(NULL);
         debug_printf("end sd_scan_music_file\n");
-        g_fopr_mgr.sdcard_status = SD_CARD_OK;
+        g_fopr_mgr.sdcard_status = SD_CARD_OK;        
+        scan_musictosec_init();
 #if 0
         TCHAR name[4] = {'1','/','1',0};
         
@@ -347,9 +352,7 @@ void upload_handle(int interval_ms)
             
             f_close(pf_upload);
             realloc_upload_buff();
-            
-            
-            
+                        
             //通知上层应用，结束
             gp_for_upload->state = FOU_STATE_END;
             

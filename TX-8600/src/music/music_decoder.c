@@ -254,9 +254,10 @@ static unsigned char mp3_get_info(TCHAR *pname, MP3_Info *p_info)
                 else 
                 {
                     res=0XFE; //Œ¥’“µΩÕ¨≤Ω÷°
-                    offset++;
-                    br -= offset;
-                    memmove(buf, buf+offset, br);
+                    break;
+                    //offset++;
+                    //br -= offset;
+                    //memmove(buf, buf+offset, br);
                 }
                 /************************************************************************/
             }                

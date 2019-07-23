@@ -156,7 +156,7 @@ typedef struct
     char event;             //F_OPR_EVENT_E
     char result;            //F_OPR_RESULT_E
     char error_code;        
-    
+    char scan_file_over;
     char uplaod_reply_type;
     char uplaod_reply_data;
 }file_server_notify_data_t;
@@ -191,6 +191,8 @@ typedef interface file_server_if
     int log_mklog(uint8_t new_fname[newlen],unsigned newlen,uint8_t old_fname[oldlen],unsigned oldlen);
 
     int log_loginfo_add(uint8_t log_info[len],unsigned len);
+    
+    void setwav_mode(uint8_t wav_mode);
 
     //·µ»Ø×´Ì¬
     [[clears_notification]] void get_notify(file_server_notify_data_t &data);

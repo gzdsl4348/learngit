@@ -13,11 +13,15 @@
 extern kfifo_t upload_fifo;
 
 extern uint8_t file_scaning_flag;
+extern uint8_t file_scaning_overf;
+extern uint8_t g_wav_mode;
+
+void scan_musictosec_process(); //2MS
+
 
 #define FILE_SERVER_TRAINING  (50000)//0.5ms
 
 #define FILE_TRAINING_TICK  (100000)//2ms
-
 
 uint8_t file_busy_decode(){
     debug_printf("file control busy \n");
@@ -26,6 +30,8 @@ uint8_t file_busy_decode(){
 
 #define FILE_BUSY_DECODE  file_busy_decode()
 
+static streaming chanend * unsafe flserver_sdram;
+static s_sdram_state flserve_sdram_state;
 
 [[combinable]]
 void file_server(server file_server_if if_fs, chanend c_faction)
@@ -301,7 +307,10 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     c_faction <: (char)1;        
                 }
                 break;
-            }
+            }            
+            case if_fs.setwav_mode(uint8_t wav_mode):
+                g_wav_mode = wav_mode;
+                break;
             case if_fs.get_notify(file_server_notify_data_t &data):
             {
                 //file_server_notify_data_t data;
@@ -309,7 +318,8 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 data.result = fopr.result;
                 data.error_code = fopr.error_code;
                 data.sdcard_status = get_sdcard_status();
-
+                data.scan_file_over = file_scaning_overf;
+                file_scaning_overf = 0;
                 for(uint8_t i=0; i<MUSIC_CHANNEL_NUM; i++)
                 {
                     data.music_status[i] = decoder_status[i];
@@ -346,7 +356,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 
                 break;
             }
-            case tmr when timerafter(timeout) :> void:
+            case tmr when timerafter(timeout) :> void://0.5ms
             {
 
                 // after music_file_handle()
@@ -373,14 +383,15 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     sdcard_status = get_sdcard_status();
                     if_fs.notify2user();
                 }
-
+                if(file_scaning_overf)
+                    if_fs.notify2user();
                 if(need2action)
                 {
                     //debug_printf("event in\n");
                     c_faction <: (char)1;
                     need2action = 0;
                 }
-                
+                                
                 tmr :> timeout;
                 timeout += FILE_SERVER_TRAINING;                    
                 break;
@@ -444,7 +455,7 @@ void file_process(streaming chanend c_sdram, chanend c_faction)
     
     tmr :> timeout;
     timeout += FILE_TRAINING_TICK;
-    unsigned t1,t2;
+    
     while(1)
     {
         select{
@@ -454,11 +465,9 @@ void file_process(streaming chanend c_sdram, chanend c_faction)
                 sdcard_hot_swap_check();
                 music_file_handle(c_sdram, sdram_state);
 
-                tmr :>t1;
                 upload_handle(1);
-                tmr :>t2;
-                if(t2-t1>1000)
-                    debug_printf("\n\nsd tim %d\n\n",t2-t1);
+
+                scan_musictosec_process();
                 
                 tmr :> timeout;
                 timeout += FILE_TRAINING_TICK;

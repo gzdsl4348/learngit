@@ -206,7 +206,7 @@ typedef struct g_sys_val_t{
     uint8_t gateway_time;
     uint8_t gateresend_inc;
     // SD¿¨×´Ì¬
-    uint8_t sd_state;
+    uint8_t sd_state; //0 Õý³£  1°Î³ö
     // sys timer
     unsigned sys_timinc;
     // ----------------------------------------------

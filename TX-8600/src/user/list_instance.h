@@ -166,7 +166,7 @@ typedef struct host_info_t{
     uint8_t sys_dhcp_state;
     uint8_t log_daycnt;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];
-    uint8_t wav_mode;
+    uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
 }host_info_t;
 
 extern host_info_t host_info;
@@ -261,7 +261,7 @@ typedef struct solu_info_t{
     uint8_t id;
     uint8_t data_en;     //方案是否在有效期内
     uint8_t en;     //方案生效失效
-    uint8_t state;  //方案是否为空
+    uint8_t state;  //空方案状态为 0xFF
     uint8_t name[DIV_NAME_NUM];
     date_info_t begin_date;
     date_info_t end_date;

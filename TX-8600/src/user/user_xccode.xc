@@ -482,6 +482,12 @@ void user_xtcp_debugudpsend(uint8_t buf[],unsigned len){
 	}
 }
 
+void user_set_wavmode(){
+    unsafe{
+        i_fs_user->setwav_mode(host_info.wav_mode);  // ÉèÖÃwavÄ£Ê½
+    }
+}
+
 uint8_t user_file_mklog(){
     unsafe{
         uint8_t res;

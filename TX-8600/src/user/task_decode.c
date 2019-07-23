@@ -47,8 +47,9 @@ void timer_tasklist_read(){
     for(uint16_t i=1;i<MAX_HOST_TASK;i++){
         timer_task_read(&g_tmp_union.task_allinfo_tmp,i);
         timetask_list.timetask[i].id = g_tmp_union.task_allinfo_tmp.task_coninfo.task_id;
-        //判断错误任务 复位任务
-        if((timetask_list.timetask[i].id!=0xFFFF)&&(timetask_list.timetask[i].id != i)){
+        //判断错误任务 复位任务        判断方案状态
+        if((timetask_list.timetask[i].id!=0xFFFF && timetask_list.timetask[i].id!=i) || 
+            (solution_list.solu_info[g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn].state==0xFF)){
             //xtcp_debug_printf("write task %d\n",timetask_list.timetask[i].id);
             g_tmp_union.task_allinfo_tmp.task_coninfo.task_id=0xFFFF;
             g_tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum=0x00;
@@ -264,9 +265,13 @@ void task_10hz_mutich_play(){
     if(!g_sys_val.play_ok)
         return;
     g_sys_val.play_ok = 0;
+    //
     for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
         if(g_sys_val.task_wait_state[j]){
             g_sys_val.task_wait_state[j] = 0;
+            // SD卡拔出 不播放任务
+            if(g_sys_val.sd_state) continue;
+            // 扫描该播放的任务
             for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
                 if(timetask_now.ch_state[i]==0xFF){
                     xtcp_debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
@@ -1067,7 +1072,9 @@ void task_dtinfo_config_recive(){
             if(g_sys_val.task_con_state == 0){
                 // 日志记录 
                 log_timetask_config(config_state);
-                mes_send_taskinfo(&g_sys_val.tmp_union.task_allinfo_tmp);
+                mes_send_taskinfo(&g_sys_val.tmp_union.task_allinfo_tmp);           
+                if(g_sys_val.task_delete_s || g_sys_val.task_creat_s)
+                    mes_send_suloinfo(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn);
             }
             //--------------------------------------------------------------------------------
             xtcp_debug_printf("task dtinfo config over\n");

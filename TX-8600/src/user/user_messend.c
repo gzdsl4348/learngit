@@ -52,17 +52,19 @@ void mes_send_decode(){
 				user_sending_len = mes_send_list.len[mes_send_list.rpttr];
 				build_endpage_forid(user_sending_len,mes_send_list.messend_conn[mes_send_list.send_inc].could_id);
 				//
-                debug_printf("\n\nmessend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
-                debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
+				/*
+                xtcp_debug_printf("\n\nmessend:%x%x    ",xtcp_tx_buf[POL_COM_BASE+1],xtcp_tx_buf[POL_COM_BASE]);
+                xtcp_debug_printf("ip : %d,%d,%d,%d\n",mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[0],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[1],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[2],
                                                   mes_send_list.messend_conn[mes_send_list.send_inc].conn.remote_addr[3]);
-                debug_printf("mac : %x,%x,%x,%x,%x,%x\n",mes_send_list.messend_conn[mes_send_list.send_inc].could_id[0],
+                xtcp_debug_printf("mac : %x,%x,%x,%x,%x,%x\n",mes_send_list.messend_conn[mes_send_list.send_inc].could_id[0],
                                                             mes_send_list.messend_conn[mes_send_list.send_inc].could_id[1],
                                                             mes_send_list.messend_conn[mes_send_list.send_inc].could_id[2],
                                                             mes_send_list.messend_conn[mes_send_list.send_inc].could_id[3],
                                                             mes_send_list.messend_conn[mes_send_list.send_inc].could_id[4],
                                                             mes_send_list.messend_conn[mes_send_list.send_inc].could_id[5]);
+                */
                 user_xtcp_send(mes_send_list.messend_conn[mes_send_list.send_inc].conn,mes_send_list.messend_conn[mes_send_list.send_inc].could_f);
                 mes_send_list.send_inc++;
                 mes_send_list.tim_inc = 0;
@@ -85,10 +87,8 @@ void taskview_page_messend(){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
 	mes_send_list.len[mes_send_list.wrptr] = taskview_page_build(TASK_PAGESHOW_B312_CMD);
-    //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
 	mes_send_list.wrptr++;
-	
 }
 
 // 信息列表更新通知
@@ -104,8 +104,12 @@ void mes_send_listinfo(uint8_t type,uint8_t need_send){
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
 	mes_send_list.wrptr++;
+    
+    xtcp_debug_printf("iin\n ");
 
 	taskview_page_messend();
+    
+    xtcp_debug_printf("oout \n");
     //
     if(need_send)
         mes_send_decode();

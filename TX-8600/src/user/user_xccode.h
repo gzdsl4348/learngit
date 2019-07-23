@@ -111,6 +111,7 @@ void user_arp_clear(xtcp_ipaddr_t ipaddr);
 
 void user_getsdcard_state(unsigned *tol_mb,unsigned *free_mb);
 
+void user_set_wavmode();
 
 #endif //__USER_XCCODE_H_
 

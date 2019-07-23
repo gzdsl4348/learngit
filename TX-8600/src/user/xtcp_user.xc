@@ -427,15 +427,15 @@ void user_fldat_init(){
 	//MAC 写入
 	// 72 4B
 	#if 0
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,tmp_union.buff);
+    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
     //
     host_info.mac[0]=0x42;
     host_info.mac[1]=0x4C;
     host_info.mac[2]=0x45;
     host_info.mac[3]=0x00;
-    host_info.mac[4]=0x71;
-    host_info.mac[5]=0x3B;
+    host_info.mac[4]=0x72;
+    host_info.mac[5]=0x45;
     
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(USER_DAT_SECTOR);
@@ -485,7 +485,7 @@ void user_fldat_init(){
     //-----------------------------------------------------------------------------------------------------
     // 方案信息初始化
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++)
-        solution_list.solu_info[i].state=0xFF;
+        solution_list.solu_info[i].state=0xFF;  // 空方案状态为 0xFF
     //solution_list.solu_info[0].state=0x00;
     //solution_list.solu_info[0].id=0xFF;
     sys_dat_write((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST);
@@ -543,6 +543,7 @@ void sys_info_init(){
     //
     conn_list_init();   //链表初始化
     sys_gobalval_init(); //全局变量初始化
+ 
     }//unsafe
 }
 
@@ -637,6 +638,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	sys_info_init();	    //系统信息 列表 获取及初始化
     ds1302_init();          //ds1302 及日期初始化
     maschine_code_init();   //生成机器码
+    if_fs.setwav_mode(host_info.wav_mode);  // 设置wav模式
 	//----------------------------------------------------------------------
 	// Config xtcp ethernet info
 	//----------------------------------------------------------------------
@@ -737,6 +739,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 
     // 初始化发送buff指针
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
+    // 初始化rx指针
+    xtcp_rx_buf = all_rx_buf;
+
 
     //====================================================================================================
 	//main loop process 
@@ -772,7 +777,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 }
                 else
                 {
-                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d \n", data.sdcard_status, data.event, data.result, data.error_code);
+                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
+                    data.error_code,data.scan_file_over);
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;
                         xtcp_debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
@@ -786,6 +792,11 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         if(data.sdcard_status)
                             stop_all_timetask();
                             user_disptask_refresh();
+                    }
+                    if(data.scan_file_over){
+                        xtcp_debug_printf("in ");
+                        mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
+                        xtcp_debug_printf("out\n");
                     }
                     if(data.result!=255){
                         file_bat_contorl_event(data.error_code);
