@@ -213,6 +213,7 @@ void task_music_config_play(uint8_t ch,uint16_t id){
     timetask_now.task_musicplay[ch].music_tol = g_tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum;   //音乐总数 
     timetask_now.task_musicplay[ch].time_inc = 0;
     timetask_now.task_musicplay[ch].music_inc = 0;
+    timetask_now.task_musicplay[ch].sulo_id = g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn;
     memcpy(timetask_now.task_musicplay[ch].name,g_tmp_union.task_allinfo_tmp.task_coninfo.task_name,DIV_NAME_NUM);
     timetask_now.task_musicplay[ch].time_info = g_tmp_union.task_allinfo_tmp.task_coninfo.time_info;
     // 播放任务
@@ -1051,7 +1052,8 @@ void task_dtinfo_config_recive(){
                                g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.dura_time,
                                g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn,g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.dateinfo)
                                &&(g_sys_val.task_delete_s==0)){
-                g_sys_val.task_con_state |= 16;
+               if(g_sys_val.task_creat_s==0)
+                    g_sys_val.task_con_state |= 16;
                 g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.task_state = 0;
                 timetask_list.timetask[g_sys_val.task_con_id].task_en=0;
             }
@@ -1101,6 +1103,7 @@ void task_bat_config_recive(){
     uint16_t dat_base = TASK_BAT_TASKID;
     uint16_t id;
     uint8_t beg_hour,beg_minute,beg_second;
+    uint8_t solu_id;
     unsigned rectime,tasktime;
 
     rectime = (xtcp_rx_buf[TASK_BAT_BEGTIME]*3600)+(xtcp_rx_buf[TASK_BAT_BEGTIME+1]*60)+xtcp_rx_buf[TASK_BAT_BEGTIME+2];
@@ -1119,6 +1122,7 @@ void task_bat_config_recive(){
             break;
         }
         timer_task_read(&g_tmp_union.task_allinfo_tmp,id);
+        solu_id = g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn;
         tasktime = (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour*3600)+
                    (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute*60)+g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
         // 删除任务
@@ -1174,6 +1178,19 @@ void task_bat_config_recive(){
         id = xtcp_rx_buf[dat_base]|(xtcp_rx_buf[dat_base+1]<<8);
         timer_task_read(&g_tmp_union.task_allinfo_tmp,id);
         //
+        if(tasktime_decode(g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour,
+                           g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute,
+                           g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.second,
+                           g_tmp_union.task_allinfo_tmp.task_coninfo.dura_time,
+                           g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn,
+                           g_tmp_union.task_allinfo_tmp.task_coninfo.dateinfo)){
+            // 禁止与保存任务
+            timer_task_read(&g_tmp_union.task_allinfo_tmp,id);
+            timetask_list.timetask[id].task_en=0;
+            g_tmp_union.task_allinfo_tmp.task_coninfo.task_state=0;
+            timer_task_write(&g_tmp_union.task_allinfo_tmp,id);
+        }
+        /*
         beg_time = (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.hour*3600)+
                    (g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.minute*60)+
                    g_tmp_union.task_allinfo_tmp.task_coninfo.time_info.second;
@@ -1199,6 +1216,7 @@ void task_bat_config_recive(){
             }
             task_p = task_p->all_next_p;
         }
+        */
         // 下一个id
         dat_base+=2;
     }
@@ -1209,6 +1227,9 @@ void task_bat_config_recive(){
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
     mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
     taskview_page_messend();
+    
+    mes_send_suloinfo(solu_id);
+
     // 日志记录
     log_timetask_config(5);
 }
@@ -1248,7 +1269,7 @@ void task_en_recive(){
                            g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn,
                            dateinfo
                            )){
-            user_sending_len = onebyte_ack_build(0,TASK_EN_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+            user_sending_len = onebyte_ack_build(2,TASK_EN_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
             return;
         }
@@ -1303,6 +1324,18 @@ void task_playtext_recive(){
         goto play_text_fail;
     }
     //--------------------------------------------------------------
+    //检查任务冲突
+    uint8_t cnt=0;
+    for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
+        if(timetask_now.ch_state[j]!=0xFF && timetask_now.task_musicplay[j].sulo_id==g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn){
+            cnt++;
+            if(cnt>=SOLU_MAX_PLAYCH){
+                user_sending_len =  id_ack_build(id,2,TASK_PLAYTEXT_CMD);
+                user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+                return;
+            }
+        }
+    }
     // 查找任务
     uint8_t play_flag=0;
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){

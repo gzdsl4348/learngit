@@ -52,7 +52,6 @@ static int itoa(unsigned n, char *buf, unsigned base, int fill)
 
 void debug_printf(char * fmt, ...)
 {
-    return;
   char width = 0;
   char * marker;
   int intArg;

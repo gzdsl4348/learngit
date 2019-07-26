@@ -434,8 +434,8 @@ void user_fldat_init(){
     host_info.mac[1]=0x4C;
     host_info.mac[2]=0x45;
     host_info.mac[3]=0x00;
-    host_info.mac[4]=0x72;
-    host_info.mac[5]=0x45;
+    host_info.mac[4]=0x73;
+    host_info.mac[5]=0x87;
     
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(USER_DAT_SECTOR);
@@ -777,7 +777,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 }
                 else
                 {
-                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
+                    debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
                     data.error_code,data.scan_file_over);
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;

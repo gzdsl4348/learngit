@@ -47,34 +47,35 @@ static uint8_t f_copy(uint8_t *psrc,uint8_t *pdst, uint8_t *pcurpct, uint8_t *pe
             else
                 curpct=(cpdsize*100)/totsize;  //得到新百分比
             // 文件容量判断
-            //debug_printf("cl tol %d size %d\n",fatfs.n_fatent-2,fsrc->fsize/512/64);
-            if((fatfs.free_clust+(fsrc->fsize/512/64))>(fatfs.n_fatent-2)){
-                return 0xFF;
+            debug_printf("cl tol %d size %d\n",fatfs.n_fatent-2,fsrc->fsize/512);
+            if((fatfs.free_clust-2)<(fsrc->fsize/512/64)){//>(fatfs.n_fatent-2)){
+                res = 0xFF;
             }
-            
-            *pcurpct = curpct;          //更新百分比
-            while(res==0)//开始复制
-            {
-                res=f_read(fsrc,fbuf,16*1024,(UINT*)&br);  //源头读出512字节
-                if(res||br==0)break;
-
-                res=f_write(fdst,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
-
-                cpdsize+=bw;
-
-                if(curpct != (cpdsize*100)/totsize)//是否需要更新百分比
+            else{
+                *pcurpct = curpct;          //更新百分比
+                while(res==0)//开始复制
                 {
-                    curpct=(cpdsize*100)/totsize;
-                    *pcurpct = curpct;//更新百分比
+                    res=f_read(fsrc,fbuf,16*1024,(UINT*)&br);  //源头读出512字节
+                    if(res||br==0)break;
 
-                    if(*pexit)
+                    res=f_write(fdst,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
+
+                    cpdsize+=bw;
+
+                    if(curpct != (cpdsize*100)/totsize)//是否需要更新百分比
                     {
-                        res=0XFF;//强制退出
-                        *pexit=0;
-                        break;
+                        curpct=(cpdsize*100)/totsize;
+                        *pcurpct = curpct;//更新百分比
+
+                        if(*pexit)
+                        {
+                            res=0XFF;//强制退出
+                            *pexit=0;
+                            break;
+                        }
                     }
+                    if(res||bw<br)break;
                 }
-                if(res||bw<br)break;
             }
             f_close(fsrc);
             f_close(fdst);

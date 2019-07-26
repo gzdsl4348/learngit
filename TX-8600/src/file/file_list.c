@@ -104,7 +104,7 @@ void printfstr(TCHAR *str)
 //buff_size:buff的大小
 //num:返回文件数目
 //返回值:执行结果
-char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, int *num, uint8_t *buff_full)
+char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, int *num, uint8_t *buff_full,uint16_t *dir_index)
 {
     //debug_printf("\n\n sacn in \n\n");   
     int i = 0;
@@ -167,7 +167,8 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
             //printfstr(fn);
             //debug_printf("  :%d %d\n", (fno->fattrib&(AM_DIR)), (fno->fattrib&(AM_HID)));
             if(fno->fattrib&(AM_HID)) continue;//跳过隐藏文件
-
+            
+            //debug_printf("fno %d\n",dir->index);
             if((fno->fattrib&(AM_DIR))&&mark==0)//是一个文件夹且mark=0
             {
 
@@ -214,7 +215,9 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
                         wstrcpy(pt_mi->name, fn);
                         offset += sizeof(music_info_t);
-                        (*num)++;
+                        (*num)++;                        
+                        // 获得文件index值
+                        *dir_index = dir->index;
                     }
                     else
                     {
@@ -244,6 +247,8 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         wstrcpy(pt_mi->name, fn);
                         offset += sizeof(music_info_t);
                         (*num)++;
+                        // 获得文件index值
+                        *dir_index = dir->index;
                     }
                     else
                     {
@@ -282,7 +287,7 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         wstrcpy(music_path, (const TCHAR*)path);
                         wstrcat(music_path, g);
                         wstrcat(music_path, (const TCHAR*)fn);
-                        pt_mi->totsec = 0;//get_mp3_totsec((TCHAR*)music_path);
+                        pt_mi->totsec = get_mp3_totsec((TCHAR*)music_path);
 
                         if(pt_mi->totsec == 0) continue;
                         
@@ -290,6 +295,10 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         wstrcpy(pt_mi->name, fn);
                         offset += sizeof(music_info_t);
                         (*num)++;
+                        // 获得文件index值
+                        if(dir->index>*dir_index){
+                            *dir_index = dir->index;
+                        }
                     }
                     else
                     {
@@ -302,7 +311,14 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                 else if(type == 2)//wav文件
                 {
                     if(offset+sizeof(music_info_t) < buff_size)
-                    {
+                    {                      
+                        //排除相同文件名称
+                        for(i=0; i<(*num); i++)
+                        {
+                            if(wstrcmp(fn, ((music_info_t*)&buff[0])[i].name) == 0) break;
+                        }
+                        if(i != (*num)) continue;
+                        //
                         TCHAR g[] = {'/',0};
                         pt_mi = (music_info_t*)&buff[offset];
                         //pt_mi->type = type;
@@ -311,14 +327,18 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         wstrcat(music_path, g);
                         wstrcat(music_path, (const TCHAR*)fn);
                         
-                        pt_mi->totsec = 0;//get_wav_totsec((TCHAR*)music_path);
+                        pt_mi->totsec = get_wav_totsec((TCHAR*)music_path);
 
-                        //if(pt_mi->totsec == 0) continue;
+                        if(pt_mi->totsec == 0) continue;
 
                         memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
                         wstrcpy(pt_mi->name, fn);
                         offset += sizeof(music_info_t);
                         (*num)++;
+                        // 获得文件index值
+                        if(dir->index>pt_di->*dir_index ){
+                            *dir_index = dir->index;
+                        }
                     }
                     else
                     {
@@ -417,13 +437,13 @@ void sd_scan_test()
 
     uint8_t *tbl = mymalloc(F_DIR_TBL_BYTE_SIZE);
 
-    mf_scan_files(ROOT_PATH, 0, tbl, F_DIR_TBL_BYTE_SIZE, &num, NULL);
+    mf_scan_files(ROOT_PATH, 0, tbl, F_DIR_TBL_BYTE_SIZE, &num, NULL,NULL);
 
     printf_dir_info((dir_info_t*)tbl, num);
 
     memset(tbl, 0, F_DIR_TBL_BYTE_SIZE);
 
-    mf_scan_files(ROOT_PATH, 1, tbl, F_DIR_TBL_BYTE_SIZE, &num, NULL);
+    mf_scan_files(ROOT_PATH, 1, tbl, F_DIR_TBL_BYTE_SIZE, &num, NULL,NULL);
 
     printf_music_info((music_info_t*)tbl, num);
 
@@ -480,7 +500,7 @@ static int scan_music_filelist(TCHAR *path, dir_info_t *dir_info, music_tbl_t *m
     int music_num = 0;
     int res = 0;
     //搜索对应文件夹的音乐列表
-    res = mf_scan_files(path, 1, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), &music_num, &dir_info->music_num_full);
+    res = mf_scan_files(path, 1, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), &music_num, &dir_info->music_num_full,&dir_info->music_index);
     if(res != 0)
     {
         return 1;
@@ -537,7 +557,7 @@ void sd_scan_music_file(uint8_t *specify_path)
     fl_read_flielist(0, (uint8_t*)dir_tbl_sdram, F_DIR_TBL_BYTE_SIZE);
     
     //读SD卡音乐文件夹列表
-    res = mf_scan_files(ROOT_PATH, 0, (uint8_t*)dir_tbl->m, sizeof(dir_tbl->m), &dir_num, NULL);
+    res = mf_scan_files(ROOT_PATH, 0, (uint8_t*)dir_tbl->m, sizeof(dir_tbl->m), &dir_num, NULL,NULL);
     if(res != 0)
     {
         goto FUN_END;
@@ -568,10 +588,10 @@ void sd_scan_music_file(uint8_t *specify_path)
     if(dir_tbl_sdram->num==0 || dir_tbl_sdram->num>F_DIR_MAX_NUM)
     {
         dir_tbl->num = dir_num;
-
         for(i=0; i<dir_num; i++)
         {
             dir_tbl->m[i].sector = i+F_START_MUSIC_SECTOR;//sector[0]存储文件夹列表
+            dir_tbl->m[i].music_index = 0; 
             //dir_tbl->m[i].user_index = 0;
             //搜索对应文件夹的音乐列表
             if(scan_music_filelist(dir_tbl->m[i].name, &dir_tbl->m[i], music_tbl)!=0) goto FUN_END;
@@ -662,6 +682,7 @@ void sd_scan_music_file(uint8_t *specify_path)
             {
                 if(dir_tbl->m[index].name[0] != 0)
                 {
+                    dir_tbl->m[index].music_index=0;
                     dir_tbl_sdram->m[i] = dir_tbl->m[index];
 
                     //找到空闲的index
@@ -772,6 +793,8 @@ void update_music_filelist(uint8_t path[], uint8_t is_del)
     
     dir_tbl_t *dir_tbl_sdram = mymalloc(F_DIR_TBL_BYTE_SIZE);
     music_tbl_t *music_tbl = mymalloc(F_MUSIC_TBL_BYTE_SIZE);
+
+    debug_printf("updat in\n");
 
     if(dir_tbl_sdram==NULL || music_tbl==NULL || dir_name==NULL || music_name==NULL)
     {
@@ -890,7 +913,7 @@ filelist_layer_2:   //二层路径处理逻辑
             //当操作的音乐文件夹已满文件数时, 删除音乐文件需要重新轮训列表
             if(dir_tbl_sdram->m[dir_index].music_num_full && is_del)
             {
-                mf_scan_files((TCHAR *)dir_name, 2, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), (int*)&music_tbl->num, &dir_tbl_sdram->m[dir_index].music_num_full);
+                mf_scan_files((TCHAR *)dir_name, 2, (uint8_t*)&music_tbl->m[0], sizeof(music_tbl->m), (int*)&music_tbl->num, &dir_tbl_sdram->m[dir_index].music_num_full,&dir_tbl_sdram->m[dir_index].music_index);
                 if(music_tbl->num > F_MUSIC_MAX_NUM)
                 {
                     music_tbl->num = F_MUSIC_MAX_NUM;
@@ -916,6 +939,10 @@ typedef struct{
     uint8_t scan_file_f;    // 开始扫描标志
     uint8_t scan_dir_cnt;   // 文件夹计数
     uint8_t scan_file_cnt;  // 音乐文件计数
+    uint8_t need_open_dir;
+    FILINFO fno;    
+    DIR dir;
+    TCHAR  lfname[_MAX_LFN * 2 + 1];
     unsigned tim_cnt;
 }scan_musicsec_s;
 
@@ -926,6 +953,12 @@ void scan_musictosec_init(){
     s_scan_musicsec.scan_file_cnt = 0;
     s_scan_musicsec.scan_dir_cnt = 0;  
     s_scan_musicsec.tim_cnt = 0;
+    #if _USE_LFN
+    s_scan_musicsec.fno.lfsize = _MAX_LFN * 2 + 1;
+    s_scan_musicsec.fno.lfname = &s_scan_musicsec.lfname[0];
+    #endif
+    
+    s_scan_musicsec.need_open_dir=1;
 }
 
 void scan_musictosec_clear(){
@@ -933,6 +966,7 @@ void scan_musictosec_clear(){
 }
 
 void scan_musictosec_process(){ //2MS
+    uint8_t res;
     // 是否进入扫描时长模式
     if(s_scan_musicsec.scan_file_f==0)
         return;
@@ -963,9 +997,7 @@ void scan_musictosec_process(){ //2MS
     //-------------------------------------------------------------------------------    
     if(music_tbl->num==0)
         goto scan_next_music;
-    
-    //debug_printf("get file num %d\n",dir_tbl->num);
-    //debug_printf("get music secoter %d\n",music_tbl->num);
+    //
     uint8_t type=mf_typetell(music_tbl->m[s_scan_musicsec.scan_file_cnt].name);    //获得类型
     //
     if(type == 1)//mp3文件
@@ -995,22 +1027,118 @@ void scan_musictosec_process(){ //2MS
     }
     //------------------------------------------------------------------------------------------------------------
     // 是否错误音乐
-    if(music_tbl->m[s_scan_musicsec.scan_file_cnt].totsec == 0){
-        music_tbl->m[s_scan_musicsec.scan_file_cnt].totsec=0xFFFF;
-        
+    if(music_tbl->m[s_scan_musicsec.scan_file_cnt].totsec == 0){   
+        //----------------------------------------------------------
+        //删除当前错误音乐信息        
         int music_index = s_scan_musicsec.scan_file_cnt;
-        //删除已有音乐信息
         int move_size = music_tbl->num-music_index-1;
         if(move_size > 0)
-            memmove(&music_tbl->m[music_index], &music_tbl->m[music_index+1], sizeof(music_info_t)*move_size);
-        music_tbl->num--;
-        s_scan_musicsec.scan_file_cnt--;        
-        dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num = music_tbl->num;
-        dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num_full=0;
+            memmove(&music_tbl->m[music_index], &music_tbl->m[music_index+1], sizeof(music_info_t)*move_size);        
+        //----------------------------------------------------------
+        // 是否超过100首音乐，取新音乐填充音乐到最后位置
+        if(dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num_full){
+            if(s_scan_musicsec.need_open_dir){
+                s_scan_musicsec.need_open_dir=0;
+                res = f_opendir(&s_scan_musicsec.dir,(const TCHAR*)dir_tbl->m[s_scan_musicsec.scan_dir_cnt].name); //打开一个目录
+                //指定文件位置 
+                //s_scan_musicsec.dir.index = dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_index;
+                // 打开失败
+                if(res!=FR_OK){
+                    // 歌曲数减一 进入下一首扫描
+                    music_tbl->num--;
+                    s_scan_musicsec.scan_file_cnt--;        
+                    dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num = music_tbl->num;                    
+                    goto scan_next_music;
+                }
+            }
+            // 目录打开成功
+            TCHAR *fn;   /* This function is assuming non-Unicode cfg. */
+            music_info_t *pt_mi = NULL;
+            while(1) //读取目录下的一个文件
+            {
+                //debug_printf("read next %d\n",s_scan_musicsec.dir.index);
+                res = f_readdir(&s_scan_musicsec.dir, &s_scan_musicsec.fno);     
+                //错误了/到末尾了,退出 
+                if (res != FR_OK || s_scan_musicsec.fno.fname[0] == 0){
+                    music_tbl->num--;
+                    s_scan_musicsec.scan_file_cnt--;        
+                    dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num = music_tbl->num;
+                    dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num_full=0;
+                    debug_printf("end file \n");
+                    break; // 歌曲数减一 进入下一首扫描
+                }
+                // 更新文件index值
+                //dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_index =s_scan_musicsec.dir.index;
+                // 取得文件名
+                #if _USE_LFN
+                fn = *s_scan_musicsec.fno.lfname ? s_scan_musicsec.fno.lfname : s_scan_musicsec.fno.fname;
+                #else
+                fn = s_scan_musicsec.fno.fname;
+                #endif                                
+                //
+                if(s_scan_musicsec.fno.fattrib& AM_HID) continue;//跳过隐藏文件
+
+                //debug_printf("fno %d\n",dir->index);
+                if(s_scan_musicsec.fno.fattrib & AM_ARC) //是一个归档文件
+                {
+                    if(wstrlen(fn) > ((MUSIC_NAME_SIZE-2)/2)) continue;//限制文件名长度
+                    //---------------------------------------------------------------------------------------
+                    //重名判断
+                    uint8_t same_cnt=0;
+                    for(same_cnt=0;same_cnt<F_MUSIC_MAX_NUM;same_cnt++){
+                        if(wstrcmp((TCHAR*)music_tbl->m[same_cnt].name, (TCHAR*)fn) == 0)
+                        {
+                            break;
+                        }
+
+                    }
+                    if(same_cnt!=F_MUSIC_MAX_NUM){
+                        //debug_printf("cnt %d\n",same_cnt);
+                        continue;
+                    }
+                    //----------------------------------------------------------------------------------------
+                    type=mf_typetell(fn);    //获得类型
+                    
+                    if(type == 1)//mp3文件
+                    {
+                        pt_mi = (music_info_t*)&music_tbl->m[music_tbl->num-1];
+                        pt_mi->totsec = 0;
+                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
+                        wstrcpy(pt_mi->name, fn);
+                        s_scan_musicsec.scan_file_cnt--;
+                        break; //下一个周期处理
+                    }
+                    //#if WAV_FILE_ENABLE
+                    else if(type == 2)//wav文件
+                    {
+                        pt_mi = (music_info_t*)&music_tbl->m[music_tbl->num-1];
+                        pt_mi->totsec = 0;
+                        memset(pt_mi->name, 0, sizeof(pt_mi->name));//APP端需要在截止符后清空
+                        wstrcpy(pt_mi->name, fn);
+                        
+                        s_scan_musicsec.scan_file_cnt--;
+                        break; //下一个周期处理
+                    }
+                    //#endif
+                    else 
+                    {
+                        continue;  //不需要的类型
+                    }
+                }
+                else 
+                {
+                    continue;      //继续找下一个
+                }
+            }
+        }
+        else{
+            music_tbl->num--;
+            s_scan_musicsec.scan_file_cnt--;        
+            dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num = music_tbl->num;
+        }
+        //dir_tbl->m[s_scan_musicsec.scan_dir_cnt].music_num_full=0;
         // 保存文件夹信息
         fl_write_flielist(0, (uint8_t*)dir_tbl, F_DIR_TBL_BYTE_SIZE);
-        
-        //debug_printf("\n\n music error %d\n\n",music_tbl->num);
     }
     //------------------------------------------------------------------------------------------------------------
     // 保存音乐时长信息
@@ -1023,6 +1151,7 @@ void scan_musictosec_process(){ //2MS
         // 下一个文件夹        
         s_scan_musicsec.scan_file_cnt=0;
         s_scan_musicsec.scan_dir_cnt++;
+        s_scan_musicsec.need_open_dir=1;
         // 是否扫完所有文件夹
         if(s_scan_musicsec.scan_dir_cnt>=dir_tbl->num){
             s_scan_musicsec.scan_file_f = 0;

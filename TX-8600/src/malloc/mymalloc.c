@@ -1,6 +1,7 @@
 #include "mymalloc.h"
 #include "swlock.h"
 #include "hwlock.h"
+#include "debug_print.h"
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
 //ALIENTEK MiniSTM32开发板
@@ -140,6 +141,7 @@ void myfree(void* ptr)
 	MEM_LOCK();
     mem_free(offset);	//释放内存
 	MEM_UNLOCK();
+    static unsigned cnt=0;
 }  
 //分配内存(外部调用)
 //size:内存大小(字节)
@@ -150,8 +152,12 @@ void *mymalloc(u32 size)
 	MEM_LOCK();
 	offset=mem_malloc(size);
 	MEM_UNLOCK();
+    
+    static unsigned cnt=0;
+    
     if(offset==0XFFFFFFFF)return NULL;
-    else return (void*)((u32)mallco_dev.membase+offset);
+    else return (void*)((u32)mallco_dev.membase+offset);    
+
 }  
 //重新分配内存(外部调用)
 //*ptr:旧内存首地址

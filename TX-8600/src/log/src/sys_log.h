@@ -23,7 +23,7 @@ extern "C" {
 ---------------------------------------------------------------------------------------*/
 void xtcp_debug_printf(char fmt[], ...);
 
-#define xtcp_debug_printf(...) xtcp_debug_printf(__VA_ARGS__)
+#define xtcp_debug_printf(...)  xtcp_debug_printf(__VA_ARGS__)
 //=====================================================================
 typedef struct log_info_t{
     char buff[512];

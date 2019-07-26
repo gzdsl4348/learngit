@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x23)
+#define VERSION_L    (0x24)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (23)
+#define VERSION_TEN_L    (24)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")

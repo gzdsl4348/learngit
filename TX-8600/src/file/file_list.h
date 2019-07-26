@@ -25,7 +25,8 @@ typedef struct
 {
     uint8_t sector;
     uint8_t music_num;
-    uint8_t music_num_full;
+    uint8_t music_num_full;    
+    uint16_t music_index;
     uint16_t name[DIR_NAME_SIZE/2];
 }dir_info_t;
 
@@ -33,7 +34,7 @@ typedef struct
 typedef struct
 {
     uint32_t num;
-    dir_info_t m[F_DIR_MAX_NUM+1];
+    dir_info_t m[F_DIR_MAX_NUM+1];    
 } dir_tbl_t;
 
 

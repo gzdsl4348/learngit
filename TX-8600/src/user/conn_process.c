@@ -333,7 +333,6 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
 	        return LIST_SEND_INIT;
 	    }
 	}
-    debug_printf("\n\n find num %d \n\n",i);
     //----------------------------------------------------------------
     //³õÊ¼»¯·¢ËÍ×´Ì¬
     t_list_connsend[i].pack_inc=0;
