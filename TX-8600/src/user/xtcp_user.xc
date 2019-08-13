@@ -434,9 +434,9 @@ void user_fldat_init(){
     host_info.mac[1]=0x4C;
     host_info.mac[2]=0x45;
     host_info.mac[3]=0x00;
-    host_info.mac[4]=0x73;
-    host_info.mac[5]=0x87;
-    
+    host_info.mac[4]=0x72;
+    host_info.mac[5]=0x45;
+    init_string= 0x5AA57349;
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(USER_DAT_SECTOR);
     #endif
@@ -654,12 +654,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
         #if 0
         ipconfig.ipaddr[0] = 172;
         ipconfig.ipaddr[1] = 16;
-        ipconfig.ipaddr[2] = 13;
-        ipconfig.ipaddr[3] = 116;
+        ipconfig.ipaddr[2] = 23;
+        ipconfig.ipaddr[3] = 112;
 
         ipconfig.gateway[0] = 172;
         ipconfig.gateway[1] = 16;
-        ipconfig.gateway[2] = 13;
+        ipconfig.gateway[2] = 23;
         ipconfig.gateway[3] = 254;
         #endif
         i_xtcp.xtcp_init(ipconfig,host_info.mac);

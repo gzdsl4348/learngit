@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // 连接建立
-uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[]);
+uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[],uint8_t account_f);
 
 // 连接关闭
 void mes_list_close(unsigned id);

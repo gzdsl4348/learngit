@@ -498,6 +498,7 @@ void conn_overtime_close(){
     // 关闭连接 conn
     conn_list_tmp = conn_list_head;   
     conn_list_t *conn_next_p = conn_list_head;
+    uint8_t conn_cnt=0;
     while(conn_list_tmp!=null){
         conn_list_tmp->over_time++;
         conn_next_p = conn_list_tmp->next_p;
@@ -517,13 +518,19 @@ void conn_overtime_close(){
     // 关闭超时列表更新
     for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
       if(mes_send_list.messend_conn[i].state){
+        conn_cnt++;
         mes_send_list.messend_conn[i].over_timeinc++;
+        //xtcp_debug_printf("me ++ num %d t %d %d ip %d %d %d %d \n",i,mes_send_list.messend_conn[i].over_timeinc,mes_send_list.messend_conn[i].account_f,
+        //mes_send_list.messend_conn[i].conn.remote_addr[0],mes_send_list.messend_conn[i].conn.remote_addr[1],mes_send_list.messend_conn[i].conn.remote_addr[2],
+        //mes_send_list.messend_conn[i].conn.remote_addr[3]);
         if(mes_send_list.messend_conn[i].over_timeinc>CONN_OVERTIME){
             mes_send_list.messend_conn[i].over_timeinc=0;
             mes_send_list.messend_conn[i].state = 0;
+            mes_send_list.messend_conn[i].account_f= 0;
         }
     }
-    }
+  }  
+    xtcp_debug_printf("connect num %d\n",conn_cnt);
 }
 #if 1
 void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf){

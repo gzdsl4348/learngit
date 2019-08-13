@@ -226,6 +226,7 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                         break;
                     }
                 }
+                
                 //#if WAV_FILE_ENABLE
                 else if(type == 2)//wavÎÄ¼þ
                 {

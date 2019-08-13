@@ -62,17 +62,6 @@ void account_login_recive(){
             continue;
         }
         // 判断密码
-        #if 0
-        xtcp_debug_printf("sn:");
-        for(uint8_t i=0;i<SYS_PASSWORD_NUM;i++){
-            xtcp_debug_printf("%x,",tmp_union.account_all_info.account_info.sn[i]);
-        }
-        xtcp_debug_printf("\n");
-        for(uint8_t i=0;i<SYS_PASSWORD_NUM;i++){
-            xtcp_debug_printf("%x,",xtcp_rx_buf[A_LOGIN_SN_B+i]);
-        }
-        xtcp_debug_printf("\n");
-        #endif
         if(!sn_cmp(&xtcp_rx_buf[A_LOGIN_SN_B],g_tmp_union.account_all_info.account_info.sn)){
             filename_decoder(&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
             user_sending_len = account_login_ack_build(02,0,null,ACCOUNT_LOGIN_CMD);
@@ -80,6 +69,24 @@ void account_login_recive(){
             xtcp_debug_printf("sn error\n");
             return; //fail
         }
+        // 判断登录用户
+        //--------------------------------------------------------------------------------------------------------------
+        // 添加进消息队列
+        uint8_t state;
+        #if ALL_ACCOUNT_ENTER
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],1);
+        state=0;
+        //
+        #else
+        state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],1);
+        if(state!=2){
+            state=0;
+        }
+        else{
+            state=1;
+        }
+        #endif
+        //--------------------------------------------------------------------------------------------------------------
         //读取账户详细信息
         account_fl_read(&g_tmp_union.account_all_info,account_info[i].id);
         account_info[i].login_state = 1; // account login
@@ -89,13 +96,12 @@ void account_login_recive(){
         account_info[i].time_info = g_sys_val.time_info;
         account_info[i].date_info = g_sys_val.date_info;
         //
-        user_sending_len = account_login_ack_build(0,i,&g_tmp_union.account_all_info.mac_list,ACCOUNT_LOGIN_CMD);
+        user_sending_len = account_login_ack_build(state,i,&g_tmp_union.account_all_info.mac_list,ACCOUNT_LOGIN_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         // 保存登录信息
         g_tmp_union.account_all_info.account_info = account_info[i];
         account_fl_write(&g_tmp_union.account_all_info,i);
-        // 添加进消息队列
-        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
+
         //
         xtcp_debug_printf("login ok\n");
         log_account_login();
@@ -473,7 +479,10 @@ void cld_account_login_recive(){
 //================================================================================
 uint8_t sysonline_recive(){
     uint8_t state=0;
-    state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
+    state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],0);
+    if(state!=1){
+        state=0;
+    }
     return state;
 }
 
@@ -518,7 +527,7 @@ void mic_userlist_chk_recive(){
         user_sending_len = mic_userlist_ack_build(state,&g_tmp_union.account_all_info);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         // 加入消息队列
-        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE]);
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],2);
     }
 }
 

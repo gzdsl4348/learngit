@@ -10,17 +10,19 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x24)
+#define VERSION_L    (0x25)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (24)
+#define VERSION_TEN_L    (25)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
 #define LIST_TEXT_DEBUG 0
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 1
+
+#define ALL_ACCOUNT_ENTER   1
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -47,7 +49,11 @@ extern "C" {
 
 #define MAX_CONNET_LIST	(10) //支持同时20部机建立任务
 
-#define MAX_ACCOUNT_CONNET (MAX_ACCOUNT_NUM) //同时支持30个控制机
+#define MAX_ACCOUNT_CONNET (100) //同时支持30个控制机
+
+#define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
+
+#define MAX_ENTER_ACCOUNT   15  //最大同时登录账号
 
 //最大设备
 #define MAX_DIV_LIST    150
@@ -111,6 +117,7 @@ extern "C" {
 
 #define MAX_TASK_ONCESEND   10
 //
+
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
 
@@ -628,7 +635,8 @@ typedef struct messend_conn_t{
     uint8_t state;
     uint8_t could_id[6];
     uint8_t could_f;
-    uint8_t over_timeinc;
+    uint8_t over_timeinc;    
+    uint8_t account_f;
 }messend_conn_t;
 
 typedef struct mes_send_list_t{
