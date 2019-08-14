@@ -127,7 +127,6 @@ int main()
     output_gpio_if	i_output_wifi_tx[1];
     uart_tx_buffered_if i_wifi_tx[1];
     streaming chan c_sdram[SDRAM_CLENT_TOTAL];
-
     //
     //======================================================================================================
     // Main Loop 16Core Process

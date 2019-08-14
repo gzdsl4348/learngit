@@ -22,7 +22,7 @@ extern "C" {
 
 #define NO_NEED_REGISTER 1
 
-#define ALL_ACCOUNT_ENTER   1
+#define ALL_ACCOUNT_ENTER   0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -49,7 +49,7 @@ extern "C" {
 
 #define MAX_CONNET_LIST	(10) //支持同时20部机建立任务
 
-#define MAX_ACCOUNT_CONNET (100) //同时支持30个控制机
+#define MAX_ACCOUNT_CONNET (30) //同时支持30个控制机
 
 #define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
 
