@@ -32,12 +32,79 @@ void sys_dat_write(uint8_t buff[],uint16_t num,uint16_t base_adr){
 // 烧写主机信息flash
 //---------------------------------------------------------------------------
 uint8_t timer_fl_hostinfo_decode(){
-    user_fl_sector_read(USER_DAT_SECTOR);
+    user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
     sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
-    user_fl_sector_write(USER_DAT_SECTOR);
+    user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+    //
+    user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
+    sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+    user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
     //
     g_sys_val.need_flash ^= NEED_FL_HOSTINFO;
     return 1;
+}
+
+//----------------------------------------------------------------------------
+// 烧写读取系统信息flash
+//---------------------------------------------------------------------------
+void read_fl_hostinfo(){
+    unsigned init_string;
+    user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
+	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);  
+    //第0页数据出错
+    if(init_string!=FLASH_INIT_F){
+        // 读取页1数据 同步页0数据
+        user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
+        sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+        user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+    }
+    else{
+        // 读取用户数据 同步页1数据
+        sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+        user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
+    }
+}
+
+uint8_t hostinfo_needreset_decode(){
+    unsigned init_string;
+    user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
+	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
+    if(init_string!=FLASH_INIT_F){
+        user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
+    	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);  
+        if(init_string!=FLASH_INIT_F){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void hostinfo_init_decode(){
+    // 两个sector同时保存用户信息
+    unsigned init_string;
+    // 读取第0页信息
+    user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
+	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);
+    // 第0页信息是否有问题
+    if(init_string!=FLASH_INIT_F){
+        // 读取第1页信息
+        user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
+        sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
+    }
+    // 保存初始化信息
+	init_string = 0x5AA57349;
+	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
+   //
+    sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+    // 判断MAC地址是否已经烧录
+    if((host_info.mac[0]==0x42)&&(host_info.mac[1]==0x4C)&&(host_info.mac[2]==0x45)){
+        memcpy(&host_info_tmp,&host_info,sizeof(host_info_t));
+    }    
+    memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
+    // 烧录两页数据
+	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+    user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+    user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
 }
 
 //===================================================================

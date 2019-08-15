@@ -10,17 +10,17 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x25)
+#define VERSION_L    (0x26)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (25)
+#define VERSION_TEN_L    (26)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
 #define LIST_TEXT_DEBUG 0
 
-#define NO_NEED_REGISTER 1
+#define NO_NEED_REGISTER 0
 
 #define ALL_ACCOUNT_ENTER   0
 
@@ -53,7 +53,7 @@ extern "C" {
 
 #define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
 
-#define MAX_ENTER_ACCOUNT   15  //最大同时登录账号
+#define MAX_ENTER_ACCOUNT   30  //最大同时登录账号
 
 //最大设备
 #define MAX_DIV_LIST    150

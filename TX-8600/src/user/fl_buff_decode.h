@@ -19,7 +19,17 @@ void sys_dat_read(uint8_t buff[],uint16_t num,uint16_t base_adr);
 
 void sys_dat_write(uint8_t buff[],uint16_t num,uint16_t base_adr);
 
+// 延时烧写主机数据
 void hostinfo_fl_write();
+
+// 读主机信息
+void read_fl_hostinfo();
+
+// 判断FLASH是否初始化
+uint8_t hostinfo_needreset_decode();
+
+// 初始化用户数据
+void hostinfo_init_decode();
 
 uint8_t timer_fl_hostinfo_decode();
 

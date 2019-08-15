@@ -1303,7 +1303,6 @@ void task_playtext_recive(){
         for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
             //xtcp_debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
             if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==id)){
-                xtcp_debug_printf("text stop %d\n",id);
                 task_music_config_stop(i);
                 // 任务信息更新
             	g_sys_val.task_config_s = 2; //任务编辑

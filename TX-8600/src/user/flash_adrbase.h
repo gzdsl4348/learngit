@@ -59,15 +59,17 @@
 
 //====================================================================================
 // flash sector define
-#define FLASH_DAT_SECTOR_BASE    200   //800K开始
+#define FLASH_DAT_SECTOR_BASE    199   //800K开始
 
-#define USER_DAT_SECTOR         (FLASH_DAT_SECTOR_BASE)     //1 用户数据块
-#define SOLUSION_DAT_SECTOR     (USER_DAT_SECTOR+1)
-#define DIV_INFOLIST_SECTOR     (SOLUSION_DAT_SECTOR+1)           //5 设备信息块
-#define AREA_INFOLIST_SECTOR    (DIV_INFOLIST_SECTOR+5)     //1 分区信息块
-#define TIMED_TASK_SECTOR       (AREA_INFOLIST_SECTOR+1)     //MAX_TIMED_TASK_NUM+MAX_RING_TASK_NUM  定时任务块 
-#define RT_TASK_SECTOR          (TIMED_TASK_SECTOR+MAX_TIMED_TASK_NUM+MAX_RING_TASK_NUM) //MAX_RT_TASK_NUM 即时任务块
-#define RT_TASK_LIST_SECTOR     (RT_TASK_SECTOR+MAX_RT_TASK_NUM)     //1 即时任务块
+#define SYSTEM_0_DAT_SECTOR_BASE  (FLASH_DAT_SECTOR_BASE)
+#define SYSTEM_1_DAT_SECTOR_BASE  (SYSTEM_0_DAT_SECTOR_BASE+1)
+
+#define SOLUSION_DAT_SECTOR     (SYSTEM_1_DAT_SECTOR_BASE+1)         //1 方案列表     4K
+#define DIV_INFOLIST_SECTOR     (SOLUSION_DAT_SECTOR+1)     //5 设备信息块 20K
+#define AREA_INFOLIST_SECTOR    (DIV_INFOLIST_SECTOR+5)     //1 分区信息块 4K
+#define TIMED_TASK_SECTOR       (AREA_INFOLIST_SECTOR+1)     //MAX_TIMED_TASK_NUM+MAX_RING_TASK_NUM  定时任务块 450*4=1800K
+#define RT_TASK_SECTOR          (TIMED_TASK_SECTOR+MAX_TIMED_TASK_NUM+MAX_RING_TASK_NUM) //MAX_RT_TASK_NUM 即时任务块 50*4=200K
+#define RT_TASK_LIST_SECTOR     (RT_TASK_SECTOR+MAX_RT_TASK_NUM)     //1 即时任务块          // 10K
 
 #define ACCOUT_SECTOR           (RT_TASK_LIST_SECTOR+10)    // MAX_ACCOUNT_NUM 账户列表块
 

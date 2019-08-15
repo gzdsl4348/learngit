@@ -154,10 +154,9 @@ uint8_t playing_char[10] = {0x6B,0x63,0x57,0x28,0x64,0xAD,0x65,0x3E,0x00,0x3A};
 uint8_t future_play_char[10] = {0x53,0x73,0x5C,0x06,0x62,0x67,0x88,0x4C,0x00,0x3A};
 
 void user_dispunti_init(){
-    //disp_unti(DISP_A_ID,nowtask_char);
-    //disp_unti(DISP_B_ID,begtime_char);
-    //disp_unti(DISP_C_ID,dura_char);
-    //disp_unti(DISP_D_ID,playing_char);
+    dhcp_disp_none();
+    ip_conflict_disp(0);
+    disp_couldstate(0);
 }
 
 // 

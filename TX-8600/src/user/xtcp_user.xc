@@ -79,14 +79,12 @@ extern host_info_t host_info;
 void mac_writeflash(uint8_t macadr[6]){
     unsafe{
 	// Get Host info
-	i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
-	sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+	i_user_flash->flash_sector_read(SYSTEM_0_DAT_SECTOR_BASE,g_tmp_union.buff);
     //
     memcpy(host_info.mac,macadr,6);
-	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     //
-    //while(i_user_flash->is_flash_write_complete());
-    user_fl_sector_write(USER_DAT_SECTOR);
+    user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+    user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
     //
     xtcp_debug_printf("write: %x,%x,%x,%x,%x,%x\n",macadr[0],macadr[1],macadr[2],macadr[3],macadr[4],macadr[5]);
     }
@@ -436,16 +434,15 @@ void user_fldat_init(){
     host_info.mac[3]=0x00;
     host_info.mac[4]=0x72;
     host_info.mac[5]=0x45;
-    init_string= 0x5AA57349;
+    init_string= FLASH_INIT_F;
+    //    
+	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(USER_DAT_SECTOR);
     #endif
     // sn
     //------------------------------------------------------------
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
-	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
-    //init_string = 0;
-	if(0x5AA57349==init_string){
+    if(hostinfo_needreset_decode()){
 		return;
 	}
     //------------------------------------------------------------    
@@ -471,17 +468,7 @@ void user_fldat_init(){
     //
     //-------------------------------------------------------------
     // 用户信息初始化
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
-	init_string = 0x5AA57349;
-	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
-    sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
-    //
-    if((host_info.mac[0]==0x42)&&(host_info.mac[1]==0x4C)&&(host_info.mac[2]==0x45)){
-        memcpy(host_info_tmp.mac,host_info.mac,6);
-    }    
-    memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
-	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
-    user_fl_sector_write(USER_DAT_SECTOR);
+    hostinfo_init_decode();
     //-----------------------------------------------------------------------------------------------------
     // 方案信息初始化
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++)
@@ -520,8 +507,7 @@ void sys_info_init(){
     unsafe{
     //-------------------------------------------------------------------------------------------------
 	// Get Host info
-	i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
-	sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+    read_fl_hostinfo();
 	host_info.version[0] = VERSION_H;
     host_info.version[1] = VERSION_L;
 	//----------------------------------------------------------------------------------------------------
@@ -1112,9 +1098,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 unsigned init_string;
                 // 用户信息初始化
             	init_string = 0;
-                user_fl_sector_read(USER_DAT_SECTOR);
+                user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
             	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
-                user_fl_sector_write(USER_DAT_SECTOR);
+                user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+                user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
                 //--------------------------------------------------------------
                 delay_milliseconds(3000);
                 while(!(if_fl_manage.is_flash_write_complete()));    

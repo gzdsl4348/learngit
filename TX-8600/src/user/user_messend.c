@@ -14,7 +14,7 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[],u
     // 检查是否重复添加
     account_cnt=0;
     for(uint8_t i=0;i<MAX_ACCOUNT_CONNET;i++){
-        // 云
+        // 云判断
 		if(could_f && mes_send_list.messend_conn[i].state && charncmp(could_id,mes_send_list.messend_conn[i].could_id,6)){
             mes_send_list.messend_conn[i].over_timeinc=0;
             //
@@ -39,7 +39,6 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[],u
         else if(could_f==0 && (mes_send_list.messend_conn[i].conn.id == conn.id) && mes_send_list.messend_conn[i].state){
             mes_send_list.messend_conn[i].over_timeinc=0;
             //
-            
             //xtcp_debug_printf("eth chk %d\n",account_f);
             if(account_f==1){
                 for(uint8_t j=0;j<MAX_ACCOUNT_CONNET;j++){
@@ -48,7 +47,7 @@ uint8_t mes_list_add(xtcp_connection_t conn,uint8_t could_f,uint8_t could_id[],u
                         //xtcp_debug_printf("eth  %d %d\n",i,j);
                     }
                 }
-                //xtcp_debug_printf("find ac %d\n",account_cnt);
+               // xtcp_debug_printf("find ac %d\n",account_cnt);
                 if(account_cnt>=MAX_ENTER_ACCOUNT){
                     return 2;
                 }
@@ -119,6 +118,7 @@ void mes_list_close(unsigned id){
 // 消息发送同步
 void mes_send_decode(){
     if(mes_send_list.wrptr-mes_send_list.rpttr!=0){
+        //xtcp_debug_printf("mes send in %d\n",mes_send_list.send_inc);
         for(;mes_send_list.send_inc<MAX_MESSAGE_SEND;mes_send_list.send_inc++){
             if(mes_send_list.messend_conn[mes_send_list.send_inc].state!=0){
                 //获取备份发送数据发送
@@ -146,7 +146,7 @@ void mes_send_decode(){
                 break;
             }
         }
-        if(mes_send_list.send_inc >= MAX_ACCOUNT_CONNET){
+        if(mes_send_list.send_inc >= MAX_MESSAGE_SEND){
             mes_send_list.send_inc=0;
             mes_send_list.rpttr++;
             if(mes_send_list.rpttr==mes_send_list.wrptr){
@@ -203,9 +203,11 @@ void mes_send_acinfo(uint16_t id){
 
 // 任务更新通知
 void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
+    xtcp_debug_printf("mes wrptr %d\n",mes_send_list.wrptr);
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //备份发送数据
+    xtcp_debug_printf("\n\ntask messend decode \n\n");
     timer_task_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
     mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
