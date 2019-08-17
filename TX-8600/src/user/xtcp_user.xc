@@ -563,6 +563,13 @@ void disp_text_conn(client xtcp_if i_xtcp){
     #endif
 }
 
+void value_init_0(){
+    memset(&host_info,0,sizeof(host_info));    
+    memset(&mes_send_list,0,sizeof(mes_send_list));
+    memset(&rttask_lsit,0,sizeof(rttask_lsit));
+    memset(&g_sys_val,0,sizeof(g_sys_val_t));
+}
+
 //=======================================================================================================
 /*
 //--------------------------------------------------------------------------------
@@ -572,6 +579,7 @@ void disp_text_conn(client xtcp_if i_xtcp){
 void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client fl_manage_if if_fl_manage,client file_server_if if_fs,
                   client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx,client image_upgrade_if i_image){
     unsafe{
+    value_init_0();
     //--------------------------------------------------------------------------
     // 接口初始化
 	unsigned data_len=0;		// set xtcp recive data len
@@ -629,7 +637,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	// Config xtcp ethernet info
 	//----------------------------------------------------------------------
 	//协议栈初始化
-    xtcp_ipconfig_t ipconfig={0};
+    xtcp_ipconfig_t ipconfig;
     if(!host_info.dhcp_en){
         xtcp_debug_printf("te %d\n",host_info.div_type[0]);
         xtcp_debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
@@ -775,14 +783,15 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     }
                     if(g_sys_val.sd_state != data.sdcard_status){
                         g_sys_val.sd_state = data.sdcard_status;
-                        if(data.sdcard_status)
+                        if(data.sdcard_status){
                             stop_all_timetask();
                             user_disptask_refresh();
+                        }//else{                
+                           // g_sys_val.log_waitmk_f = user_file_mklog();
+                        //}
                     }
                     if(data.scan_file_over){
-                        xtcp_debug_printf("in ");
                         mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
-                        xtcp_debug_printf("out\n");
                     }
                     if(data.result!=255){
                         file_bat_contorl_event(data.error_code);
@@ -826,16 +835,35 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 																	   ipconfig.ipaddr[2],
 																	   ipconfig.ipaddr[3]);    
 						g_sys_val.eth_link_state = 1;
+                        g_sys_val.reset_ethtim=0;
                         //audio_moudle_set();
-                        user_disp_ip(ipconfig);
-                        disp_text_conn(i_xtcp);
-						#if COULD_TCP_EN
-						g_sys_val.dns_resend_cnt=3;
-						dns_couldip_chk_send();
-						#endif
-                        //i_xtcp.connect(ETH_COMMUN_PORT,a,XTCP_PROTOCOL_UDP);
-                        // 重新查找网关
-                        g_sys_val.gateway_standy=0;
+                        // 正在IP配置模式
+                        if(g_sys_val.host_ipget_mode){
+                            // 判断是否获取到DHCP
+                            if(i_xtcp.get_autoip_flag()==0){
+                                xtcp_debug_printf("\n\n get dhcp \n\n");
+                                memcpy(&host_info.ipconfig,&ipconfig,sizeof(xtcp_ipconfig_t));
+                                dhcp_getin_over_disp(1);
+                            }
+                            else{
+                                dhcp_getin_over_disp(0);
+                            }
+                            g_sys_val.host_clear_f=1;
+                            g_sys_val.host_disp_tim=0;
+                            user_xtcp_ipconfig(host_info.ipconfig);
+                            g_sys_val.host_ipget_mode = 0;
+                        }
+                        else{
+                            user_disp_ip(ipconfig);
+                            disp_text_conn(i_xtcp);
+    						#if COULD_TCP_EN
+    						g_sys_val.dns_resend_cnt=3;
+    						dns_couldip_chk_send();
+    						#endif
+                            //i_xtcp.connect(ETH_COMMUN_PORT,a,XTCP_PROTOCOL_UDP);
+                            // 重新查找网关
+                            g_sys_val.gateway_standy=0;
+                        }
 						break;
 		  			case XTCP_IFDOWN:
 						g_sys_val.eth_link_state = 0;
@@ -991,7 +1019,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 time_count=0;
 				//
 		    	second_process();
-                //
+                // 建立日志失败，继续建立
                 if(g_sys_val.log_waitmk_f){
                     debug_printf("delay mk log\n");
                     g_sys_val.log_waitmk_f = user_file_mklog();
@@ -1015,6 +1043,15 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     disp_text_conn(i_xtcp);
                 }
                 #endif
+                if(g_sys_val.host_clear_f){
+                    g_sys_val.host_disp_tim++;
+                    if(g_sys_val.host_disp_tim>5){
+                        g_sys_val.host_disp_tim=0;
+                        g_sys_val.host_clear_f=0;
+                        dhcp_getin_clear();
+                    }
+                }
+                
                 //-----------------------------------------
                 // 系统重启
                 if(g_sys_val.reboot_f){
@@ -1053,9 +1090,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     }
                 }
                 //--------------------------------------
-                // IP冲突检测
-				
-            }
+              }
             //--------------------------------------------------
             // 10hz process
             //-------------------------------------------------
@@ -1075,16 +1110,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             
             //--------------------------------------------------------
             // 网络芯片 不正常 定时复位处理
-            static uint8_t reset_ethtim=0;
-            static uint8_t p_tmp=0;
-            if((g_sys_val.eth_link_state==0)||(p_tmp)){
-                reset_ethtim++;
-                if(reset_ethtim>35){
-                    p_eth_reset <: p_tmp; 
-                    if((p_tmp)&&(reset_ethtim>40)){
-                        reset_ethtim=0;
-                    }
-                    p_tmp ^=1;
+            if(g_sys_val.eth_link_state==0){
+                g_sys_val.reset_ethtim++;
+                if(g_sys_val.reset_ethtim==40){
+                    p_eth_reset <: 0; 
+                }
+                else if(g_sys_val.reset_ethtim>45){
+                    p_eth_reset <: 1; 
                 }
             }
             //--------------------------------------------------------
@@ -1167,6 +1199,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             // key 松开 11 = 1011B 松开 
             if((g_sys_val.key_state==11)&&(g_sys_val.key_delay == 0)){
                 //xtcp_debug_printf("key rel\n");
+                // 复位键短按 进入IP获取模式
+                if(g_sys_val.key_wait_release==KEY_RESET_RELEASE && (g_sys_val.key_wait_inc<15)){
+                    g_sys_val.host_ipget_mode = 1;
+                    xtcp_ipconfig_t ipconfig;
+                    memset(&ipconfig,0,sizeof(xtcp_ipconfig_t));
+                    user_xtcp_ipconfig(ipconfig);
+                    g_sys_val.eth_link_state = 0;
+                    g_sys_val.reset_ethtim=0;
+                    dhcp_getin_disp();
+                }
+                //---------------------------------------
                 g_sys_val.key_wait_release = 0;
                 g_sys_val.key_delay = 1;
                 //g_sys_val.key_delay = 0;

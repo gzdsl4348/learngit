@@ -314,7 +314,6 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
     #endif
-
     xtcp_debug_printf("register %d day %d\n",xtcp_tx_buf[AC_LOGIN_RES_STATE_B] ,host_info.regiser_days);
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;

@@ -303,6 +303,14 @@ typedef struct g_sys_val_t{
     // 日志处理
     log_info_t *log_info_p;
     uint8_t log_waitmk_f;
+    // 主机IP获取管理
+    uint8_t host_ipget_mode;
+    uint8_t host_disp_tim;
+    uint8_t host_clear_f;
+
+    uint8_t reset_ethtim;
+    
+    uint8_t resetio_ethtmp;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

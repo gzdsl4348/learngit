@@ -126,6 +126,8 @@ void log_rttask_config(){
 void log_timetask_contorl(){
     g_sys_val.log_info_p = log_info_chang("timetask contorl:%d 0=start 1=stop 2=config  name:%l\r\r\n", 
                                     xtcp_rx_buf[TASK_PLAY_CONTORL],g_tmp_union.task_allinfo_tmp.task_coninfo.task_name);
+    xtcp_debug_printf("timetask contorl:%d 0=start 1=stop 2=config  name:%l\r\r\n", 
+                                    xtcp_rx_buf[TASK_PLAY_CONTORL],g_tmp_union.task_allinfo_tmp.task_coninfo.task_name);
     user_loginfo_add(&xtcp_rx_buf[POL_ID_BASE],conn.remote_addr); 
 }
 

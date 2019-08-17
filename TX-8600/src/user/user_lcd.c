@@ -541,3 +541,26 @@ void disp_couldstate(uint8_t state){
     user_disp_icon(DISP_COULD_ID,state);
 }
 
+void dhcp_getin_disp(){
+    uint8_t disp_char[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x4E,0x2D}; 
+    memcpy(&disp_buff[DAT_DISP_BASE],disp_char,14);
+    disp_len = DAT_DISP_BASE+14;
+    send_buff(DISP_IPCONFILCT_ID);
+}
+
+void dhcp_getin_over_disp(uint8_t state){
+    uint8_t disp_char_succse[]={00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x62,0x10,0x52,0x9F}; 
+    uint8_t disp_char_fail[]={00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x59,0x31,0x8D,0x25};
+    if(state){
+        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_succse,16);
+
+    }else{
+        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_fail,16);
+    }
+    disp_len = DAT_DISP_BASE+16;
+    send_buff(DISP_IPCONFILCT_ID);
+}
+
+void dhcp_getin_clear(){
+    ip_conflict_disp(0);
+}

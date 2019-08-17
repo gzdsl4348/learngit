@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x26)
+#define VERSION_L    (0x25)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (26)
+#define VERSION_TEN_L    (25)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -174,6 +174,7 @@ typedef struct host_info_t{
     uint8_t log_daycnt;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
+    //uint8_t noneed_register;  // 0 无需注册   1 需要注册
 }host_info_t;
 
 extern host_info_t host_info;

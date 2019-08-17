@@ -176,6 +176,9 @@
 
 #define ETH_WAV_OPEN_CMD        0xC003
 
+#define ETH_NONEDD_RESIGE_CMD   0xC004
+
+
 //---------------------------------------------------------------------
 // 云包头
 #define CLH_TYPE_BASE           0                                   // 4 云包头类型

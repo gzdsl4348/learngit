@@ -302,8 +302,8 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 memcpy(fopr.data.file.log_info, log_info, len);
                 fopr.data.file.len =len;
                 fopr.log_event = FOR_LOGADD;                  
-                //debug_printf("scan flag %d\n",file_scaning_flag);
-                if(file_scaning_flag==0 && sdcard_status){                    
+                debug_printf("scan flag %d %d\n",file_scaning_flag,sdcard_status);
+                if(file_scaning_flag==0 && sdcard_status==0){                    
                     c_faction <: (char)1;        
                 }
                 break;

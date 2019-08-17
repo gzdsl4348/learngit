@@ -74,7 +74,7 @@ void timer_process(){
             // 更新注册信息
             register_could_chk();
             //
-            user_file_mklog();
+            g_sys_val.log_waitmk_f = user_file_mklog();
         }
     }
 }

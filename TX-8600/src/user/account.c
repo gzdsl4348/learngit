@@ -467,7 +467,6 @@ void cld_account_login_recive(){
         }
     }   
     // 云登录信息推送
-    
     user_sending_len = account_login_ack_build(1,0,null,CLD_REGISTER_INFO_CMD); 
     xtcp_debug_printf("could len %d\n",user_sending_len);
     user_could_send(0);    
@@ -803,6 +802,11 @@ void backup_sendmes_10hz(){
         }
     }
 }
-
-
+/*
+// 内部接口 无需注册开关
+void noneed_resiged_recive(){
+    host_info.noneed_register = xtcp_rx_buf[POL_DAT_BASE];
+    hostinfo_fl_write();    //烧写主机信息
+}
+*/
 

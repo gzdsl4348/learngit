@@ -44,5 +44,11 @@ void ip_disp_decode(uint8_t data,uint8_t *base_adr);
 
 void ip_conflict_disp(uint8_t state);
 
+void dhcp_getin_disp();
+
+void dhcp_getin_over_disp(uint8_t state);
+
+void dhcp_getin_clear();
+
 #endif
 

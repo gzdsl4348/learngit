@@ -339,7 +339,7 @@ uint8_t mf_add_loginfo(char *file_name,unsigned len){
     //
     f_lseek(logfile,logfile->fptr+logfile->fsize);
     res = f_write(logfile,(const TCHAR*)file_name, len, &bw);
-    //debug_printf("loginfo er %d \n",res);
+    debug_printf("loginfo er %d \n",res);
     //
     f_close(logfile);
     myfree(logfile);

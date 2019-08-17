@@ -488,6 +488,8 @@ void user_set_wavmode(){
     }
 }
 
+// return 0 ³É¹¦
+// return 1 Ê§°Ü
 uint8_t user_file_mklog(){
     unsafe{
         uint8_t res;

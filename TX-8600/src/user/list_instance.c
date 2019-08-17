@@ -77,7 +77,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {MUSIC_B807_BATRECHK_CMD,music_batrechk_recive},
                              {ETH_WAV_OPEN_CMD,wav_modeset_recive},
                              {SDCARD_SIZECHK_B809_CMD,sdcard_sizechk_recive},
-                             {DIVLIST_IPCHK_CMD,divlist_ipchk_recive}
+                             {DIVLIST_IPCHK_CMD,divlist_ipchk_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 	
@@ -110,13 +110,13 @@ void init_funlist_len(){
 conn_list_t conn_list[MAX_UDP_CONNET];
 //connect_list_t connect_list;
 //conn_long_list_t conn_long_list;
-mes_send_list_t mes_send_list = {0};
+mes_send_list_t mes_send_list;
 //-----------------------------------------
 // div list
 div_list_t div_list;
 //------------------------------------------
 // host info
-host_info_t host_info = {0};
+host_info_t host_info;
 host_info_t host_info_tmp = {
                          {0x42,0x4C,0x45,0x00,0x00,0x00},//mac
                          {0x9A,0x5B,0xF6,0x65,0x68,0x56,0x3B,0x4E,0x3A,0x67,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00}, //NAME
@@ -131,9 +131,9 @@ host_info_t host_info_tmp = {
                          0x00,    //regiser state
                          0x00,  //regiser day
                          {//172,16,13,119,//ip
-                          172,16,13,119,//ip
+                          192,168,168,168,//ip
                           255,255,255,0,//netmask
-                          172,16,13,254}, //gateway 
+                          0,0,0,0}, //gateway 
                          {0x49,0x00,0x54,0x00,0x43,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,00,00,00,00,00,00,00,00,00,00}, //BRAND
                          0x00,
                          0x00,
@@ -156,7 +156,7 @@ timetask_list_t timetask_list;
 timetask_now_t timetask_now;
 
 // 即时任务链表
-rttask_lsit_t rttask_lsit = {0};
+rttask_lsit_t rttask_lsit;
 // 即时任务启动连接建立状态
 rttask_build_state_t rttask_build_state[MAX_RTTASK_CONTORL_NUM];
 
