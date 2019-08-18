@@ -24,6 +24,7 @@ extern "C" {
 
 #define ALL_ACCOUNT_ENTER   0
 
+#define PRINT_CONNET_ACCOUNT 0
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
 //---------------------------------

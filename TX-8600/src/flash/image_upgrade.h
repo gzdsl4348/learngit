@@ -22,7 +22,6 @@ enum {
 
 #define IMAGE_UPGRADE_FIFO_SIZE 512
 
-//#define IMAGE_UPGRADE_MAX_SIZE (1024*128)
 
 typedef struct image_upgrade_mgr_t
 {
@@ -45,6 +44,6 @@ int  _begin_image_upgrade(unsigned int image_size);
 void _stop_image_upgrade(int error);
 void _image_upgrade_poll(server image_upgrade_if i_image, int interval_ms);
 
-extern image_upgrade_mgr_t gt_ium;
+extern image_upgrade_mgr_t g_upgrade_manager;
 
 #endif

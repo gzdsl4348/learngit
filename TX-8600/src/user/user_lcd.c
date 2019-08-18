@@ -498,8 +498,9 @@ void user_disp_version(){
     send_buff(DISP_VER_ID);
 }
 
-
+// 显示DHCP打开
 void dhcp_disp_en(){
+    //“DHCP打开” 
     uint8_t dhcp_enchar[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x00,0x3A,0x62,0x53,0x5F,0x00}; 
     memcpy(&disp_buff[DAT_DISP_BASE],dhcp_enchar,14);
     disp_len = DAT_DISP_BASE+14;
@@ -515,6 +516,7 @@ void dhcp_disp_dis(){
     #endif
 }
 
+// 清空DHCP显示
 void dhcp_disp_none(){
     uint8_t dhcp_nonechar[]={0x00,0x00}; 
     memcpy(&disp_buff[DAT_DISP_BASE],dhcp_nonechar,2);
@@ -523,6 +525,7 @@ void dhcp_disp_none(){
     
 }
 
+// 显示IP冲突
 void ip_conflict_disp(uint8_t state){
     if(state){
         uint8_t ipconflict_char[]={0x00,0x49,0x00,0x50,0x51,0xB2,0x7A,0x81,0x00,0x21}; 
@@ -537,27 +540,36 @@ void ip_conflict_disp(uint8_t state){
     }
 }
 
+// 显示云连接图标状态
+// state=0 关闭
+// state=1 打开
 void disp_couldstate(uint8_t state){
     user_disp_icon(DISP_COULD_ID,state);
 }
 
+// 显示IP获取中
 void dhcp_getin_disp(){
-    uint8_t disp_char[]={0x00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x4E,0x2D}; 
-    memcpy(&disp_buff[DAT_DISP_BASE],disp_char,14);
-    disp_len = DAT_DISP_BASE+14;
+    // "IP获取中"
+    uint8_t disp_char[]={0x00,0x49,0x00,0x50,0x83,0xB7,0x53,0xD6,0x4E,0x2D}; 
+    memcpy(&disp_buff[DAT_DISP_BASE],disp_char,10);
+    disp_len = DAT_DISP_BASE+10;
     send_buff(DISP_IPCONFILCT_ID);
 }
 
+// state=0 显示IP获取成功
+// state=1 显示IP获取失败
 void dhcp_getin_over_disp(uint8_t state){
-    uint8_t disp_char_succse[]={00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x62,0x10,0x52,0x9F}; 
-    uint8_t disp_char_fail[]={00,0x44,0x00,0x48,0x00,0x43,0x00,0x50,0x83,0xB7,0x53,0xD6,0x59,0x31,0x8D,0x25};
+    // “IP获取成功”
+    uint8_t disp_char_succse[]={0x00,0x49,0x00,0x50,0x83,0xB7,0x53,0xD6,0x62,0x10,0x52,0x9F}; 
+    // “IP获取失败”
+    uint8_t disp_char_fail[]={0x00,0x49,0x00,0x50,0x83,0xB7,0x53,0xD6,0x59,0x31,0x8D,0x25};
     if(state){
-        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_succse,16);
+        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_succse,12);
 
     }else{
-        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_fail,16);
+        memcpy(&disp_buff[DAT_DISP_BASE],disp_char_fail,12);
     }
-    disp_len = DAT_DISP_BASE+16;
+    disp_len = DAT_DISP_BASE+12;
     send_buff(DISP_IPCONFILCT_ID);
 }
 

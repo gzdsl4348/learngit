@@ -148,9 +148,10 @@ static uint8_t tftp_upgrade_jude_header(uint8_t block[])
 void tftp_upgrade_reply_deal(client xtcp_if i_xtcp, client image_upgrade_if i_image)
 {
     int event, data;
-    
+    debug_printf("get im in\n");
     i_image.get_image_upgrade_reply(event, data);
     
+    debug_printf("get im out\n");
     switch(event)
     {
         case UPGRADE_END_REPLY:
@@ -529,7 +530,6 @@ void sys_info_init(){
     //
     conn_list_init();   //链表初始化
     sys_gobalval_init(); //全局变量初始化
- 
     }//unsafe
 }
 
@@ -803,12 +803,14 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             }
             case i_image.image_upgrade_ready():
             {
+                debug_printf("im up in\n");
                 tftp_upgrade_reply_deal(i_xtcp, i_image);
+                debug_printf("im out in\n");
                 break;
             }     
             case tftptime when timerafter(time_tftp+500000):> time_tftp:
             {            
-                tftp_tmr_poll(i_xtcp, 5);
+                tftp_tmr_poll(i_xtcp, 5);                
                 break;
             }
         			
@@ -817,7 +819,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	  		//-----------------------------------------------------------------------------
 	 		case i_xtcp.packet_ready():
 				i_xtcp.get_packet(conn, all_rx_buf, RX_BUFFER_SIZE, data_len);
-
                 if(pc_config_handle(i_xtcp,conn,all_rx_buf,data_len)){
                     user_xtcp_ipconfig(host_info.ipconfig);
                     hostinfo_fl_write();
@@ -841,7 +842,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         if(g_sys_val.host_ipget_mode){
                             // 判断是否获取到DHCP
                             if(i_xtcp.get_autoip_flag()==0){
-                                xtcp_debug_printf("\n\n get dhcp \n\n");
+                                //xtcp_debug_printf("\n\n get dhcp \n\n");
                                 memcpy(&host_info.ipconfig,&ipconfig,sizeof(xtcp_ipconfig_t));
                                 dhcp_getin_over_disp(1);
                             }
@@ -916,11 +917,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             }
                         }
                         disp_text_conn(i_xtcp);
+                        
 						break;
 		 			case XTCP_RECV_DATA:
                         //===================================================================================
-
-                        
                         #if 0
                         //获取真实数据
                         xtcp_debug_printf("could rec len %d\n",data_len);
@@ -1021,7 +1021,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		    	second_process();
                 // 建立日志失败，继续建立
                 if(g_sys_val.log_waitmk_f){
-                    debug_printf("delay mk log\n");
+                    //debug_printf("delay mk log\n");
                     g_sys_val.log_waitmk_f = user_file_mklog();
                 }
 				// 广播连接关闭处理
@@ -1090,7 +1090,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     }
                 }
                 //--------------------------------------
-              }
+            }
             //--------------------------------------------------
             // 10hz process
             //-------------------------------------------------

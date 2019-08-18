@@ -504,7 +504,8 @@ uint8_t user_file_mklog(){
         memcpy(host_info.log_filename[host_info.log_daycnt],g_sys_val.log_info_p->buff,64);
         //
         host_info.log_daycnt++;
-        hostinfo_fl_write();    //烧写主机信息
+        if(res==0)
+            hostinfo_fl_write();    //烧写主机信息
         return res;
     }
 }

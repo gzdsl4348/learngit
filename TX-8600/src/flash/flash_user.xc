@@ -110,10 +110,10 @@ void flash_process(server image_upgrade_if i_image,streaming chanend c_sdram)
             }            
             case i_image.put_image_data(unsigned char data[], unsigned int num, char last_page_flag) -> int idle_size:
             {
-                KFIFO_PUT(gt_ium.kf, data, num);
-                idle_size = IMAGE_UPGRADE_FIFO_SIZE-KFIFO_SIZE(gt_ium.kf);
+                KFIFO_PUT(g_upgrade_manager.kf, data, num);
+                idle_size = IMAGE_UPGRADE_FIFO_SIZE-KFIFO_SIZE(g_upgrade_manager.kf);
                 
-                gt_ium.last_page_flag = last_page_flag;
+                g_upgrade_manager.last_page_flag = last_page_flag;
                 break;
             }
             
@@ -292,7 +292,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 //fl_sector_write_flag[sector_num]= 1;
                 set_flash_sector_write_flag(sector_num);
                 tmr :> t2;
-                //debug_printf("\nflash_sector_write %dus %d\n\n", (t2-t1)/100, sector_num);
+                debug_printf("\nflash_sector_write %dus %d\n\n", (t2-t1)/100, sector_num);
                 break;
             }
             case if_fl_manage.flash_sector_read(unsigned sector_num, uint8_t buff[]):

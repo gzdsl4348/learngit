@@ -530,7 +530,11 @@ void conn_overtime_close(){
         }
     }
   }  
-    xtcp_debug_printf("connect num %d\n",conn_cnt);
+  static uint8_t secodn=0;
+   secodn++;
+  #if PRINT_CONNET_ACCOUNT
+  xtcp_debug_printf("connect num %d %d\n",conn_cnt,secodn);
+  #endif
 }
 #if 1
 void xtcp_buff_fifo_put(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf){

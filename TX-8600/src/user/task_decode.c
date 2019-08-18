@@ -48,9 +48,10 @@ void timer_tasklist_read(){
         timer_task_read(&g_tmp_union.task_allinfo_tmp,i);
         timetask_list.timetask[i].id = g_tmp_union.task_allinfo_tmp.task_coninfo.task_id;
         //判断错误任务 复位任务        判断方案状态
-        if((timetask_list.timetask[i].id!=0xFFFF && timetask_list.timetask[i].id!=i) || 
-            (solution_list.solu_info[g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn].state==0xFF)){
-            //xtcp_debug_printf("write task %d\n",timetask_list.timetask[i].id);
+        if(timetask_list.timetask[i].id!=0xFFFF && 
+           (timetask_list.timetask[i].id!=i || solution_list.solu_info[g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn].state==0xFF)
+          ){
+            //debug_printf("write task %d\n",timetask_list.timetask[i].id);
             g_tmp_union.task_allinfo_tmp.task_coninfo.task_id=0xFFFF;
             g_tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum=0x00;
             g_tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum = 0x00;

@@ -460,15 +460,15 @@ void account_list_read(){
     // admin
     memcpy(account_info[0].name,MAIN_USER,DIV_NAME_NUM);
     // sn
-    uint8_t sn[14] = {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00};  //sn  123456 
-    memcpy(account_info[0].sn,sn,SYS_PASSWORD_NUM);
-    memset(&account_info[0].time_info,0x00,3);
-    memset(&account_info[0].date_info,0x01,4);
-    memset(&account_info[0].build_time_info,0x00,3);
-    memset(&account_info[0].build_date_info,0x01,4);
-    account_info[0].div_tol = 0;
-    g_tmp_union.account_all_info.account_info=account_info[0];
-    account_fl_write(&g_tmp_union.account_all_info,0);
+    //uint8_t sn[14] = {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00};  //sn  123456 
+    //memcpy(account_info[0].sn,sn,SYS_PASSWORD_NUM);
+    //memset(&account_info[0].time_info,0x00,3);
+    //memset(&account_info[0].date_info,0x01,4);
+    //memset(&account_info[0].build_time_info,0x00,3);
+    //memset(&account_info[0].build_date_info,0x01,4);
+    //account_info[0].div_tol = 0;
+    //g_tmp_union.account_all_info.account_info=account_info[0];
+    //account_fl_write(&g_tmp_union.account_all_info,0);
 }
 
 
