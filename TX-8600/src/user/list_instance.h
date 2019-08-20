@@ -18,13 +18,18 @@ extern "C" {
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
 
-#define LIST_TEXT_DEBUG 0
+#define LIST_TEXT_DEBUG 0 // 开启列表打印
 
-#define NO_NEED_REGISTER 0
+#define NO_NEED_REGISTER 0 // 无需注册
 
-#define ALL_ACCOUNT_ENTER   0
+#define ALL_ACCOUNT_ENTER   0 // 允许无限制登录
 
-#define PRINT_CONNET_ACCOUNT 0
+#define PRINT_CONNET_ACCOUNT 0 // 打印链接账号数
+
+#define REGITSER_NEWVESION_DISP 0 // 云服务器显示 试用 过期 激活 未激活模式
+
+#define DISABLE_COULDOFFLINE_MODE    0 // 关闭云离线停止工作模式
+
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
 //---------------------------------
@@ -175,6 +180,9 @@ typedef struct host_info_t{
     uint8_t log_daycnt;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
+    //
+    date_info_t online_date_info;          // 记录日期
+    uint8_t offline_mode;           // 离线模式
     //uint8_t noneed_register;  // 0 无需注册   1 需要注册
 }host_info_t;
 

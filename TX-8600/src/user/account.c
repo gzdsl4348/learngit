@@ -329,10 +329,50 @@ void account_sys_register_recive(){
     xtcp_debug_printf("\n");
     //比较机器码
     if(charncmp(maschien_code,g_sys_val.maschine_code,10)){
-        host_info.regiser_state = xtcp_rx_buf[POL_DAT_BASE+10]^key_tmp;
-        xtcp_debug_printf("BE02 rec %d \n",host_info.regiser_state );
-        // 有限期注册
+        //--------------------------------------------------------------------------------------
+        // 登录回复状态                   //激活状态查询
+        // 0 未注册                    //0 未激活
+        // 1 有限期注册                  //1 无限期
+        // 2 永久注册                   //2 有限期
+        // 3 试用(增加)                 //3 试用期
+        // 4 已过期(增加)
+        // 5 云离线(增加)
+        //------------------------------------------------------------------------------------
+        // 注册天数
         host_info.regiser_days = (xtcp_rx_buf[POL_DAT_BASE+11]^key_tmp)|((xtcp_rx_buf[POL_DAT_BASE+12]^key_tmp)<<8);
+        host_info.regiser_state = xtcp_rx_buf[POL_DAT_BASE+10]^key_tmp;
+        //
+        xtcp_debug_printf("BE02 rec %d regday %d \n",host_info.regiser_state,host_info.regiser_days);
+        //------------------------------------------------------------------------------------------------------------------------------------
+        #if REGITSER_NEWVESION_DISP
+        //------------------------------------------------------------------------------------------------------------------------------------
+        // 未注册
+        if(host_info.regiser_state==0){
+            host_info.regiser_state = 0;
+        }
+        // 无限期注册
+        else if(host_info.regiser_state==1){
+            host_info.regiser_state = 2;
+        }
+        // 已过期
+        else if(host_info.regiser_state==2 && ((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
+            host_info.regiser_state = 4;
+        }
+        // 有限期注册
+        else if(host_info.regiser_state==2){
+            host_info.regiser_state = 1;
+        }
+        // 试用过期 未激活
+        else if(host_info.regiser_state=3 && ((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
+            host_info.regiser_state = 0;
+        }
+        // 试用中
+        else{
+            host_info.regiser_state = 3;
+        }        
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+        #else
+        //-------------------------------------------------------------------------------------------------------------------------------------------
         // 未注册
         if((host_info.regiser_state==0)&&(host_info.regiser_days == 0)){
             host_info.regiser_state = 0;
@@ -341,12 +381,15 @@ void account_sys_register_recive(){
         else if(host_info.regiser_state==1){
             host_info.regiser_state = 2;
         }
-        else if((host_info.regiser_state==2)&&((host_info.regiser_days==0)||(host_info.regiser_days >365*3))){
-            host_info.regiser_state = 0;
+        // 有限期注册
+        else if((host_info.regiser_state==2 || host_info.regiser_state==3)&&((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
+            host_info.regiser_state = 0; // 过期，当未注册
         }
         else{
-            host_info.regiser_state = 1;
+            host_info.regiser_state = 1; // 未过期
         }
+        #endif
+        //----------------------------------------------------------------------------------
         // 需更新注册信息
         if(g_sys_val.register_need_send){
             user_sending_len = cld_appregsied_request_build();   
@@ -491,7 +534,7 @@ void account_sysonline_recive(){
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
-// 手机在线保持  B90C
+// 手机在线保持  B90C
 void app_sysonline_recive(){
     //xtcp_debug_printf("rec app online\n");
     sysonline_recive();
@@ -550,6 +593,9 @@ void time_sync_deocde(uint8_t could_s){
     g_sys_val.time_info.second = xtcp_rx_buf[USER_TIMSYNC_SECOND_B];
     g_sys_val.date_info.week = xtcp_rx_buf[USER_TIMSYNC_WEEK_B];
     g_sys_val.today_date = g_sys_val.date_info;
+    // 获取云时间备份
+    host_info.online_date_info = g_sys_val.date_info; 
+    host_info.offline_mode=0;
     //
     ds1302_date_set();
     ds1302_time_set();
@@ -570,6 +616,8 @@ void time_sync_deocde(uint8_t could_s){
     user_disp_time();
 
     user_disp_data();
+    
+    hostinfo_fl_write();    //烧写主机信息
 }
 
 void user_timer_sync_recive(){

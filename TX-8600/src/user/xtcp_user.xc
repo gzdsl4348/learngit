@@ -426,7 +426,7 @@ void user_fldat_init(){
 	//MAC 写入
 	// 72 4B
 	#if 0
-    i_user_flash->flash_sector_read(USER_DAT_SECTOR,g_tmp_union.buff);
+    i_user_flash->flash_sector_read(SYSTEM_0_DAT_SECTOR_BASE,g_tmp_union.buff);
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
     //
     host_info.mac[0]=0x42;
@@ -439,7 +439,8 @@ void user_fldat_init(){
     //    
 	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
-    user_fl_sector_write(USER_DAT_SECTOR);
+    user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
+    user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
     #endif
     // sn
     //------------------------------------------------------------
@@ -736,6 +737,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     // 初始化rx指针
     xtcp_rx_buf = all_rx_buf;
 
+    host_info.wav_mode=1; 
 
     //====================================================================================================
 	//main loop process 
