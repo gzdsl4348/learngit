@@ -53,7 +53,7 @@ extern "C" {
 // 最大UDP连接数
 #define MAX_UDP_CONNET	180
 
-#define MAX_CONNET_LIST	(10) //支持同时20部机建立任务
+#define MAX_CONNET_LIST	(10) //支持同时10部机建立任务
 
 #define MAX_ACCOUNT_CONNET (30) //同时支持30个控制机
 

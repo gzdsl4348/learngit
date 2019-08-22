@@ -556,8 +556,8 @@ void dhcp_getin_disp(){
     send_buff(DISP_IPCONFILCT_ID);
 }
 
-// state=0 显示IP获取成功
-// state=1 显示IP获取失败
+// state=0 显示IP获取失败
+// state=1 显示IP获取成功
 void dhcp_getin_over_disp(uint8_t state){
     // “IP获取成功”
     uint8_t disp_char_succse[]={0x00,0x49,0x00,0x50,0x83,0xB7,0x53,0xD6,0x62,0x10,0x52,0x9F}; 

@@ -78,13 +78,17 @@ extern host_info_t host_info;
 //-------------------------------------------------------------------------------------------------------
 void mac_writeflash(uint8_t macadr[6]){
     unsafe{
-	// Get Host info
-	i_user_flash->flash_sector_read(SYSTEM_0_DAT_SECTOR_BASE,g_tmp_union.buff);
-    //
+    int init_string = 0;
     memcpy(host_info.mac,macadr,6);
+	// Get Host info
+    user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
+	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
+    sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     //
     user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
     user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
+    
+    user_disp_ip(host_info.ipconfig);
     //
     xtcp_debug_printf("write: %x,%x,%x,%x,%x,%x\n",macadr[0],macadr[1],macadr[2],macadr[3],macadr[4],macadr[5]);
     }
@@ -448,12 +452,19 @@ void user_fldat_init(){
 		return;
 	}
     //------------------------------------------------------------    
+    // 用户信息初始化
+    hostinfo_init_decode();
     // 账户列表初始化
     account_list_init();
     // 账户flash初始化
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
         g_tmp_union.account_all_info.account_info=account_info[i];
         account_fl_write(&g_tmp_union.account_all_info,i);
+    }
+    //
+    if(host_info.mac[0]==0x42 && host_info.mac[1]==0x4C && host_info.mac[2]==0x45 && 
+       host_info.mac[3]==0x00 && host_info.mac[4]==0x00 && host_info.mac[5]==0x00 ){
+       return;
     }
     //-------------------------------------------------------------
     // 分区信息初始化
@@ -468,9 +479,6 @@ void user_fldat_init(){
     // 即时任务链表初始化
     fl_rttask_dat_init();
     //
-    //-------------------------------------------------------------
-    // 用户信息初始化
-    hostinfo_init_decode();
     //-----------------------------------------------------------------------------------------------------
     // 方案信息初始化
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++)
@@ -847,6 +855,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 //xtcp_debug_printf("\n\n get dhcp \n\n");
                                 memcpy(&host_info.ipconfig,&ipconfig,sizeof(xtcp_ipconfig_t));
                                 dhcp_getin_over_disp(1);
+                                hostinfo_fl_write();    //烧写主机信息
+                                g_sys_val.reboot_f = 1;
                             }
                             else{
                                 dhcp_getin_over_disp(0);

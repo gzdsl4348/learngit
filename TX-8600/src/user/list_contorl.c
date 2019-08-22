@@ -436,7 +436,9 @@ void account_list_init(){
     // admin
     memcpy(account_info[0].name,MAIN_USER,DIV_NAME_NUM);
     // sn
-    memcpy(account_info[0].sn,host_info.sn,SYS_PASSWORD_NUM);
+    uint8_t sn[14] = {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00};  //sn  123456 
+    memcpy(account_info[0].sn,sn,SYS_PASSWORD_NUM);
+    //
     memset(&account_info[0].phone_num,0x00,DIV_NAME_NUM);
     memset(&account_info[0].time_info,0x00,3);
     memset(&account_info[0].date_info,0x01,4);
@@ -459,6 +461,17 @@ void account_list_read(){
     account_info[0].login_state=OFFLINE;
     // admin
     memcpy(account_info[0].name,MAIN_USER,DIV_NAME_NUM);
+    for(uint8_t i=0;i<32;i++){
+        xtcp_debug_printf("%x ",account_info[0].name[i]);
+    }    
+    xtcp_debug_printf("\n");
+
+    for(uint8_t i=0;i<14;i++){
+        xtcp_debug_printf("%x ",account_info[0].sn[i]);
+    }    
+    xtcp_debug_printf("\n");
+
+    
     // sn
     //uint8_t sn[14] = {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00};  //sn  123456 
     //memcpy(account_info[0].sn,sn,SYS_PASSWORD_NUM);
