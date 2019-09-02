@@ -210,7 +210,7 @@ void flash_process(server image_upgrade_if i_image,streaming chanend c_sdram)
 // 非阻塞线程
 //===============================================================================================
 [[combinable]]
-void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdram){
+void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static const unsigned n_fl_manage,streaming chanend c_sdram){
     timer tmr;
     uint32_t i, t1, t2;
     
@@ -226,12 +226,12 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
     
 	while(1){
 	    select{
-            case if_fl_manage.start_write_backup():
+            case if_fl_manage[unsigned a].start_write_backup():
             {
                 write_backup_offset = 0;
                 break;
             }
-            case if_fl_manage.write_backup(uint32_t size, uint8_t buff[]):
+            case if_fl_manage[unsigned a].write_backup(uint32_t size, uint8_t buff[]):
             {
                 for(i=0; i<(size/256); i++)
                 {
@@ -243,12 +243,12 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 write_backup_offset += size;
                 break;
             }
-            case if_fl_manage.start_write_backup2flash():
+            case if_fl_manage[unsigned a].start_write_backup2flash():
             {
                 start_write_backup2flash();
                 break;
             }
-            case if_fl_manage.get_write_backup2flash_progress(uint8_t &complete, uint32_t &total, uint32_t &writed):
+            case if_fl_manage[unsigned a].get_write_backup2flash_progress(uint8_t &complete, uint32_t &total, uint32_t &writed):
             {
                 uint8_t c;
                 uint32_t t;
@@ -260,7 +260,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 writed = (w>BACKUP_DATA_START_SECTOR)?(w-BACKUP_DATA_START_SECTOR):0;
                 break;
             }
-            case if_fl_manage.read_backup(uint32_t address, uint32_t size, uint8_t buff[]):
+            case if_fl_manage[unsigned a].read_backup(uint32_t address, uint32_t size, uint8_t buff[]):
             {
                 for(i=0; i<(size/256); i++)
                 {
@@ -270,17 +270,17 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 }
                 break;
             }
-            case if_fl_manage.is_flash_init_complete()-> uint8_t res:
+            case if_fl_manage[unsigned a].is_flash_init_complete()-> uint8_t res:
             {
                 res = !is_flash_init();
                 break;
             }
-            case if_fl_manage.is_flash_write_complete() -> uint8_t res:
+            case if_fl_manage[unsigned a].is_flash_write_complete() -> uint8_t res:
             {
                 res = is_flash_write_complete();
                 break;
             }
-            case if_fl_manage.flash_sector_write(unsigned sector_num,uint8_t buff[]):
+            case if_fl_manage[unsigned a].flash_sector_write(unsigned sector_num,uint8_t buff[]):
             {
                 tmr :> t1;
                 for(i=0; i<16; i++)
@@ -295,7 +295,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 debug_printf("\nflash_sector_write %dus %d\n\n", (t2-t1)/100, sector_num);
                 break;
             }
-            case if_fl_manage.flash_sector_read(unsigned sector_num, uint8_t buff[]):
+            case if_fl_manage[unsigned a].flash_sector_read(unsigned sector_num, uint8_t buff[]):
             {
                 for(i=0; i<16; i++)
                 {
@@ -306,7 +306,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 break;
             }
             // user 读音乐库文件夹列表 [int n + n*dir_info_t]
-            case if_fl_manage.read_dirtbl(uint8_t buff[], int btr, int &br):
+            case if_fl_manage[unsigned a].read_dirtbl(uint8_t buff[], int btr, int &br):
             {
                 //fl_readDataPage(SDRAM_FILE_LIST_START*16,tmp_buff);
                 sdram_read(c_sdram, sdram_state, SDRAM_FILE_LIST_START, (256/4), pw_buff);
@@ -326,7 +326,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 break;
             }
             // user 读音乐文件列表 [int n + n*music_info_t]
-        case if_fl_manage.read_musictbl(uint8_t music_index, uint8_t buff[], int btr, int &br):
+        case if_fl_manage[unsigned a].read_musictbl(uint8_t music_index, uint8_t buff[], int btr, int &br):
             {
                 sdram_read(c_sdram, sdram_state, (SDRAM_FILE_LIST_START+music_index*SDRAM_FILE_LIST_SECTOR_SIZE), (256/4), pw_buff);
                 sdram_complete(c_sdram, sdram_state);
@@ -343,31 +343,31 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
                 break;
             }           
         // 批处理临时音乐文件名读取
-        case if_fl_manage.if_fl_music_tmpbuf_read(unsigned num,uint8_t buff[]):
+        case if_fl_manage[unsigned a].if_fl_music_tmpbuf_read(unsigned num,uint8_t buff[]):
             sdram_read(c_sdram, sdram_state, USER_MUSICNAME_TMP_BASE+num*64/4, (64/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff, tmp_buff, 64);
             break;
         // 批处理临时音乐文件名存放
-        case if_fl_manage.if_fl_music_tmpbuf_write(unsigned num,uint8_t buff[]):
+        case if_fl_manage[unsigned a].if_fl_music_tmpbuf_write(unsigned num,uint8_t buff[]):
             memcpy(tmp_buff, buff, 64);
             sdram_write(c_sdram, sdram_state, USER_MUSICNAME_TMP_BASE+num*64/4, (64/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             break;
         // 搜索设备临时存放
-        case if_fl_manage.if_fl_divinfo_tmpbuf_write(unsigned num,uint8_t buff[]):
+        case if_fl_manage[unsigned a].if_fl_divinfo_tmpbuf_write(unsigned num,uint8_t buff[]):
             memcpy(tmp_buff, buff, 200);
             sdram_write(c_sdram, sdram_state, USER_DIV_SEARCH_BASE+num*200/4, (200/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             break;
         // 搜索设备读取
-        case if_fl_manage.if_fl_divinfo_tmpbuf_read(unsigned num,uint8_t buff[]):
+        case if_fl_manage[unsigned a].if_fl_divinfo_tmpbuf_read(unsigned num,uint8_t buff[]):
             sdram_read(c_sdram, sdram_state, USER_DIV_SEARCH_BASE+num*200/4, (200/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
             memcpy(buff, tmp_buff, 200);
             break;
         // xtcp fifo 写入
-        case if_fl_manage.xtcp_buff_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
+        case if_fl_manage[unsigned a].xtcp_buff_fifo_put(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
             unsigned data_base;
             if(tx_rx_f){
                 data_base = USER_XTCP_TXFIFO_BASE;
@@ -379,7 +379,7 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             sdram_complete(c_sdram, sdram_state);
             break;
         // xtcp fifo 读取
-        case if_fl_manage.xtcp_buff_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
+        case if_fl_manage[unsigned a].xtcp_buff_fifo_get(uint8_t num,uint8_t buff[],uint8_t tx_rx_f):
             unsigned data_base;
             if(tx_rx_f){
                 data_base = USER_XTCP_TXFIFO_BASE;
@@ -391,19 +391,19 @@ void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdra
             memcpy(buff,pw_buff,1472);
             break;
 		// 消息更新 写入
-	    case if_fl_manage.if_messend_buff_put(uint8_t wptr,uint8_t buff[]):
+	    case if_fl_manage[unsigned a].if_messend_buff_put(uint8_t wptr,uint8_t buff[]):
             memcpy(tmp_buff, buff, 1472);
             sdram_write(c_sdram, sdram_state, USER_MESSEND_BUFF_BASE+wptr*1472/4, (1472/4), pw_buff);
             sdram_complete(c_sdram, sdram_state);
 			break;
 		// 消息读取 写入
-		case if_fl_manage.if_messend_buff_get(uint8_t rptr,uint8_t buff[]):
+		case if_fl_manage[unsigned a].if_messend_buff_get(uint8_t rptr,uint8_t buff[]):
 			sdram_read(c_sdram, sdram_state, USER_MESSEND_BUFF_BASE+rptr*1472/4, (1472/4), pw_buff);
 			sdram_complete(c_sdram, sdram_state);
 			memcpy(buff,pw_buff,1472);
 			break;
 		// wifi串口
-        case if_fl_manage.uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
+        case if_fl_manage[unsigned a].uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
             switch(mode){
                 case 0:
                     for(uint8_t i=0;i<len;i++){

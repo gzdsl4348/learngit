@@ -17,7 +17,7 @@
 #include "eth_audio.h"
 #include "eth_audio_config.h"
 #include "protocol_adrbase.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "debug_print.h"
 #include "sys_log.h"
 
@@ -67,11 +67,9 @@ typedef struct g_sys_val_t{
 
     //-------------------------------------------
     // flash 烧写标志位
-    unsigned need_flash;
+    //unsigned need_flash;
     // flash 设备列表烧写计数位
     unsigned fl_divlist_inc;
-    // 需flash 操作的任务编号
-    uint16_t fl_task_sn;
     //
     tmp_union_l_t tmp_union;
     // 协议任务处理部分

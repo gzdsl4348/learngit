@@ -453,7 +453,7 @@ void account_list_init(){
 //================================================================================
 void account_list_read(){
     for(uint8_t i=0; i<MAX_ACCOUNT_NUM; i++){
-        account_fl_read(&g_tmp_union.account_all_info,i);
+        fl_account_read(&g_tmp_union.account_all_info,i);
         account_info[i] = g_tmp_union.account_all_info.account_info;
     }
     account_info[0].id=0x00;
@@ -461,6 +461,7 @@ void account_list_read(){
     account_info[0].login_state=OFFLINE;
     // admin
     memcpy(account_info[0].name,MAIN_USER,DIV_NAME_NUM);
+    /*
     for(uint8_t i=0;i<32;i++){
         xtcp_debug_printf("%x ",account_info[0].name[i]);
     }    
@@ -470,7 +471,7 @@ void account_list_read(){
         xtcp_debug_printf("%x ",account_info[0].sn[i]);
     }    
     xtcp_debug_printf("\n");
-
+    */
     
     // sn
     //uint8_t sn[14] = {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00};  //sn  123456 
@@ -481,7 +482,7 @@ void account_list_read(){
     //memset(&account_info[0].build_date_info,0x01,4);
     //account_info[0].div_tol = 0;
     //g_tmp_union.account_all_info.account_info=account_info[0];
-    //account_fl_write(&g_tmp_union.account_all_info,0);
+    //fl_account_write(&g_tmp_union.account_all_info,0);
 }
 
 

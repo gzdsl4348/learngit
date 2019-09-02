@@ -99,7 +99,7 @@ void flash_process(server image_upgrade_if i_image,streaming chanend c_sdram);
 //----------------------------------------------------------------------------------
 //
 [[combinable]]
-void user_flash_manage(server fl_manage_if if_fl_manage,streaming chanend c_sdram);
+void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static const unsigned n_fl_manage,streaming chanend c_sdram);
 //==================================================================================================
 #endif
 

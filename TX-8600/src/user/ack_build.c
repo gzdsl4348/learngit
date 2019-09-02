@@ -1,6 +1,6 @@
 #include "ack_build.h"
 #include "checksum.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "list_contorl.h"
 #include "protocol_adrbase.h"
 #include "user_unti.h"
@@ -156,9 +156,7 @@ uint16_t heart_ack_build(uint8_t state){
     xtcp_tx_buf[POL_DAT_BASE+3] = g_sys_val.sys_timinc>>16;
     xtcp_tx_buf[POL_DAT_BASE+4] = g_sys_val.sys_timinc>>24;
     return build_endpage_decode(POL_DAT_BASE+5,DIV_HEART_CMD,&xtcp_rx_buf[POL_ID_BASE]);
-
 }
-
 
 //========================================================================================
 // 设备列表协议
@@ -281,7 +279,6 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_PHONENUM_B],account_info[user_id].phone_num,DIV_NAME_NUM);
     //
-    xtcp_debug_printf("log state %d\n",log_state);
     xtcp_tx_buf[AC_LOGIN_STATE_B] = log_state;
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYSSN_B],host_info.sn,SYS_PASSWORD_NUM);
@@ -301,7 +298,6 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B] = VERSION_TEN_H;
    
     xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1] = VERSION_TEN_L;
-    xtcp_debug_printf("ver %x %x  \n",xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B],xtcp_tx_buf[AC_LOGIN_SYS_VERSION_B+1]);
     //
     xtcp_tx_buf[AC_LOGIN_DHCP_EN_B] = host_info.dhcp_en;
     //
@@ -314,7 +310,6 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
     #endif
-    xtcp_debug_printf("register %d day %d\n",xtcp_tx_buf[AC_LOGIN_RES_STATE_B] ,host_info.regiser_days);
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
@@ -517,7 +512,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
         }
         i++;
         // 取flash数据
-        timer_task_read(&g_tmp_union.task_allinfo_tmp,t_list_connsend[list_num].list_info.tasklist.task_p->id);
+        fl_timertask_read(&g_tmp_union.task_allinfo_tmp,t_list_connsend[list_num].list_info.tasklist.task_p->id);
         tmp_p = &g_tmp_union.task_allinfo_tmp.task_coninfo;
         //
         xtcp_tx_buf[data_base+TASK_CK_SOLU_ID] = tmp_p->solution_sn; 
@@ -541,7 +536,6 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
         for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
             if((timetask_now.ch_state[j]!=0xFF)&&(timetask_now.task_musicplay[j].task_id==tmp_p->task_id)){
                 xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S] = 1;
-                xtcp_debug_printf("have task id %d\n\n",tmp_p->task_id);
             }
         }
         //xtcp_debug_printf("\n task s: %d \n",xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S]);
@@ -674,7 +668,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
         if(t_list_connsend[list_num].list_info.rttasklist.rttask_p==null)
             break;
         // 获得即时任务详细信息
-        rt_task_read(&g_tmp_union.rttask_dtinfo,t_list_connsend[list_num].list_info.rttasklist.rttask_p->rttask_id);
+        fl_rttask_read(&g_tmp_union.rttask_dtinfo,t_list_connsend[list_num].list_info.rttasklist.rttask_p->rttask_id);
         // 获得账户ID
         xtcp_tx_buf[data_base+RTTASK_CK_ACID] = g_tmp_union.rttask_dtinfo.account_id;
         // 获得即时任务ID
@@ -733,7 +727,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
 uint16_t rttask_dtinfo_chk_build(uint16_t id){
     uint16_t data_base;
     //-----------------------------------------------------
-    rt_task_read(&g_tmp_union.rttask_dtinfo,id);
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     //
     xtcp_tx_buf[RTTASK_DTCK_ACKID] = id;
     xtcp_tx_buf[RTTASK_DTCK_ACKID+1] = id>>8;
@@ -764,14 +758,13 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
     }
     // 获取任务详细信息
     else{
-        rt_task_read(&g_tmp_union.rttask_dtinfo,id);
+        fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     }
     // 任务建立与关闭
     xtcp_tx_buf[RTTASK_BUILD_CONTORL] = contorl;
     //
     xtcp_tx_buf[RTTASK_BUILD_ID] = g_tmp_union.rttask_dtinfo.rttask_id;
     xtcp_tx_buf[RTTASK_BUILD_ID+1] = g_tmp_union.rttask_dtinfo.rttask_id>>8;
-    xtcp_debug_printf("rttask id %d\n",g_tmp_union.rttask_dtinfo.rttask_id);
     // 随机ID
     xtcp_tx_buf[RTTASK_BUILD_CONID] = ran_id;
     xtcp_tx_buf[RTTASK_BUILD_CONID+1] = ran_id>>8;
@@ -822,7 +815,7 @@ uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttas
     uint16_t data_base;
     div_node_t *div_tmp_p=null;
     // 读取任务信息
-    rt_task_read(&g_tmp_union.rttask_dtinfo,id);
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     // 设备总量
     xtcp_tx_buf[RTTASK_LISTUP_DIVTOL] = g_tmp_union.rttask_dtinfo.div_tol;
     //
@@ -1158,7 +1151,7 @@ uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t con
 uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
     uint8_t task_state=0;
     
-    rt_task_read(&g_tmp_union.rttask_dtinfo,id);
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     //
     // 查找任务状态
     rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
@@ -1403,7 +1396,6 @@ uint16_t taskview_page_build(uint16_t cmd){
         rttask_info_p = rttask_info_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE] = tmp_num; //即时任务总数
-    xtcp_debug_printf("rttask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     while(timetask_p!=null){
@@ -1422,7 +1414,6 @@ uint16_t taskview_page_build(uint16_t cmd){
         }
     }
     xtcp_tx_buf[POL_DAT_BASE+2] = tmp_num; //方案总数
-    xtcp_debug_printf("solu num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num=0;
     while(div_info_p!=null){

@@ -1,5 +1,5 @@
-#ifndef __LIST_INSTANCE_H_
-#define __LIST_INSTANCE_H_
+#ifndef __SYS_CONFIG_DAT_H_
+#define __SYS_CONFIG_DAT_H_
 
 #include <stdint.h>
 #include "xtcp.h"
@@ -53,8 +53,6 @@ extern "C" {
 // 最大UDP连接数
 #define MAX_UDP_CONNET	180
 
-#define MAX_CONNET_LIST	(10) //支持同时10部机建立任务
-
 #define MAX_ACCOUNT_CONNET (30) //同时支持30个控制机
 
 #define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
@@ -82,7 +80,7 @@ extern "C" {
 // 最大即时任务数
 #define MAX_RT_TASK_NUM     50
 // 同时开关即时任务用户数
-#define MAX_RTTASK_CONTORL_NUM     10
+#define MAX_RTTASK_CONTORL_NUM     5
 
 // 最大方案数
 #define MAX_TASK_SOULTION   10 //10 //4打铃 
@@ -130,12 +128,11 @@ extern char *xtcp_rx_buf;
 extern char all_rx_buf[RX_BUFFER_SIZE];
 extern char all_tx_buf[TX_BUFFER_SIZE];
 
-#define MAX_BATCONTORL_OBJ_NUM 5    //最大保存批量文件处理对象数
+#define MAX_BATCONTORL_OBJ_NUM 5    //最大保存批量文件操作 恢复对象数
 
 extern uint16_t user_sending_len;
 
 extern xtcp_connection_t conn;
-
 
 //=================================================================
 // 日期信息
@@ -669,5 +666,5 @@ void init_funlist_len();
 #endif
 
 
-#endif//    __LIST_INSTANCE_H_
+#endif//    __SYS_CONFIG_DAT_H_
 

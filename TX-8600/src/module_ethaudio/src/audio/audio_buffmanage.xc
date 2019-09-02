@@ -11,15 +11,6 @@
 
 #include "audio_tx.h"
 
-
-static struct
-{
-    uint8_t flag;
-    uint16_t dst_ip[4];
-    uint16_t dst_mask[4];
-    uint8_t dst_mac[6];
-}g_static_route;
-
 static void debug_audio_devlist(eth_audio_dev_t audio_devlist[MAX_SENDCHAN_NUM], int num)
 {
     debug_printf("\ndebug_audio_devlist\n");
@@ -78,7 +69,7 @@ static void remove_media_list(media_info_t media_list[NUM_MEDIA_INPUTS], uint8_t
 }
 //--------------------------------------------------------------------------------
 
-void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
+void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 						 			 server ethaud_cfg_if i_ethaud_cfg[n_ethaud_cfg],
 						  			 static const unsigned n_ethaud_cfg){
 	//-----------------------------------------------------------------------
@@ -104,13 +95,7 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
 	//tx_flag = &g_t_val->tx_flag;
 	}//unsafe
 
-
-	// Add Eth TYPE Filter
-	if(!is_hp) i_eth_cfg.add_ethertype_filter(0, 0x0800);   	//ETH Fun
-	
 	//-------------------------------------------------------------------------
-	debug_printf("audio begin \n");
-    memset(&g_static_route, 0, sizeof(g_static_route));
 	//-------------------------------------------------------------------------
 	// main loop
 	//-------------------------------------------------------------------------
@@ -143,7 +128,6 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
 				g_t_val->standby=1;
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_desip_infolist(audio_txlist_t *t_audio_txlist,uint8_t ch,uint8_t priority):
-#if NEW_SEND_LIST_MODE_ENABLE
                 timer tmr;
                 uint32_t t1, t2;
                 //uint8_t priority = 0;
@@ -153,7 +137,7 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                 if(ch >= NUM_MEDIA_INPUTS) break;
                 if(t_audio_txlist->num_info>=MAX_SENDCHAN_NUM) break;
                 
-                tmr :> t1;
+                //tmr :> t1;
                 //eth_audio_dev_t dev;
                 for(i=0; i<t_audio_txlist->num_info; i++) { // ÂÖÑµÉè±¸
                     audio_devlist_free_index = -1;
@@ -204,19 +188,9 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                         g_t_val->audio_devlist[j].channel_num++;
                     }
                 }
-                tmr :> t2;
-                debug_audio_devlist(g_t_val->audio_devlist, MAX_SENDCHAN_NUM);
-                debug_printf("audio_devlist tick %d\n", t2-t1);
-#else
-				memcpy(&g_t_val->t_audio_txlist[ch],t_audio_txlist,sizeof(audio_txlist_t));	
-                for(i=0;i<g_t_val->t_audio_txlist[ch].num_info; i++){
-                    if(g_static_route.flag&ipaddr_maskcmp(g_t_val->ipaddr, g_static_route.dst_ip, g_static_route.dst_mask)) {
-                        /* Build an ethernet header. */
-                        memcpy(g_t_val->t_audio_txlist[ch].t_des_info[i].mac, g_static_route.dst_mac, 6);
-                    } else if(!(ipaddr_maskcmp(g_t_val->ipaddr,g_t_val->t_audio_txlist[ch].t_des_info[i].ip,g_t_val->ipmask)))
-                        memcpy(g_t_val->t_audio_txlist[ch].t_des_info[i].mac,g_t_val->ipgate_macaddr,6);
-                }
-#endif
+                //tmr :> t2;
+                //debug_audio_devlist(g_t_val->audio_devlist, MAX_SENDCHAN_NUM);
+                //debug_printf("audio_devlist tick %d\n", t2-t1);
                 g_t_val->sample_rate[ch] = 44100;
 				break;
 
@@ -264,7 +238,6 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
                     g_t_val->aux_timestamp[i] = timestamp[i];
                     g_t_val->audio_txen[i] = audio_txen[i];
                 }
-				debug_printf("set_audio_txen\n");
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_txvol(uint8_t audio_val[NUM_MEDIA_INPUTS]):
 				//memcpy(g_t_val->audio_txvol,audio_val,NUM_MEDIA_INPUTS);
@@ -275,12 +248,6 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg, int is_hp,
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_silentlv(uint8_t audio_silentlv[NUM_MEDIA_INPUTS]):
 				break;
-            case i_ethaud_cfg[uint8_t a].set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]):
-                memcpy(g_static_route.dst_ip, dst_ip, 4);
-                memcpy(g_static_route.dst_mask, dst_mask, 4);
-                memcpy(g_static_route.dst_mac, dst_mac, 6);
-                g_static_route.flag = 1;
-                break;
 			case i_ethaud_cfg[uint8_t a].chk_txpage_cnt(unsigned &txch_cnt):
 				txch_cnt = g_t_val->audio_tx_cnt;
 				g_t_val->audio_tx_cnt=0;

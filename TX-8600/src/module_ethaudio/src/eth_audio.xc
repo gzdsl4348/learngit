@@ -25,11 +25,10 @@ void eth_audio(client ethernet_cfg_if i_eth_cfg,
 				 static const unsigned n_ethaud_cfg,
                  client music_decoder_output_if if_mdo)
 {
-    int is_hp = !isnull(c_tx_hp);
 	//-----------------------------------------------------------------------------
 	par{
 		audio_tx(if_mdo,i_eth_rx_lp,i_eth_tx_lp,c_rx_hp,c_tx_hp);
-		audio_buffmanage_process(i_eth_cfg,is_hp, i_ethaud_cfg,n_ethaud_cfg);
+		audio_buffmanage_process(i_eth_cfg,i_ethaud_cfg,n_ethaud_cfg);
 		//clock_inc();
 	}
 }

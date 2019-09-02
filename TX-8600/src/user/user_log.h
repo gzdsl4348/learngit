@@ -12,7 +12,7 @@
 #define __USER_LOG_H_
 #include <string.h>
 #include <stdint.h>
-#include "list_instance.h"
+#include "sys_config_dat.h"
 
 /*---------------------------------------------------------------------------------------
 *@description: 账号登入日志记录

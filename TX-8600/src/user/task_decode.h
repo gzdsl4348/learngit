@@ -2,7 +2,7 @@
 #define __TASK_DECODE_H_
 
 #include <stdint.h>
-#include "list_instance.h"
+#include "sys_config_dat.h"
 
 // 定时任务列表初始化
 void task_fl_init();

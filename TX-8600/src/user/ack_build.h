@@ -2,7 +2,7 @@
 #define __ACK_BUILD_H_
 
 #include <stdint.h>
-#include "list_instance.h"
+#include "sys_config_dat.h"
 
 #if defined(__cplusplus) || defined(__XC__)
 extern "C" {

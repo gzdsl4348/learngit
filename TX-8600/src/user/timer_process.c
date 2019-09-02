@@ -1,5 +1,5 @@
 #include "timer_process.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "list_contorl.h"
 #include "user_xccode.h"
 #include "user_unti.h"
@@ -46,8 +46,8 @@ void timer_process(){
                 for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
                     if((solution_list.solu_info[i].en==1)&&(solution_list.solu_info[i].state!=0xFF))
                         solution_data_chk(i);
-                        g_sys_val.need_flash |= NEED_FL_SOLUTION;
                 }
+                fl_solution_write();
                 //
                 g_sys_val.today_date = g_sys_val.date_info;
                 //
@@ -59,7 +59,7 @@ void timer_process(){
                     if((host_info.regiser_days==0)&&(host_info.regiser_state==1)){
                         host_info.regiser_state = 0;
                     }
-                    hostinfo_fl_write();
+                    fl_hostinfo_write();
                 }
                 g_sys_val.today_date = g_sys_val.date_info;
             }
@@ -87,7 +87,6 @@ void timer_process(){
 void timee10hz_process(){
     mes_send_overtime();        // 主动上传到客户端消息同步
     task_10hz_mutich_play();    // 任务连续播放处理
-    timer_flash_dat_process();  // flash 延时烧录处理线程
     task_dtinfo_overtime_recive_close(); //关闭详细信息 连接
     disp_task_delay();          // 任务刷新显示
     bat_filecontorl_resend_tim(); //音乐回复重发

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "user_xccode.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "user_unti.h"
 
 #define MAX_INT_STRING_SIZE 10

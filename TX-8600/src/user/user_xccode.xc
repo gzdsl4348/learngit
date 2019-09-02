@@ -1,7 +1,7 @@
 #include "user_xccode.h"
 #include "debug_print.h"
 #include "flash_user.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "file.h"
 #include "debug_print.h"
 #include "music_play.h"
@@ -56,7 +56,7 @@ void user_uart_tx(uint8_t *data,uint8_t len){
 
 void stop_all_timetask(){
     unsafe{
-    xtcp_debug_printf("stop all task\n");
+    //sxtcp_debug_printf("stop all task\n");
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
         timetask_now.ch_state[i]=0xFF;
     }
@@ -372,11 +372,12 @@ int user_filefolder_del(uint8_t *f_name){
     unsafe{
     uint8_t tmp[PATCH_NAME_NUM];
     memcpy(tmp,f_name,PATCH_NAME_NUM);
+    /*
     for(uint8_t i=0;i<PATCH_NAME_NUM/2;i++){
         xtcp_debug_printf("%x ",((uint16_t *)tmp)[i]);
     }
     xtcp_debug_printf("end\n");
-    
+    */
     return i_fs_user->file_delete(tmp,PATCH_NAME_NUM);
     }
 }
@@ -505,7 +506,7 @@ uint8_t user_file_mklog(){
         //
         host_info.log_daycnt++;
         if(res==0)
-            hostinfo_fl_write();    //烧写主机信息
+            fl_hostinfo_write();    //烧写主机信息
         return res;
     }
 }

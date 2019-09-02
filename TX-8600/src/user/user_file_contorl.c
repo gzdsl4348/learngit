@@ -1,5 +1,5 @@
 #include "user_file_contorl.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "ack_build.h"
 #include "user_xccode.h"
 #include "list_contorl.h"
@@ -680,7 +680,7 @@ void sdcard_sizechk_recive(){
 //------------------------------------------------------
 void wav_modeset_recive(){
     host_info.wav_mode = xtcp_rx_buf[POL_DAT_BASE];
-    hostinfo_fl_write();    //烧写主机信息
+    fl_hostinfo_write();    //烧写主机信息
     user_set_wavmode();
     debug_printf("set wav %d\n",host_info.wav_mode);
 }

@@ -88,11 +88,6 @@ typedef interface ethaud_cfg_if{
 	//---------------------------------------------------------------------------
 	void set_audio_silentlv(uint8_t audio_silentlv[NUM_MEDIA_INPUTS]);		//0-50
 
-	//---------------------------------------------------------------------------
-	// set route text
-	//---------------------------------------------------------------------------
-    void set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]);
-
     void update_audio_desip_info(uint8_t dev_mac[6], uint8_t ip[4]);
 
 	void chk_txpage_cnt(unsigned &txch_cnt);

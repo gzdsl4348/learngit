@@ -2,7 +2,7 @@
 #define SYS_TEXT_SERVE_H
 
 #include <stdint.h>
-#include "list_instance.h"
+#include "sys_config_dat.h"
 
 void text_get_txpage_recive();
 

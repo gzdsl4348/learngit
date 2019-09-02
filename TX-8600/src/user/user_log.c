@@ -98,7 +98,7 @@ void log_musicfile_config(){
 
 // 即时任务控制 开启/停止
 void log_rttask_runingstate(uint16_t id){
-    rt_task_read(&g_tmp_union.rttask_dtinfo,id);
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     g_sys_val.log_info_p = log_info_chang("rttask contorl:%d 0=stop 1=start name:%l duratime:%d-second\r\r\n", 
                                         xtcp_rx_buf[RTTASK_PLAY_CONTORL],g_tmp_union.rttask_dtinfo.name,g_tmp_union.rttask_dtinfo.dura_time);
     user_loginfo_add(&xtcp_rx_buf[POL_ID_BASE],conn.remote_addr); 

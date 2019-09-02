@@ -3,7 +3,7 @@
 #include "account.h"
 #include "list_contorl.h"
 #include "conn_process.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "timer_process.h"
 #include "user_unti.h"
 #include "bsp_ds1302.h"
@@ -448,18 +448,18 @@ void user_fldat_init(){
     #endif
     // sn
     //------------------------------------------------------------
-    if(hostinfo_needreset_decode()){
+    if(read_hostinfo_reset_state()){
 		return;
 	}
     //------------------------------------------------------------    
     // 用户信息初始化
-    hostinfo_init_decode();
+    fl_hostinfo_init();
     // 账户列表初始化
     account_list_init();
     // 账户flash初始化
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
         g_tmp_union.account_all_info.account_info=account_info[i];
-        account_fl_write(&g_tmp_union.account_all_info,i);
+        fl_account_write(&g_tmp_union.account_all_info,i);
     }
     //
     if(host_info.mac[0]==0x42 && host_info.mac[1]==0x4C && host_info.mac[2]==0x45 && 
@@ -469,11 +469,10 @@ void user_fldat_init(){
     //-------------------------------------------------------------
     // 分区信息初始化
     area_list_init();
-    while(!timer_fl_arealist_decode()); //烧写
+    fl_area_write();
     //设备列表初始化
 	div_list_init();        
-    g_sys_val.fl_divlist_inc=0;
-    while(!timer_fl_divlist_decode()); //烧写
+    fl_divlist_write(); //烧写
     // 任务列表初始化
     task_fl_init();
     // 即时任务链表初始化
@@ -483,11 +482,7 @@ void user_fldat_init(){
     // 方案信息初始化
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++)
         solution_list.solu_info[i].state=0xFF;  // 空方案状态为 0xFF
-    //solution_list.solu_info[0].state=0x00;
-    //solution_list.solu_info[0].id=0xFF;
-    sys_dat_write((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST);
-    while(i_user_flash->is_flash_write_complete());
-    user_fl_sector_write(SOLUSION_DAT_SECTOR);
+    fl_solution_write();
     //--------------------------------------------------------------
     }//unsafe 
     xtcp_debug_printf("reset flash\n");
@@ -498,8 +493,6 @@ void sys_gobalval_init(){
     const uint8_t sn_key[DIV_NAME_NUM] = {0x5E,0x7F,0x5D,0xDE,0x5E,0x02,0x72,0x31,0x90,0x12,0x60,0x1D,0x75,0x35,0x5B,
                                           0x50,0x67,0x09,0x96,0x50,0x51,0x6C,0x53,0xF8,0x78,0x14,0x53,0xD1,0x90,0xE8,0x00,0x00};
 	g_sys_val.eth_link_state=0;
-    g_sys_val.need_flash=0;
-    g_sys_val.fl_divlist_inc=0;
     g_sys_val.task_recid=0xFF;
     g_sys_val.task_rec_count = 0;
     g_sys_val.file_bat_conn.id = null;
@@ -517,25 +510,17 @@ void sys_info_init(){
     unsafe{
     //-------------------------------------------------------------------------------------------------
 	// Get Host info
-    read_fl_hostinfo();
+    fl_hostinfo_read(); //主机信息读取
 	host_info.version[0] = VERSION_H;
     host_info.version[1] = VERSION_L;
 	//----------------------------------------------------------------------------------------------------
-	i_user_flash->flash_sector_read(SOLUSION_DAT_SECTOR,g_tmp_union.buff);
-	sys_dat_read((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
-	//无效方案过滤
-	for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
-        if(solution_list.solu_info[i].state!=0xFF && solution_list.solu_info[i].id!=i){
-            solution_list.solu_info[i].state=0xFF;
-        }
-    }
-    area_fl_read();    //分区表读取
-    divlist_fl_read(); //列表读取
+    fl_solution_read();  //方案列表读取
+    fl_area_read();    //分区表读取
+    fl_divlist_read(); //列表读取
     account_list_read();//账户列表读取
     timer_tasklist_read(); //定时任务列表读取
     rt_task_list_read();   //获取即时任务链表
     create_alltask_list(); //建立所有任务
-    //建立今日任务
     //
     conn_list_init();   //链表初始化
     sys_gobalval_init(); //全局变量初始化
@@ -548,9 +533,6 @@ void read_link_up_event(){
     g_sys_val.gateway_standy=1;
     g_sys_val.gateresend_inc=0;
     g_sys_val.gateway_time=0;
-    //
-    //if(g_sys_val.could_conn.id==0)
-    //    i_user_xtcp->connect(7002,g_sys_val.could_ip,XTCP_PROTOCOL_TCP);
     }
 }
 
@@ -584,7 +566,6 @@ void value_init_0(){
 //--------------------------------------------------------------------------------
 		XTCP EVENT USER DECODE PROCESS  
 //-------------------------------------------------------------------------------*/
-
 void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client fl_manage_if if_fl_manage,client file_server_if if_fs,
                   client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx,client image_upgrade_if i_image){
     unsafe{
@@ -648,7 +629,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	//协议栈初始化
     xtcp_ipconfig_t ipconfig;
     if(!host_info.dhcp_en){
-        xtcp_debug_printf("te %d\n",host_info.div_type[0]);
+        //xtcp_debug_printf("te %d\n",host_info.div_type[0]);
         xtcp_debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
         xtcp_debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
         memcpy(&ipconfig,&host_info.ipconfig,12);
@@ -831,7 +812,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 				i_xtcp.get_packet(conn, all_rx_buf, RX_BUFFER_SIZE, data_len);
                 if(pc_config_handle(i_xtcp,conn,all_rx_buf,data_len)){
                     user_xtcp_ipconfig(host_info.ipconfig);
-                    hostinfo_fl_write();
+                    fl_hostinfo_write();
                 }
                 tftp_handle_event(i_xtcp, conn, all_rx_buf, data_len);
                 mac_fatctory_xtcp_event(i_xtcp, conn, all_rx_buf, data_len);
@@ -855,7 +836,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 //xtcp_debug_printf("\n\n get dhcp \n\n");
                                 memcpy(&host_info.ipconfig,&ipconfig,sizeof(xtcp_ipconfig_t));
                                 dhcp_getin_over_disp(1);
-                                hostinfo_fl_write();    //烧写主机信息
+                                fl_hostinfo_write();    //烧写主机信息
                                 g_sys_val.reboot_f = 1;
                             }
                             else{

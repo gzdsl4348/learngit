@@ -71,11 +71,6 @@ void audio_tx(  client music_decoder_output_if if_mdo,
 	//main loop
 	while(1){
 		select{
-            [[independent_guard]]
-			case (!isnull(i_eth_rx_lp))=> i_eth_rx_lp.packet_ready():
-                i_eth_rx_lp.get_packet(packet_info,txbuff,1500);
-                aud_udpdata_init(txbuff,g_t_val->macaddress);
-				break;
             case (!isnull(c_rx_hp))=> ethernet_receive_hp_packet(c_rx_hp, txbuff, packet_info):
                 aud_udpdata_init(txbuff,g_t_val->macaddress);
                 break;            
@@ -162,10 +157,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                             //debug_printf("page build %d\n",t6-t5);
                             // Send Packet
                             g_t_val->audio_tx_cnt++;
-                            if(!isnull(c_tx_hp))
-                                ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
-                            else if(!isnull(i_eth_tx_lp))
-        					    i_eth_tx_lp.send_packet(txbuff,len,ETHERNET_ALL_INTERFACES);   
+                            ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
                         }// for end ip info build 
 #else
                         for(uint8_t i=0; i<g_t_val->t_audio_txlist[ch].num_info; i++){
@@ -175,10 +167,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                               g_t_val->t_audio_txlist[ch].t_des_info[i].area_contorl);
                             // Send Packet
                             g_t_val->audio_tx_cnt++;
-                            if(!isnull(c_tx_hp))
-                                ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);
-                            else if(!isnull(i_eth_tx_lp))
-        					    i_eth_tx_lp.send_packet(txbuff,len,ETHERNET_ALL_INTERFACES);                         
+                            ethernet_send_hp_packet(c_tx_hp,txbuff,len,ETHERNET_ALL_INTERFACES);                   
                         }// for end ip info build
 #endif
                         //sys_timer :> t4;
@@ -193,8 +182,6 @@ void audio_tx(  client music_decoder_output_if if_mdo,
 							uint32_t num, sr, len,format;
                             uint8_t file_type;
 	                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr,file_type,format);
-							if(len!=0)
-								debug_printf("error get frame ch%d l %d samplerate %d\n",ch,len,g_t_val->sample_rate[ch] );
 	                        //sys_timer :> t2;
 	                        // ÎÞÊý¾Ý
 							sample_error_f[ch]=0;;

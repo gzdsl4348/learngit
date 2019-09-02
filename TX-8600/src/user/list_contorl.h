@@ -2,7 +2,7 @@
 #define __LIST_CONTORL_H
 
 #include "xtcp.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 
 #ifndef null
 #define null -1

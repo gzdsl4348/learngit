@@ -142,7 +142,7 @@ void wifi_contorl_mode(){
                     host_info.sys_dhcp_state = g_sys_val.sys_dhcp_state_tmp;
                     g_sys_val.wifi_contorl_state = WIFI_AT_APPLY;
                     // flash info   
-                    hostinfo_fl_write();    //烧写主机信息
+                    fl_hostinfo_write();    //烧写主机信息
                 }
                 else{
                     g_sys_val.wifi_contorl_state=0;

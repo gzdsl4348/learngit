@@ -108,7 +108,7 @@ int main()
     streaming chan c_tx_hp;
     streaming chan c_rx_hp;
     
-    fl_manage_if if_fl_manage;
+    fl_manage_if if_fl_manage[2];
     
   	chan c_faction;
     file_server_if if_fs;
@@ -145,51 +145,49 @@ int main()
                                  sdram_clk,
                                  sdram_cb,
                                  2, 128, 16, 8, 12, 2, 64, 4096, 4); //Uses IS42S16400D 64Mb part supplied on SDRAM slice
-   
-        on tile[0]:user_flash_manage(if_fl_manage,c_sdram[SDRAM_USER]);
-        
-        on tile[0]:music_decoder_server(if_mdo);
-        
-        on tile[0]:file_server(if_fs, c_faction);
-        
+        //6KB
+        on tile[0]:user_flash_manage(if_fl_manage,2,c_sdram[SDRAM_USER]);
+        //----------------------------------------------------------------------------------
+        // 165KB
+        on tile[0]:{
+            [[combine]]par{
+                music_decoder_server(if_mdo);
+                file_server(if_fs, c_faction);
+            }
+        }
         on tile[0]:
         {
             set_core_high_priority_on();
             file_process(c_sdram[SDRAM_FILE_SYSTEM], c_faction);
-        };
+        }
         on tile[0]:
         {
             set_core_high_priority_on();
             music_decoder(c_sdram[SDRAM_MP3_DECODER]);
-        };      
-        
+        }
+        //---------------------------------------------------------------------------------
+        //  55KB
+		on tile[0]: xtcp_uip(i_xtcp_user,XTCP_CLENT_TOTAL,null,
+   	      	        		  i_eth_cfg[ETH_XTCP_CFG],  	// eth cfg client 2
+    		        		  i_eth_rx_lp[ETH_XTCP_DATA],   // eth rx client 1
+    	 	        		  i_eth_tx_lp[ETH_XTCP_DATA],	// eth tx client 1
+     			        	  i_smi,		  // smi
+      			         	  0);             // smi phy addr
         //--------------------------------------------------------------------------------------------------
         // user process
         //--------------------------------------------------------------------------------------------------
-        on tile[1]: xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage,if_fs,i_uart_tx[UART_USER],i_uart_rx[UART_USER],i_image);
-        
+        // 204KB
+        on tile[1]: xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage[0],if_fs,i_uart_tx[UART_USER],i_uart_rx[UART_USER],i_image);
+        // 29KB
         on tile[1]: eth_audio(i_eth_cfg[ETH_AUDIO_CFG],
                               //i_eth_rx_lp[ETH_AUDIO_DATA], i_eth_tx_lp[ETH_AUDIO_DATA],
                               null,null,
                               c_rx_hp, c_tx_hp,
                               if_ethaud_cfg, 1,
                               if_mdo);
-         
         //--------------------------------------------------------------------------------------------------
         // system process
         //--------------------------------------------------------------------------------------------------
-#if 0
-        	mii_ethernet_mac(i_eth_cfg, ETH_CFGCLENT_TOTAL,
-                               i_eth_rx_lp, ETH_CLENT_TOTAL,
-                               i_eth_tx_lp, ETH_CLENT_TOTAL,
-                               p_rxclk, p_rxer,
-                               p_rxd, p_rxdv,
-                               p_txclk, p_txen, p_txd,
-                               p_eth_dummy,
-                               eth_rxclk, eth_txclk,
-                               RX_BUFSIZE_WORDS);
-                  }            
-#else
         on tile[1]:
         {
             mii_ethernet_rt_mac(i_eth_cfg,ETH_CFGCLENT_TOTAL,
@@ -203,32 +201,16 @@ int main()
                              TX_BUFSIZE_WORDS,
                              ETHERNET_DISABLE_SHAPER);        
         }
-#endif
-
-		//SMI Contorl Process
-		//on tile[1]: /*[[distribute]]*/smi(i_smi, p_smi_mdio, p_smi_mdc);
         //
-        
-		on tile[0]: xtcp_uip(i_xtcp_user,XTCP_CLENT_TOTAL,null,
-   	      	        		  i_eth_cfg[ETH_XTCP_CFG],  	// eth cfg client 2
-    		        		  i_eth_rx_lp[ETH_XTCP_DATA],   // eth rx client 1
-    	 	        		  i_eth_tx_lp[ETH_XTCP_DATA],	// eth tx client 1
-     			        	  i_smi,		  // smi
-      			         	  0);             // smi phy addr
-        //
-        
         //---------------------------------------------------------------------------------------------
         // uart process
         //---------------------------------------------------------------------------------------------
-        
         on tile[1]: {
 			[[combine]]par{
 		    // UART TX MODULE	
-		    uart_tx_buffered(i_uart_tx[UART_USER],null,1200,115200,UART_PARITY_NONE,8,1,p_uart_tx,i_smi, p_smi_mdio, p_smi_mdc);
+		    uart_tx_buffered(i_uart_tx[UART_USER],null,1024,115200,UART_PARITY_NONE,8,1,p_uart_tx,i_smi, p_smi_mdio, p_smi_mdc);
 			}
-		}
-        //on tile[1]:[[distribute]]output_gpio(i_port_tx,UART_CLENT_TOTAL,p_uart_tx,null);
-        
+		}        
     }//Par
     //=======================================================================================================
     return 0;

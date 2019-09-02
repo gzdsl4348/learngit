@@ -1,7 +1,7 @@
 #ifndef  __FLASH_ADRBASE_H_
 #define  __FLASH_ADRBASE_H_
 
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "protocol_adrbase.h"
 
 //-------------------------------------------------------------------------

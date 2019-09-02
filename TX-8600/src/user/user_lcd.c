@@ -1,6 +1,6 @@
 #include "user_lcd.h"
 #include "user_xccode.h"
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "user_unti.h"
 #include "list_contorl.h"
 #include "task_decode.h"
@@ -275,7 +275,7 @@ void user_disptask_refresh(){
             break;
         //-----------------------------------------------------------------------------------
         // 显示任务名称
-        timer_task_read(&g_tmp_union.task_allinfo_tmp,today_t_p->id);
+        fl_timertask_read(&g_tmp_union.task_allinfo_tmp,today_t_p->id);
         debug_printf("\n\nhave future task disp\n\n");
         disp_taskname(g_tmp_union.task_allinfo_tmp.task_coninfo.task_name);
         // 显示任务时间

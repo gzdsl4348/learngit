@@ -2,7 +2,7 @@
 #define __USER_MESSEND_H
 
 #include <stdint.h>
-#include "list_instance.h"
+#include "sys_config_dat.h"
 #include "user_unti.h"
 #include "ack_build.h"
 #include "user_xccode.h"
