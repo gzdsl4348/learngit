@@ -24,7 +24,7 @@ void scan_musictosec_process(); //2MS
 #define FILE_TRAINING_TICK  (100000)//2ms
 
 uint8_t file_busy_decode(){
-    debug_printf("file control busy \n");
+    //debug_printf("file control busy \n");
     return FOR_BUSY;
 }
 

@@ -360,7 +360,7 @@ void music_bat_contorl_recive(){
     task_music_stop_all();
     // 停止操作
     if(xtcp_rx_buf[MUSIC_BAT_CONTORL]==3){
-        xtcp_debug_printf("bat contorl stop\n");
+        //xtcp_debug_printf("bat contorl stop\n");
         g_sys_val.file_bat_contorl_s = 0;
         user_file_stop();
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],0,MUSIC_BAT_CONTORL_CMD);
@@ -370,7 +370,7 @@ void music_bat_contorl_recive(){
     }
     // 单次配一个批量任务
     if((g_sys_val.file_bat_contorl_s)||((g_sys_val.file_bat_conn.id!=null)&&(conn.id!=g_sys_val.file_bat_conn.id))){
-		xtcp_debug_printf("file bat busy\n");
+		//xtcp_debug_printf("file bat busy\n");
         user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],01,MUSIC_BAT_CONTORL_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
         return;
@@ -404,7 +404,7 @@ void music_bat_contorl_recive(){
     //----------------------------------------------------------------------------------------
     g_sys_val.file_batpack_inc++;
     g_sys_val.file_bat_overtime = 0;
-    xtcp_debug_printf("pack tol %d cnt %d\n",xtcp_rx_buf[MUSIC_BAT_PACKTOL],xtcp_rx_buf[MUSIC_BAT_PACKINC]);
+    //xtcp_debug_printf("pack tol %d cnt %d\n",xtcp_rx_buf[MUSIC_BAT_PACKTOL],xtcp_rx_buf[MUSIC_BAT_PACKINC]);
     //完成分包接收
     if(((xtcp_rx_buf[MUSIC_BAT_PACKINC]+1)==xtcp_rx_buf[MUSIC_BAT_PACKTOL])&&(g_sys_val.file_batpack_inc == xtcp_rx_buf[MUSIC_BAT_PACKTOL])){
         //======================================================================================================================    
@@ -417,8 +417,8 @@ void music_bat_contorl_recive(){
         
         for(uint8_t i=0;i<*patch_tol;i++){
             if(charncmp(g_sys_val.file_bat_despatch,dir_info[i].name,PATCH_NAME_NUM)==1){
-                xtcp_debug_printf("\n\n bat music chk\n");
-                xtcp_debug_printf("file:%d,muc:%d\n",dir_info[i].music_num,g_sys_val.file_bat_tolnum);
+                //xtcp_debug_printf("\n\n bat music chk\n");
+                //xtcp_debug_printf("file:%d,muc:%d\n",dir_info[i].music_num,g_sys_val.file_bat_tolnum);
                 if(dir_info[i].music_num+g_sys_val.file_bat_tolnum > MAX_SDCARD_MUSIC_NUM){
                     user_sending_len = twobyte_ack_build(xtcp_rx_buf[MUSIC_BAT_CONTORL],0,MUSIC_BAT_CONTORL_CMD);    
                     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]); 
@@ -441,7 +441,7 @@ void music_bat_contorl_recive(){
         bat_contorlobj_init();
         file_bat_contorl_event(0);
         //xtcp_debug_printf("bat music tol %d\n",g_sys_val.file_bat_tolnum);
-        xtcp_debug_printf("bat contorl recive over\n");
+        //xtcp_debug_printf("bat contorl recive over\n");
         // 日志更新
         log_musicfile_config();
     
@@ -457,7 +457,7 @@ void music_bat_info_recive(){
     if(g_sys_val.file_bat_resend_tmp[0]==0){
         g_sys_val.file_bat_conn.id=null;
     }
-    xtcp_debug_printf("recive bat info\n");
+    //xtcp_debug_printf("recive bat info\n");
 }
 
 //==================================================================================================
@@ -465,14 +465,14 @@ void music_bat_info_recive(){
 //==================================================================================================
 void file_contorl_ack_decode(uint8_t error_code){
     if(g_sys_val.file_ack_cmd!=0){ 
-        xtcp_debug_printf("folar ack / error %d\n",error_code);
+        //xtcp_debug_printf("folar ack / error %d\n",error_code);
         if(error_code!=0)
         {
             user_sending_len = onebyte_ack_build(0,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
             user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);    
         }
         else{            
-            xtcp_debug_printf("scuss state \n");
+            //xtcp_debug_printf("scuss state \n");
             mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
             user_sending_len = onebyte_ack_build(1,g_sys_val.file_ack_cmd,g_sys_val.file_contorl_id);
             user_xtcp_send(g_sys_val.file_conn_tmp,g_sys_val.file_contorl_couldf);
@@ -500,7 +500,7 @@ void file_bat_contorl_event(uint8_t error_code){
     if(g_sys_val.file_bat_contorl_s){ 
         //-----------------------------------------------------------------------------------------------------
         // 文件操作错误
-        xtcp_debug_printf("folar error %d\n",error_code);
+        //xtcp_debug_printf("folar error %d\n",error_code);
         if(error_code!=0){
             file_state=1;
         }
@@ -532,7 +532,6 @@ void file_bat_contorl_event(uint8_t error_code){
             g_sys_val.file_bat_resend_tmp[0] = bat_state;
             g_sys_val.file_bat_resend_tmp[1] = file_state;
             g_sys_val.file_bat_resend_tmp[2] = contorl;
-            debug_printf("b807,error state %d\n",file_state);
             user_sending_len = file_batinfo_build(g_sys_val.file_bat_srcpatch,music_tmp,bat_state,file_state,contorl);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);   
             bat_contorlobj_add(file_state);
@@ -643,7 +642,7 @@ void bat_filecontorl_resend_tim(){
             user_sending_len = file_progress_build(0,file_process,g_sys_val.file_bat_id,
                                g_sys_val.file_bat_nametmp,g_sys_val.file_bat_srcpatch);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);
-            xtcp_debug_printf("send %d\n",file_process);
+            //xtcp_debug_printf("send %d\n",file_process);
         }
     }
     //---------------------------------------------------------------
@@ -682,7 +681,6 @@ void wav_modeset_recive(){
     host_info.wav_mode = xtcp_rx_buf[POL_DAT_BASE];
     fl_hostinfo_write();    //烧写主机信息
     user_set_wavmode();
-    debug_printf("set wav %d\n",host_info.wav_mode);
 }
 
 

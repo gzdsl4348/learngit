@@ -47,20 +47,20 @@ void task_music_send(uint8_t ch){
     
     // text    
     #if 0
-    t_audio_txlist.num_info = 99; 
-    for(uint8_t i=0;i<99;i++){
+    t_audio_txlist.num_info = 2; 
+    for(uint8_t i=0;i<1;i++){
         if(i==0){
             t_audio_txlist.t_des_info[0].mac[0] = 0x42;
             t_audio_txlist.t_des_info[0].mac[1] = 0x4C;
             t_audio_txlist.t_des_info[0].mac[2] = 0x45;
             t_audio_txlist.t_des_info[0].mac[3] = 0x00;
             t_audio_txlist.t_des_info[0].mac[4] = 0x72;
-            t_audio_txlist.t_des_info[0].mac[5] = 0x7D;
+            t_audio_txlist.t_des_info[0].mac[5] = 0x45;
 
             t_audio_txlist.t_des_info[0].ip[0] = 172;
             t_audio_txlist.t_des_info[0].ip[1] = 16;
-            t_audio_txlist.t_des_info[0].ip[2] = 13;
-            t_audio_txlist.t_des_info[0].ip[3] = 225;
+            t_audio_txlist.t_des_info[0].ip[2] = 23;
+            t_audio_txlist.t_des_info[0].ip[3] = 112;
         }
         else{
             t_audio_txlist.t_des_info[i].mac[0] = 0x10;
@@ -72,8 +72,8 @@ void task_music_send(uint8_t ch){
 
             t_audio_txlist.t_des_info[i].ip[0] = 172;
             t_audio_txlist.t_des_info[i].ip[1] = 16;
-            t_audio_txlist.t_des_info[i].ip[2] = 13;
-            t_audio_txlist.t_des_info[i].ip[3] = 111;
+            t_audio_txlist.t_des_info[i].ip[2] = 23;
+            t_audio_txlist.t_des_info[i].ip[3] = 243;
 
         }
     }

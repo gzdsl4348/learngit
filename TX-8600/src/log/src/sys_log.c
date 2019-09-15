@@ -96,7 +96,7 @@ int itoa_forutf16(unsigned n, char *buf, unsigned base, int fill)
 //-----------------------------------------------------------------------------------------
 void xtcp_debug_printf(char * fmt, ...)
 {
-  //return;
+  return;
   char width = 0;
   char * marker;
   int intArg;

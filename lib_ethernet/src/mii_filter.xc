@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <xs1.h>
 #include "ntoh.h"
+#include "debug_print.h"
 
 #define DEBUG_UNIT ETHERNET_FILTER
 #include "debug_print.h"

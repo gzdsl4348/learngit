@@ -102,10 +102,7 @@ typedef interface ethaud_cfg_if{
 
 //---------------------------------------------------------------------------
 void eth_audio(client ethernet_cfg_if i_eth_cfg,
-			     client ethernet_rx_if ? i_eth_rx_lp,
-			     client ethernet_tx_if ? i_eth_tx_lp,
-                 streaming chanend ? c_rx_hp,
-                 streaming chanend ? c_tx_hp,
+                 streaming chanend c_tx_hp,
 			     server ethaud_cfg_if i_ethaud_cfg[n_ethaud_cfg],
 				 static const unsigned n_ethaud_cfg,
                  client music_decoder_output_if if_mdo);

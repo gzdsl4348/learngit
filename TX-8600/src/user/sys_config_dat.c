@@ -8,6 +8,7 @@
 #include "list_contorl.h"
 #include "sys_text_serve.h"
 #include "sys_log.h"
+#include "app_aud_transmit.h"
 
 //================================================================================
 // fun list decode 
@@ -78,6 +79,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {ETH_WAV_OPEN_CMD,wav_modeset_recive},
                              {SDCARD_SIZECHK_B809_CMD,sdcard_sizechk_recive},
                              {DIVLIST_IPCHK_CMD,divlist_ipchk_recive},
+                             {BE0E_AUDTRAINSMIT_DIVLIST_CMD,set_audtrainsmit_divlist_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
                             };
 	

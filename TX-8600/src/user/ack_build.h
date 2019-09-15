@@ -161,6 +161,8 @@ uint16_t music_batrechk_build();
 // 获取指定IP列表
 uint16_t divlist_ipchk_ack_build();
 
+uint16_t udp_trainsmit_headrt_build();
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

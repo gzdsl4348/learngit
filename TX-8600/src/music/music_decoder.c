@@ -521,7 +521,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
             {
                 p_dev->file_over_flag = 1;
                 
-                debug_printf("f_read over %d %d\n", ch, res);
+                //debug_printf("f_read over %d %d\n", ch, res);
                 
                 if(res == FR_NOT_READY) return;
             }
@@ -568,7 +568,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
         {
             p_dev->file_over_flag = 0;
             p_dev->decoder_status = MUSIC_DECODER_FILE_END;
-            debug_printf("music_file_handle MUSIC_DECODER_FILE_END [%d] %d\n", ch, p_dev->mp3_frame_num);
+            //debug_printf("music_file_handle MUSIC_DECODER_FILE_END [%d] %d\n", ch, p_dev->mp3_frame_num);
         }
             
         if(p_dev->file_close_flag) 
@@ -588,7 +588,7 @@ uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, 
 {
     if(ch >= gt_mmdm.ch_num || gt_mmdm.ch_dev[ch].mp3_frame_full==0) 
     {  
-#if 1
+#if 0
         if(gt_mmdm.ch_dev[ch].decoder_status == MUSIC_DECODER_START)
             debug_printf("fun get_mp3_frame empty [%d]\n", ch);
 #endif

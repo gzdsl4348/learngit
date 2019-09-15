@@ -222,23 +222,22 @@ void div_info_set_recive()
             // 同步主机IP
             div_node_t *node_tmp=null;
             conn_list_t *conn_tmp=null;
-            xtcp_connection_t new_conn;
             //
             node_tmp = div_list.div_head_p;
             
             while(node_tmp != null){   
                 conn_tmp = get_conn_for_ip(node_tmp->div_info.ip);
                 if(conn_tmp==null){
-                    if(user_xtcp_connect_udp(8805,node_tmp->div_info.ip,&new_conn)==0){
+                    if(user_xtcp_connect_udp(8805,node_tmp->div_info.ip,&g_tmp_union.conn_tmp)==0){
                         user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
-                        user_xtcp_send(new_conn,0);
-                        user_xtcp_close(new_conn);
+                        user_xtcp_send(g_tmp_union.conn_tmp,0);
+                        user_xtcp_close(g_tmp_union.conn_tmp);
                     }
                 }
                 else{
-                    new_conn = conn_tmp->conn;
+                    g_tmp_union.conn_tmp = conn_tmp->conn;
                     user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
-                    user_xtcp_send(new_conn,0);
+                    user_xtcp_send(g_tmp_union.conn_tmp,0);
                 }
                 node_tmp = node_tmp->next_p;
             }

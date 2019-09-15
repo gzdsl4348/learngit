@@ -8,11 +8,20 @@
  //Ethernet MII Interface And Chanal Define Moulde
  --------------------------------------------------------------------------------*/
 // EthFun Client Define
-enum ETH_CLIENT_T {
+enum ETH_RX_CLIENT_T {
 	//ETH_AUDIO_DATA=0,
-	ETH_XTCP_DATA,
-	ETH_CLENT_TOTAL			//Total Client 2
+	ETH_RX_XTCP_DATA,
+	ETH_RX_CLENT_TOTAL			//Total Client 2
 };
+
+// EthFun Client Define
+enum ETH_TX_CLIENT_T {
+	//ETH_AUDIO_DATA=0,
+	ETH_TX_XTCP_DATA,
+	ETH_TX_AUD_TRAINSMIT,
+	ETH_TX_CLENT_TOTAL			//Total Client 2
+};
+
 
 enum ETH_CFGCLIENT_T {
 	ETH_AUDIO_CFG=0,
@@ -26,8 +35,8 @@ enum ETH_CFGCLIENT_T {
 /* Ethernet config interfaces client total */\
 ethernet_cfg_if i_eth_cfg[ETH_CFGCLENT_TOTAL];\
 /* Ethernet config interfaces total */\
-ethernet_rx_if i_eth_rx_lp[ETH_CLENT_TOTAL];\
-ethernet_tx_if i_eth_tx_lp[ETH_CLENT_TOTAL];\
+ethernet_rx_if i_eth_rx_lp[ETH_RX_CLENT_TOTAL];\
+ethernet_tx_if i_eth_tx_lp[ETH_TX_CLENT_TOTAL];\
 /* smi interfaces */\
 smi_if i_smi;
 //

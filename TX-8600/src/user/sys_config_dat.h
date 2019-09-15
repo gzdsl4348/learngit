@@ -43,10 +43,11 @@ extern "C" {
 #define RX_BUFFER_SIZE 1472
 
 // This PORT For Eth Data Communication Port
-#define ETH_COMMUN_PORT	        8805
-#define TCP_COULD_PROT          7003
-#define ETH_DEBUG_PROT			8806
-#define ETH_DNS_PROT			53
+#define ETH_COMMUN_PORT	        8805    //协议交换端口
+#define TCP_COULD_PROT          7003    //云服务器端口
+#define ETH_DEBUG_PROT			8806    //DEBUG打印端口
+#define ETH_DNS_PROT			53      //DNS端口
+#define ETN_AUD_TRAINPORT       7002    //远程寻呼端口
 
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
@@ -109,18 +110,19 @@ extern "C" {
 #define MAX_LOGDATE_NUM 7
 
 // 注册信息
-#define HOST_UNREGISTER             0
-#define HOST_REGISTER_DAYS          1
-#define HOST_REGISTER_FOREVER       2
+#define HOST_UNREGISTER             0 //未激活
+#define HOST_REGISTER_DAYS          1 //有限期激活
+#define HOST_REGISTER_FOREVER       2 //无限期激活
 // 
-#define MAX_SDCARD_MUSIC_NUM        100
+#define MAX_SDCARD_MUSIC_NUM        100 //sd卡每个文件最大100个音乐
 //
 #define MES_STACK_NUM       10   //消息更新 堆栈数
 
-#define MAX_SEND_ACCOUNT_NUM_FORPACK    10
+#define MAX_SEND_ACCOUNT_NUM_FORPACK    10  //每数据包发送多少个账号
 
-#define MAX_TASK_ONCESEND   10
+#define MAX_TASK_ONCESEND   10  //每数据包发送多少个任务
 //
+#define MAX_APP_AUD_TRAINSMIT_NUM   4 //最大手机寻呼路数
 
 extern char *xtcp_tx_buf;
 extern char *xtcp_rx_buf;
@@ -434,6 +436,20 @@ typedef struct taskconflict_info_s{
     uint8_t  state_bg[SOLU_MAX_PLAYCH];
 }taskconflict_info_s;
 
+typedef struct audts_divinfo_s{
+    uint8_t mac[6];
+    uint8_t ip[4];
+    uint8_t area_info; 
+}audts_divinfo_s;
+
+typedef struct audts_divlist_s{
+    uint8_t num;
+    uint8_t id; //0,1，2，3
+    uint8_t prio;
+    unsigned timestamp;
+    audts_divinfo_s divinfo[MAX_SENDCHAN_NUM];
+}audts_divlist_s;
+
 //=================================================================
 // 临时变量
 typedef union{
@@ -442,6 +458,8 @@ typedef union{
     rttask_dtinfo_t rttask_dtinfo;
     uint8_t buff[8*1024];
     xtcp_ipconfig_t ipconfig;
+    xtcp_connection_t conn_tmp;
+    audts_divlist_s audts_divlist;
 }tmp_union_t;
 
 typedef union{

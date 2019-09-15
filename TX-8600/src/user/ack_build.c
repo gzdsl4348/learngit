@@ -1109,7 +1109,7 @@ uint16_t listinfo_upgrade_build(uint8_t type){
 // 定时任务更新通知
 //==========================================================================================
 uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t contorl,uint16_t task_id){
-    xtcp_debug_printf("send updata\n");
+    //xtcp_debug_printf("send updata\n");
     /*
     xtcp_tx_buf[TASK_SE_CONFIG] = xtcp_rx_buf[TASK_CFG_CONTORL];
     memcpy(&xtcp_tx_buf[TASK_SE_SOLU_ID],&xtcp_rx_buf[TASK_CFG_SOLU_ID],TASK_CFG_LEN_END - TASK_CFG_SOLU_ID);
@@ -1405,7 +1405,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         timetask_p = timetask_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+1] = tmp_num; //定时任务总数
-    xtcp_debug_printf("timetask num %d\n",tmp_num);
+    //xtcp_debug_printf("timetask num %d\n",tmp_num);
     //----------------------------------------------------------------------
     tmp_num = 0;
     for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
@@ -1434,7 +1434,7 @@ uint16_t taskview_page_build(uint16_t cmd){
         div_info_p = div_info_p->next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE+3] = tmp_num; //报警设备总数
-    xtcp_debug_printf("firediv num %d\n",tmp_num);
+    //xtcp_debug_printf("firediv num %d\n",tmp_num);
     //---------------------------------------------------------------------
     return build_endpage_decode(POL_DAT_BASE+4,cmd,&xtcp_rx_buf[POL_ID_BASE]);
 }
@@ -1539,4 +1539,10 @@ uint16_t divlist_ipchk_ack_build(){
     return build_endpage_decode(dat_base,DIVLIST_IPCHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
 
+uint16_t udp_trainsmit_headrt_build(){
+    // MAC
+    memcpy(&xtcp_tx_buf[POL_DAT_BASE],host_info.mac,6);
+    memset(&xtcp_tx_buf[POL_DAT_BASE+6],0x00,64);
+	return build_endpage_decode(POL_DAT_BASE+6+64,APP_AUDTRAINSMIT_UDP_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
 

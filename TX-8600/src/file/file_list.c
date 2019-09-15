@@ -6,7 +6,7 @@
 #include "file_list.h"
 #include "mystring.h"
 
-#define FILE_LIST_DEBUG_ENBLE 1
+#define FILE_LIST_DEBUG_ENBLE 0
 
 #if FILE_LIST_DEBUG_ENBLE
 #define DBG_PRINTF(...) debug_printf(__VA_ARGS__)
@@ -186,7 +186,6 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                 }
                 else
                 {
-                    debug_printf(" buff_size over\n");
                     break;
                 }
 
@@ -222,7 +221,6 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                     else
                     {
                         if(buff_full) *buff_full = 1;
-                        debug_printf(" buff_size over\n");
                         break;
                     }
                 }
@@ -254,7 +252,6 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                     else
                     {
                         if(buff_full) *buff_full = 1;
-                        debug_printf(" buff_size over\n");
                         break;
                     }
                 }
@@ -344,7 +341,6 @@ char mf_scan_files(TCHAR *path, char mark, unsigned char *buff, int buff_size, i
                     else
                     {
                         if(buff_full) *buff_full = 1;
-                        debug_printf(" buff_size over\n");
                         break;
                     }
                 }

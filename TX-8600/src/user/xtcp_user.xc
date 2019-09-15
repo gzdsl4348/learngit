@@ -68,6 +68,7 @@ client interface file_server_if *unsafe i_fs_user = NULL;
 client interface flash_if *unsafe i_core_flash = NULL;
 client interface uart_rx_if *unsafe i_uart_rx=NULL;
 client interface uart_tx_buffered_if *unsafe i_uart_tx=NULL;
+client interface aud_trainsmit_if *unsafe i_aud_trainsmit_tx=NULL;
 
 //--------------------------------------------------------------
 // extern val 
@@ -567,7 +568,8 @@ void value_init_0(){
 		XTCP EVENT USER DECODE PROCESS  
 //-------------------------------------------------------------------------------*/
 void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client fl_manage_if if_fl_manage,client file_server_if if_fs,
-                  client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx,client image_upgrade_if i_image){
+                  client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx,client image_upgrade_if i_image,
+                  client aud_trainsmit_if if_aud_trainsmit){
     unsafe{
     value_init_0();
     //--------------------------------------------------------------------------
@@ -579,6 +581,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	i_ethaud_cfg = (client ethaud_cfg_if * unsafe) &if_ethaud_cfg;
     i_fs_user = (client file_server_if * unsafe) &if_fs;
     i_uart_tx = &if_uart_tx;
+    i_aud_trainsmit_tx = &if_aud_trainsmit;
 	//------------------------------------------------------------------------
 	memset(&g_sys_val,0x00,sizeof(g_sys_val_t));
     g_sys_val.tx_buff_fifo.size = MAX_TXBUFF_FIFOSIZE;

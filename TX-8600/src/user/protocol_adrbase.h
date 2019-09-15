@@ -178,7 +178,9 @@
 
 #define ETH_NONEDD_RESIGE_CMD   0xC004
 
-
+// 寻呼指令
+#define APP_AUDTRAINSMIT_UDP_CMD        0xBE09
+#define BE0E_AUDTRAINSMIT_DIVLIST_CMD   0xBE0B
 //---------------------------------------------------------------------
 // 云包头
 #define CLH_TYPE_BASE           0                                   // 4 云包头类型
@@ -1003,6 +1005,19 @@
 #define DNS_DAT_BASE                        (DNS_ADDITIONAL+2)
 // dat
 #define DNS_DOMAIN_NAME                     (DNS_DAT_BASE)
+
+//====================================================================================================
+// 寻呼列表配置 
+//====================================================================================================
+#define AUD_TRAINS_PRIO                     (POL_DAT_BASE)
+#define AUD_TRAINS_DIVNUM   		        (AUD_TRAINS_PRIO+1)	// 	1
+#define AUD_TRAINS_DATBASE                  (AUD_TRAINS_DIVNUM+1)
+
+#define AUD_TRAINS_DIVMAC                   0   //6
+#define AUD_TRAINS_DIVIP                    (AUD_TRAINS_DIVMAC+6)  //4
+#define AUD_TRAINS_AREA                     (AUD_TRAINS_DIVIP+4) //2
+#define AUD_TRAINS_DIVINFO_LEN              (AUD_TRAINS_AREA+2)
+
 
 #endif //__PROTOCOL_ADRBASE_H
 

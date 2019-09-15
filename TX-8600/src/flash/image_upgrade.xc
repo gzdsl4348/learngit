@@ -5,7 +5,7 @@
 #include "image_upgrade.h"
 #include "debug_print.h"
 
-#define IMAGE_UPGRADE_DEBUG_ENBLE 1
+#define IMAGE_UPGRADE_DEBUG_ENBLE 0
 
 #if IMAGE_UPGRADE_DEBUG_ENBLE 
 #define DBG_PRINTF(...) debug_printf(__VA_ARGS__)

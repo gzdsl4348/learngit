@@ -35,14 +35,9 @@ static mp3_frame_send_info_t g_mp3_frame_send_info[] = {{48000,2400000+5, 0}, //
                                                        };
 
 void audio_tx(  client music_decoder_output_if if_mdo,
-                client ethernet_rx_if ? i_eth_rx_lp,
-			    client ethernet_tx_if ? i_eth_tx_lp,
-		        streaming chanend ? c_rx_hp,
-                streaming chanend ? c_tx_hp)
+                streaming chanend c_tx_hp)
 {
     unsafe{
-	// Eth Recive Packet Info
-	ethernet_packet_info_t packet_info;
 	//-----------------------------------------------------------------------------
 	// gobal val init
 	volatile g_val_t *unsafe g_t_val;
@@ -53,9 +48,6 @@ void audio_tx(  client music_decoder_output_if if_mdo,
 	aud_udpdata_init(txbuff,g_t_val->macaddress);
     //*tx_en = 0;
     }
-    if((isnull(i_eth_rx_lp)||isnull(i_eth_tx_lp))&&(isnull(c_rx_hp)||isnull(c_tx_hp))) {
-        fail("Using high priority channels or low priority channels");
-    }    
 	//
 	uint8_t sample_error_f[NUM_MEDIA_INPUTS];			
 	memset(sample_error_f,NUM_MEDIA_INPUTS,0);
@@ -68,12 +60,10 @@ void audio_tx(  client music_decoder_output_if if_mdo,
     sys_timer :> g_mp3_frame_send_info[0].timer_tick;
     sys_timer :> g_mp3_frame_send_info[1].timer_tick;
 	//-----------------------------------------------------------------------------
+    aud_udpdata_init(txbuff,g_t_val->macaddress);
 	//main loop
 	while(1){
-		select{
-            case (!isnull(c_rx_hp))=> ethernet_receive_hp_packet(c_rx_hp, txbuff, packet_info):
-                aud_udpdata_init(txbuff,g_t_val->macaddress);
-                break;            
+		select{        
 	        default:
 	            sys_timer :> audio_timer_tick;
                 for(uint8_t i=0; i<sizeof(g_mp3_frame_send_info)/sizeof(mp3_frame_send_info_t); i++)

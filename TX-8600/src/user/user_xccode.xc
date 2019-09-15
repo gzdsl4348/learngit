@@ -12,6 +12,9 @@
 #include "kfifo.h"
 #include <string.h>
 #include "sys_log.h"
+#include "ack_build.h"
+#include "aud_trainsmit_core.h"
+
 
 extern client interface xtcp_if  * unsafe i_user_xtcp;
 extern client interface fl_manage_if  * unsafe i_user_flash;
@@ -19,6 +22,7 @@ extern client interface file_server_if *unsafe i_fs_user;
 extern client interface ethaud_cfg_if  * unsafe i_ethaud_cfg;
 extern client interface flash_if *unsafe i_core_flash;
 extern client interface uart_tx_buffered_if *unsafe i_uart_tx;
+extern client interface aud_trainsmit_if *unsafe i_aud_trainsmit_tx;
 
 extern audio_txlist_t t_audio_txlist;
 
@@ -176,21 +180,15 @@ void user_could_send(uint8_t pol_type){
     memcpy(&all_tx_buf[CLH_DESIP_BASE],host_info.ipconfig.ipaddr,4);
     memcpy(&all_tx_buf[CLH_HOSTMAC_BASE],host_info.mac,6);
     memcpy(&all_tx_buf[CLH_CONTORL_ID_BASE],&all_tx_buf[CLH_HEADEND_BASE+POL_ID_BASE],6);
-    all_tx_buf[CLH_TRANTYPE_BASE] = pol_type;
     all_tx_buf[CLH_DIVTYPE_BASE] = 0;   //主机类型
-    //
-    #if 0
-    for(uint16_t i=0;i<user_sending_len;i++){
-        xtcp_debug_printf("%2x ",all_tx_buf[i]);
-        if((i%20==0)&&(i!=0))
-            xtcp_debug_printf("\n");
+    if(pol_type==2){
+        all_tx_buf[CLH_TRANTYPE_BASE] = 1;
     }
-    xtcp_debug_printf("\n");
-    xtcp_debug_printf("end\n");
-    #endif
-    //
-    xtcp_tx_fifo_put();
-    user_xtcp_fifo_send();
+    else{
+        all_tx_buf[CLH_TRANTYPE_BASE] = pol_type;
+        xtcp_tx_fifo_put();
+        user_xtcp_fifo_send();
+    }
     //i_user_xtcp->send(g_sys_val.could_conn,all_tx_buf,user_sending_len);
     }//unsafe
 }
@@ -269,10 +267,9 @@ void user_xtcp_ipconfig(xtcp_ipconfig_t ipconfig)
 
 int user_xtcp_connect_udp(unsigned port_number, xtcp_ipaddr_t ipaddr, xtcp_connection_t *new_conn){
     unsafe{
-        xtcp_connection_t conn;
         int tmp;
-        tmp = i_user_xtcp->connect_udp(port_number,ipaddr,conn);
-        memcpy(new_conn,&conn,sizeof(xtcp_connection_t));
+        tmp = i_user_xtcp->connect_udp(port_number,ipaddr,g_tmp_union.conn_tmp);
+        memcpy(new_conn,&g_tmp_union.conn_tmp,sizeof(xtcp_connection_t));
         return tmp;
     }
 }
@@ -563,4 +560,38 @@ void user_loginfo_add(uint8_t mac[],uint8_t ip[]){
     i_fs_user->log_loginfo_add(loginfo,len);
     }
 }
+
+void time5s_send_udpconnect(){
+    unsafe{
+    static uint8_t time_inc=0;
+    time_inc++;
+    if(time_inc<5)
+        return;
+    time_inc=0;
+    if(i_user_xtcp->connect_udp(ETN_AUD_TRAINPORT, g_sys_val.could_ip, g_tmp_union.conn_tmp))
+    {
+        return;
+    }
+    user_sending_len = udp_trainsmit_headrt_build();
+    user_could_send(2);
+    //
+    i_user_xtcp->send_udp(g_tmp_union.conn_tmp,all_tx_buf,user_sending_len);
+    i_user_xtcp->close_udp(g_tmp_union.conn_tmp);
+    }
+}
+
+uint8_t app_trainsmit_ch_chk(){
+    unsafe{
+    uint8_t state;
+    state = i_aud_trainsmit_tx->aud_ch_chk();
+    return state;
+    }
+}
+
+void app_trainsmit_divlist_set(){
+    unsafe{
+    i_aud_trainsmit_tx->divlist_set(g_tmp_union.audts_divlist,host_info.ipconfig,host_info.mac);
+    }
+}
+
 

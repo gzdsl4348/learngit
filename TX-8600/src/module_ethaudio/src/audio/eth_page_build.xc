@@ -168,8 +168,8 @@ void audpage_sum_build(uint8_t txbuff[],uint8_t des_ip[],uint8_t des_mac[],uint8
 		txbuff[i] = des_mac[i];
     //---------------------------------------------------------------
     txbuff[AUDIO_AREA_F] = area_contorl;
-   	sum_tmp = ip_sumtmp;
-    sum_tmp = ~(chksum_16bit(sum_tmp,&txbuff[AUDIO_AREA_F],1));
+   	sum_tmp = udp_sumtmp;
+    udp_sumtmp = ~(chksum_16bit(sum_tmp,&txbuff[AUDIO_AREA_F],1));
 	//----------------------------------------------------------------
     //Calculata IP Header CheckSum
 	sum_tmp = ip_sumtmp;

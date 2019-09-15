@@ -114,6 +114,9 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 				// i_eth_cfg.set_macaddr(0,g_t_val->macaddress);
 				//---------------------------------------------------------------------------------
 				// Add Eth Eth MAC Filter
+				ethernet_macaddr_filter_t macaddr_filter;
+                memcpy(macaddr_filter.addr,g_t_val->macaddress,6);
+                i_eth_cfg.add_macaddr_filter(0, 1, macaddr_filter);
 #if 0
 				{
 				ethernet_macaddr_filter_t macaddr_filter;

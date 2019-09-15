@@ -113,5 +113,11 @@ void user_getsdcard_state(unsigned *tol_mb,unsigned *free_mb);
 
 void user_set_wavmode();
 
+void time5s_send_udpconnect();
+
+uint8_t app_trainsmit_ch_chk();
+
+void app_trainsmit_divlist_set();
+
 #endif //__USER_XCCODE_H_
 

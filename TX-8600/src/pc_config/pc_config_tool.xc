@@ -162,14 +162,13 @@ static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_p
     }
     else
     {
-		xtcp_connection_t broadcast_conn;
 		xtcp_ipaddr_t broadcast_ipaddr = {255,255,255,255};
-		if(i_xtcp.connect_udp(conn.remote_port, broadcast_ipaddr, broadcast_conn))
+		if(i_xtcp.connect_udp(conn.remote_port, broadcast_ipaddr, g_tmp_union.conn_tmp))
 		{
 		    return;
 		}
-		i_xtcp.send_udp(broadcast_conn, send_buf, index);
-		i_xtcp.close_udp(broadcast_conn);
+		i_xtcp.send_udp(g_tmp_union.conn_tmp, send_buf, index);
+		i_xtcp.close_udp(g_tmp_union.conn_tmp);
     }
 	
 	//debug_printf("                feedback_dev_info\n");
