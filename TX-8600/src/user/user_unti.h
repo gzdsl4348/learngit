@@ -235,8 +235,9 @@ typedef struct g_sys_val_t{
     xtcp_connection_t ipchk_conn;
     uint8_t ipchk_timecnt;
     uint8_t ipchk_ipconflict_f;
-    //
+    // tftp 标志位
     uint8_t tftp_busy_f;
+    uint8_t tftp_dat_ack;
     //备份数据恢复状态
     uint8_t backup_busy_f;
     uint8_t backup_bar;

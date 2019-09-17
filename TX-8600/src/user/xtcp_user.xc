@@ -188,12 +188,14 @@ void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_d
         case FOU_REPLY_START:
         {
             if(reply_data == FOU_REPLY_SUCCEED){
+                // 上传请求成功，停止音乐播放
+                /*
                 for(uint8_t i=0; i<MAX_MUSIC_CH;i++){
                     if(timetask_now.ch_state[i]!=0xFF){
                         timetask_now.ch_state[i]=0xFF;
                         task_music_config_stop(i);
                     }
-                }
+                }*/
                 tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
             }
             else
@@ -205,12 +207,16 @@ void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_d
             if(tftp_block_wait)
             {
                 tftp_block_wait = 0;
+                g_sys_val.tftp_dat_ack = 1;
+                // 延时控制回复
+                debug_printf("ack reply\n");
                 tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
             }
             break;
         }
         case FOU_REPLY_END:
-        {
+        {    
+            debug_printf("ack reply end\n");
             tftp_send_ack(i_xtcp, reply_data==FOU_REPLY_SUCCEED?TFTP_ACK_SUCCEED:TFTP_ACK_FAILED, 0);
             break;
         }
@@ -758,6 +764,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         data.music_status[i].status,g_sys_val.play_error_inc[i]);
                     }
                 }
+                // 上传事件处理判断
                 if(data.event == FOE_FUPLOAD &&
                    data.uplaod_reply_type != FOU_REPLY_IDLE)
                 {
@@ -937,6 +944,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         else{
                             udp_xtcp_recive_decode(data_len);
                         }
+                        
                         //===================================================================================
 						break;
 					case XTCP_RESEND_DATA:	
