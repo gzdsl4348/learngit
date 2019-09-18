@@ -8,6 +8,7 @@
 #ifdef __XC__
 #include "flash_user.h"
 #include "sdram.h"
+#include "sdcard_host.h"
 #endif
 
 #define WAV_FILE_ENABLE 1
@@ -203,7 +204,7 @@ typedef interface file_server_if
 [[combinable]]
 void file_server(server file_server_if if_fs, chanend c_faction);
 
-void file_process(streaming chanend c_sdram, chanend c_faction);
+void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if sdif);
 
 void get_sdcard_size(unsigned     *unsafe tol_mb,unsigned *unsafe free_mb);
 

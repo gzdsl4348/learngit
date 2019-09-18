@@ -47,8 +47,13 @@
 
 #include "aud_trainsmit_core.h"
 
+#include "sdcard_host.h"
+
 extern void music_decoder(STREAMING_CHANEND(c_sdram));
 
+//--------------------------------------------------------------------------------------------------
+// sdram io 
+//--------------------------------------------------------------------------------------------------
 on tile[0]:out buffered port:32   sdram_dq_ah                 = XS1_PORT_16B;
 on tile[0]:out buffered port:32   sdram_cas                   = XS1_PORT_1K;
 on tile[0]:out buffered port:32   sdram_ras                   = XS1_PORT_1I;
@@ -63,6 +68,20 @@ enum SDRAM_CLIENT_T {
     SDRAM_MP3_DECODER,
 	SDRAM_CLENT_TOTAL	
 };
+//-------------------------------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------------------------
+// sdcard io
+//-------------------------------------------------------------------------------------------------
+on tile[0]:buffered out port:32 p_sdclk = XS1_PORT_1E;
+
+on tile[0]:[[bidirectional]] buffered port:8 p_sdcmd = XS1_PORT_1F;
+on tile[0]:[[bidirectional]] buffered port:32 p_sddata = XS1_PORT_4D;
+
+on tile[0]:in port p_sdcarddetect = XS1_PORT_1O;
+
+on tile[0]:clock cb1 = XS1_CLKBLK_2;
+on tile[0]:clock cb2 = XS1_CLKBLK_3;
 
 //-------------------------------------------------------------------------------------
 // wifi text
@@ -119,6 +138,8 @@ int main()
     image_upgrade_if i_image;
 
 	ethaud_cfg_if if_ethaud_cfg[1];
+
+    sd_host_if sdif[1];
     //-------------------------------------
     //wifi uart
     //
@@ -162,8 +183,10 @@ int main()
         on tile[0]:
         {
             set_core_high_priority_on();
-            file_process(c_sdram[SDRAM_FILE_SYSTEM], c_faction);
+            file_process(c_sdram[SDRAM_FILE_SYSTEM], c_faction,sdif[0]);
         }
+        
+        on tile[0]: [[distribute]] sd_host_native(sdif,1,p_sdclk,p_sdcmd,p_sddata,p_sdcarddetect,cb1,cb2);
         on tile[0]:
         {
             set_core_high_priority_on();

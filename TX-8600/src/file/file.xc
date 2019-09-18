@@ -433,13 +433,15 @@ void fl_write_flielist(int secoter_index, const uint8_t buff[], int bw)
     };    
 }
 
-void file_process(streaming chanend c_sdram, chanend c_faction)
+extern client interface sd_host_if  * unsafe sd_hi;
+
+void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if sdif)
 {
 
     timer tmr;
     unsigned int timeout;
     
-    unsafe{ pc_sdram = &c_sdram; }
+    unsafe{ pc_sdram = &c_sdram; sd_hi = &sdif;}
     sdram_init_state(c_sdram, sdram_state);
     
     mem_init();
