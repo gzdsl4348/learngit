@@ -90,7 +90,8 @@ typedef interface ethaud_cfg_if{
 
     void update_audio_desip_info(uint8_t dev_mac[6], uint8_t ip[4]);
 
-	void chk_txpage_cnt(unsigned &txch_cnt);
+    void audio_play_stateset(uint8_t state,uint8_t ch);
+    
 	//
 #if 0
 	void send_text_en(uint8_t audio_txen[NUM_MEDIA_INPUTS],unsigned timestamp[NUM_MEDIA_INPUTS],

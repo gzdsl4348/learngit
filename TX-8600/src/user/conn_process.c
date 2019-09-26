@@ -405,6 +405,10 @@ uint8_t list_sending_init(uint16_t cmd,uint8_t list_state,uint8_t could_id[],uin
         // 设备搜索列表
         case DIVSRC_LIST_SENDING:
             break;
+        case RTTASKMUSIC_LIST_SENDING:
+            t_list_connsend[i].list_info.rttaskmusic_ilst.music_inc = 0;
+            t_list_connsend[i].list_info.rttaskmusic_ilst.task_id = xtcp_rx_buf[TASK_DTG_TASK_ID+1]<<8 |xtcp_rx_buf[TASK_DTG_TASK_ID];
+            break;
     }
 	if(g_sys_val.list_sending_f==0)
 		g_sys_val.list_sending_cnt = i;
@@ -494,7 +498,12 @@ void conn_overtime_close(){
         //连接超时，删除节点，关闭连接
         if(conn_list_tmp->over_time>CONN_OVERTIME){
             if((conn_list_tmp->conn.id != g_sys_val.debug_conn.id) || (g_sys_val.eth_debug_f==0)){  
-                xtcp_debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
+                // 关闭即时任务信息推送
+                for(uint8_t i=0;i<MAX_SEND_RTTASKINFO_NUM;i++){
+                    if(conn_list_tmp->conn.id == rttask_info_list[i].conn.id)
+                        rttask_info_list[i].conn.id=0;
+                }
+                //xtcp_debug_printf("conn timeout %x\n",conn_list_tmp->conn.id);
                 mes_list_close(conn_list_tmp->conn.id);               
                 user_xtcp_close(conn_list_tmp->conn);
                 delete_conn_node(conn_list_tmp->conn.stack_conn);

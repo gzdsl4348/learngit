@@ -281,9 +281,21 @@ void user_fl_sector_read(unsigned sector_num){
 	}
 }
 
+void user_fl_sector_read2sector(unsigned sector_num){
+	unsafe{
+		i_user_flash->flash_sector_read(sector_num,g_tmp_union.buff+4096);
+	}
+}
+
 void user_fl_sector_write(unsigned sector_num){
 	unsafe{
 		i_user_flash->flash_sector_write(sector_num,g_tmp_union.buff);
+	}
+}
+
+void user_fl_sector_write2sector(unsigned sector_num){
+	unsafe{
+		i_user_flash->flash_sector_write(sector_num,g_tmp_union.buff+4096);
 	}
 }
 
@@ -445,6 +457,7 @@ void user_messend_buff_put(uint8_t wptr,uint8_t buff[]){
     }
 }
 
+/*
 void user_get_txpage_cnt(unsigned *txpage_cnt){
 	unsafe{
 		unsigned tmp;
@@ -452,6 +465,7 @@ void user_get_txpage_cnt(unsigned *txpage_cnt){
 		*txpage_cnt = tmp;
 	}
 }
+*/
 
 void debug_conn_connect(uint8_t ip[]){
 	xtcp_ipaddr_t ipaddr;
@@ -591,6 +605,12 @@ uint8_t app_trainsmit_ch_chk(){
 void app_trainsmit_divlist_set(){
     unsafe{
     i_aud_trainsmit_tx->divlist_set(g_tmp_union.audts_divlist,host_info.ipconfig,host_info.mac);
+    }
+}
+
+void user_playstate_set(uint8_t state,uint8_t ch){
+    unsafe{
+        i_ethaud_cfg->audio_play_stateset(state,ch);
     }
 }
 

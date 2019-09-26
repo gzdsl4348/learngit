@@ -313,8 +313,10 @@ uint8_t mf_open_log(char *file_newname,char *file_oldname)
     uint8_t res;
     uint16_t bw=0;
     uint8_t utf_16le_type[2]={0xFF,0xFE};
-    //
     logfile=(FIL*)mymalloc(sizeof(FIL));//申请内存
+
+    //---------------------------------------------------------------------------------------------------------------
+    //
     // 删除日志文件
     f_unlink((const TCHAR*)file_oldname);
     // 创建新日志    

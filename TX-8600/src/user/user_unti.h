@@ -126,12 +126,13 @@ typedef struct g_sys_val_t{
     date_info_t date_info;
     //
     //-------------------------------------------
-    // 任务连续播放
+    // 任务连续播放 处理标志
     // 
     uint8_t task_wait_state[MAX_MUSIC_CH];
     uint8_t play_ok;
     uint16_t music_task_id[MAX_MUSIC_CH];
     uint8_t play_error_inc[MAX_MUSIC_CH];
+    uint8_t play_rttask_f[MAX_MUSIC_CH];
     //-------------------------------------
     date_info_t today_date;     //今日日期
     //----------------------------------------
@@ -310,6 +311,9 @@ typedef struct g_sys_val_t{
     uint8_t reset_ethtim;
     
     uint8_t resetio_ethtmp;
+
+    // 即时任务-主机音源
+    //uint16_t rttask_music_recid;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

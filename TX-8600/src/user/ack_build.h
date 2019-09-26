@@ -163,6 +163,10 @@ uint16_t divlist_ipchk_ack_build();
 
 uint16_t udp_trainsmit_headrt_build();
 
+uint16_t rttask_muslist_chk_build(uint8_t list_num);
+
+uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch);
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

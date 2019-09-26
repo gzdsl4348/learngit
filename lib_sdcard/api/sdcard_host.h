@@ -132,7 +132,6 @@ void sd_host_native(server interface sd_host_if i[num_clients],
                     buffered out port:32 p_sdclk,
   [[bidirectional]] buffered port:8 p_sdcmd,
   [[bidirectional]] buffered port:32 p_sddata,
-                    in port  p_sdcarddetect,
                     clock  sdClkblk,
                     clock  cb_sclk
                     );

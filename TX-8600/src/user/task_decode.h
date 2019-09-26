@@ -28,7 +28,7 @@ void tasklist_sending_decode(uint8_t list_num);
 void task_dtinfo_check_recive();
 
 // 任务播放
-void task_music_config_play(uint8_t ch,uint16_t id);
+void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f);
 
 // 方案配置
 void solution_config_recive();
@@ -130,6 +130,22 @@ void task_pageshow_recive();
 void solulist_chk_forapp_recive();
 
 void tasklist_forsolu_chk_recive();
+
+//======================================================================
+// 即时任务音乐列表查看与配置
+void rttask_musiclist_chk_recive();
+
+void rttask_musiclist_set_recive();
+
+void rttask_musiclist_chk_decode(uint8_t list_num);
+//======================================================================
+// 即时任务控制
+void rttask_host_contorl_recive();
+
+void rttask_infosend_process();
+
+void task_secinc_process();
+
 
 #endif  //__TASK_DECODE_H_
 

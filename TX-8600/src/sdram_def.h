@@ -20,21 +20,21 @@
  */
 
 
-#define SDRAM_FLASH_SECTOR_MAX_NUM  ((3*1024)/4)     // 3MB
+#define SDRAM_FLASH_SECTOR_MAX_NUM  ((3*1024+200)/4)     // 3.2MB
 
 #define SDRAM_GBK_UNICODE_TBL_START (0)              //0MB 共172KB
 
-#define SDRAM_DATA_BACKUP_START     (3*1024*1024/4)  // 3MB, 共3MB
+#define SDRAM_DATA_BACKUP_START     ((3*1024+200)*1024/4)  // 3.2MB, 共3.2MB
 
-#define SDRAM_FILE_LIST_START       (6*1024*1024/4)  //6MB, 共512KB
+#define SDRAM_FILE_LIST_START       ((6*1024+400)*1024/4)  //6.4MB, 共512KB
 
 #define SDRAM_FILE_LIST_SECTOR_SIZE (10*1024/4)     //10K一个sector
 
-#define SDRAM_MP3DECODER_START      (((6*1024+512)*1024)/4) //6.5MB, 共1MB
+#define SDRAM_MP3DECODER_START      (((6*1024+400+512)*1024)/4) //6.9MB, 共768KB
 
 
 // 批处理文件临时buff
-#define USER_FILE_BAT_TMPBUF_BASE   (((7*1024+512)*1024)/4) //7.5MB, 工512KB
+#define USER_FILE_BAT_TMPBUF_BASE   (((6*1024+400+512+768)*1024)/4) //7.6MB, 256KB
 
 // 20K 存放批量操作音乐文件
 // 10K 存放设备搜索信息

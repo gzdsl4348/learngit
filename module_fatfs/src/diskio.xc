@@ -48,7 +48,6 @@ DSTATUS disk_status (
     case USB :
        break;
     }
-
     return stat;
 }
 
@@ -98,7 +97,6 @@ DRESULT disk_read (
 )
 {
     DRESULT res = RES_PARERR;
-   text_debug("sd read\n");
    switch (pdrv) {
     case SD :
         unsafe{
@@ -127,7 +125,6 @@ DRESULT disk_write (
 )
 {
     DRESULT res = RES_PARERR;
-    text_debug("sd write\n");
     switch (pdrv) {
     case SD :
         unsafe{
@@ -139,8 +136,6 @@ DRESULT disk_write (
     case USB :
         break;
     }
-
-
   return res;
 }
 #endif

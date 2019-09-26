@@ -815,7 +815,6 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
                       buffered out port:32 p_sdclk,
     [[bidirectional]] buffered port:8 p_sdcmd,
     [[bidirectional]] buffered port:32 p_sddata,
-                      in port  p_sdcarddetect,
                       clock sdClkblk,
                       clock cb_sclk
                      )

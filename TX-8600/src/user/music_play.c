@@ -8,24 +8,26 @@
 #include "eth_audio_config.h"
 #include "debug_print.h"
 #include "sys_log.h"
+#include "task_decode.h"
+#include "user_lcd.h"
 
 audio_txlist_t t_audio_txlist;
 
 extern uint8_t f_name[];
 
-void task_music_send(uint8_t ch){
+void task_music_send(uint8_t ch,taskmac_info_t *p_taskmac_info,uint8_t div_tol,uint8_t task_prio,uint8_t task_vol){
     div_node_t *div_tmp_p;
     t_audio_txlist.num_info=0;
     // 配置发送目标
-    for(uint8_t i=0;i<g_tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum;i++){
+    for(uint8_t i=0;i<div_tol;i++){
         //查找目标设备与IP
-        xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[0],
-                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[1],
-                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[2],
-                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[3],
-                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[4],
-                                                g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac[5]);
-        div_tmp_p = get_div_info_p(g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac);
+        xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",p_taskmac_info[i].mac[0],
+                                                p_taskmac_info[i].mac[1],
+                                                p_taskmac_info[i].mac[2],
+                                                p_taskmac_info[i].mac[3],
+                                                p_taskmac_info[i].mac[4],
+                                                p_taskmac_info[i].mac[5]);
+        div_tmp_p = get_div_info_p(p_taskmac_info[i].mac);
         if(div_tmp_p==null){
             //i++;
             continue;
@@ -35,12 +37,11 @@ void task_music_send(uint8_t ch){
         //xtcp_debug_printf("div ok\n");
         //
         //获得mac
-        memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].mac,6);
+        memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].mac,p_taskmac_info[i].mac,6);
         //获得IP
         memcpy(t_audio_txlist.t_des_info[t_audio_txlist.num_info].ip,div_tmp_p->div_info.ip,4);
         //获得分区控制位
-        
-        t_audio_txlist.t_des_info[t_audio_txlist.num_info].area_contorl = g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info[i].zone_control;
+        t_audio_txlist.t_des_info[t_audio_txlist.num_info].area_contorl = p_taskmac_info[i].zone_control;
         t_audio_txlist.num_info++;
         //
     }
@@ -96,14 +97,14 @@ void task_music_send(uint8_t ch){
     }
     */
     // 配置优先级
-    g_sys_val.audio_type[ch] = g_tmp_union.task_allinfo_tmp.task_coninfo.task_prio;
+    g_sys_val.audio_type[ch] = task_prio;
     //g_sys_val.audio_type[ch] = 0x11;
     //i_ethaud_cfg->set_audio_type(g_sys_val.audio_type);
     set_audio_type(g_sys_val.audio_type);
     // 配置目标
-    user_audio_desip_set(ch,g_tmp_union.task_allinfo_tmp.task_coninfo.task_prio);
+    user_audio_desip_set(ch,task_prio);
     // 配置音量
-    set_audio_vol(ch,g_tmp_union.task_allinfo_tmp.task_coninfo.task_vol);
+    set_audio_vol(ch,task_vol);
     // 发送使能
     user_audio_senden(ch);
 }
@@ -115,31 +116,35 @@ void task_music_stop(uint8_t ch){
     //xtcp_debug_printf("music stop\n");
 }
 
-void task_music_play(uint8_t ch,uint8_t num){
-    debug_printf("\n\n\nmusic play \n\n");
+void taskmusic_name_get(){
+    uint8_t i,j,ch_tmp;
+}
+
+void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
+    xtcp_debug_printf("\n\n\nmusic play \n\n");
     //获取歌曲路径名
     uint8_t i,j,ch_tmp;
     uint8_t task_id_right=0;
+    // 判断是否有空位显示任务
     for(uint8_t i=0;i<MAX_DISP_TASK;i++){
         if(g_sys_val.disp_ch[i]==ch){
-            task_id_right=1;
+            task_id_right=1; // 有空位显示任务
             ch_tmp = i;
             break;
         }
     }
     for(i=0;i<(PATCH_NAME_NUM/2);i++){
-        if(((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i]==0)
+        if(((uint16_t *)p_music_info->music_path)[i]==0)
             break;
-        ((uint16_t *)f_name)[i] = ((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_path)[i];
+        ((uint16_t *)f_name)[i] = ((uint16_t *)p_music_info->music_path)[i];
     }
     ((uint16_t *)f_name)[i] = 0x002F;
     i++;
     // 更新曲目名
     for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
-        if(((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j]==0)
+        if(((uint16_t *)p_music_info->music_name)[j]==0)
             break;
-        ((uint16_t *)f_name)[i] = ((uint16_t *)g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name)[j];
-
+        ((uint16_t *)f_name)[i] = ((uint16_t *)p_music_info->music_name)[j];
     }
     ((uint16_t *)f_name)[i] = 0x00;
     if(task_id_right){     
@@ -147,8 +152,8 @@ void task_music_play(uint8_t ch,uint8_t num){
         memcpy(g_sys_val.disinfo2buf[ch_tmp],playing_char,10);
         uint8_t data_base=10;
         for(j=0; j<(MUSIC_NAME_NUM/2);j++){
-            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2] = g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2+1];
-            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[num].music_name[j*2];
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2] = p_music_info->music_name[j*2+1];
+            g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = p_music_info->music_name[j*2];
             if(g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1]==0 && g_sys_val.disinfo2buf[ch_tmp][data_base+j*2]==0)
                 goto music_dispend;
             if(j>16)
@@ -176,7 +181,114 @@ void task_music_play(uint8_t ch,uint8_t num){
     #endif
     // 播放通道音乐
     user_music_play(ch);
+    // 获得播放时间
+    if(timetask_now.task_musicplay[ch].rttask_f){
+        memcpy(f_name,p_music_info,sizeof(task_music_info_t));
+        timetask_now.task_musicplay[ch].music_tolsec = get_music_tolsec((task_music_info_t *)f_name);
+        timetask_now.task_musicplay[ch].music_sec=0;
+    }
     //xtcp_debug_printf("music play out\n");
 }
 
+void rttask_music_play(uint16_t id){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 关闭音乐播放
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            user_audio_senden(i);
+        }
+    }
+}
+
+void rttask_music_stop(uint16_t id){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 关闭音乐播放
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            user_audio_send_dis(i);
+        }
+    }
+}
+
+void rttask_music_last(uint16_t id){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 找到正在播放通道
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            // 找到上一首歌算法  
+            timetask_now.task_musicplay[i].music_inc+=MAX_RTMUSIC_NUM-2;
+            if(timetask_now.task_musicplay[i].music_inc>=MAX_RTMUSIC_NUM){
+                timetask_now.task_musicplay[i].music_inc -=MAX_RTMUSIC_NUM;
+            }
+            //
+            task_musicevent_change(i,0,0);
+        }
+    }
+}
+
+void rttask_music_next(uint16_t id){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 找到正在播放通道
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            task_musicevent_change(i,0,0);
+        }
+    }
+}
+
+void rttask_music_select(uint16_t id,uint8_t mus_inc){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 找到正在播放通道
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            // 找到指定歌算法  
+            timetask_now.task_musicplay[i].music_inc = mus_inc;
+            timetask_now.task_musicplay[i].music_inc+=MAX_RTMUSIC_NUM-1;
+            if(timetask_now.task_musicplay[i].music_inc>=MAX_RTMUSIC_NUM){
+                timetask_now.task_musicplay[i].music_inc -=MAX_RTMUSIC_NUM;
+            }
+            task_musicevent_change(i,0,0);
+        }
+    }
+}
+
+void rttask_music_totimer(uint16_t id,uint16_t music_sec){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            timetask_now.task_musicplay[i].music_sec=music_sec;
+        }
+    }
+}
+
+void rttask_music_setmode(uint16_t id,uint8_t mode){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        // 找到正在播放通道
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            timetask_now.task_musicplay[i].play_mode = mode;
+        }
+    }
+}
+
+void rttask_music_setvol(uint16_t id,uint8_t vol){
+    set_audio_vol(id,vol);
+}
+
+uint16_t get_music_tolsec(task_music_info_t *p_music_info){
+    uint16_t music_sec=0;
+    user_fl_get_patchlist(g_tmp_union.buff);
+    uint32_t *patch_tol = &g_tmp_union.buff[0];
+    dir_info_t *dir_info = &g_tmp_union.buff[4];
+
+    for(uint16_t i=0;i<*patch_tol;i++){
+        // 比较文件夹
+        if(charncmp(p_music_info->music_path,dir_info[i].name,PATCH_NAME_NUM)==1){
+            user_fl_get_musiclist(dir_info[i].sector,g_tmp_union.buff);
+            uint32_t *music_tol = &g_tmp_union.buff[0];
+            music_info_t *music_info = &g_tmp_union.buff[4];
+            // 比较文件夹
+            for(uint16_t j=0;j<*music_tol;j++){
+                if(charncmp(p_music_info->music_name,music_info[j].name,MUSIC_NAME_NUM)==1){
+                    xtcp_debug_printf("get music sec %d\n",music_info[j].totsec);
+                    return music_info[j].totsec;
+                }
+            }
+        }
+    }
+    return music_sec;
+}
 

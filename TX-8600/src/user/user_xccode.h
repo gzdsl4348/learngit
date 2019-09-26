@@ -37,7 +37,11 @@ void user_xtcp_ipconfig(xtcp_ipconfig_t ipconfig);
 
 void user_fl_sector_read(unsigned sector_num);
 
+void user_fl_sector_read2sector(unsigned sector_num);
+
 void user_fl_sector_write(unsigned sector_num);
+
+void user_fl_sector_write2sector(unsigned sector_num);
 
 void user_music_play(uint8_t ch);
 
@@ -118,6 +122,8 @@ void time5s_send_udpconnect();
 uint8_t app_trainsmit_ch_chk();
 
 void app_trainsmit_divlist_set();
+
+void user_playstate_set(uint8_t state,uint8_t ch);
 
 #endif //__USER_XCCODE_H_
 

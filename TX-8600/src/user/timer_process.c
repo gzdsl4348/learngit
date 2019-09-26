@@ -95,7 +95,8 @@ void timee10hz_process(){
     divfound_over_timeinc();    //设备搜索计时
     rttask_playlist_updata();   //计时任务播放列表更新
     xtcp_bufftimeout_check_10hz();//发送buff发送超时
-    list_sending_overtime();    //列表发送超时
+    list_sending_overtime();    //列表发送超时    
+    rttask_infosend_process();
 }
 
 //--------------------------------------------------------------------------
@@ -123,5 +124,6 @@ void second_process(){
     task_check_and_play();      //定时任务定时播放
     user_disp_time();           // lcd 时钟显示
     timer_task_disp();          // 显示切换
+    task_secinc_process();
 }
 

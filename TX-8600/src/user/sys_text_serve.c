@@ -5,11 +5,13 @@
 #include "debug_print.h"
 #include "sys_log.h"
 
+/*
 // 查看收发包数量 C001
 void text_get_txpage_recive(){
 	user_sending_len = chk_txpage_cnt_build();
 	user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
+*/
 
 // 网络打印开启关闭   C002
 void eth_debug_contorl_recive(){

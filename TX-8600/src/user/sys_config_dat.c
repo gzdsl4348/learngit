@@ -63,7 +63,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
  							 {BACKUP_BUSY_CHK_CMD,backup_busy_chk},
                              {BACKUP_UPDATA_CMD,backup_mes_send_recive},
                              {BACKUP_CONTORL_CMD,backup_contorl_chk},
-                             {TMP_IPSET_CMD,tmp_ipset_recive},
+                             //{TMP_IPSET_CMD,tmp_ipset_recive},
                              {TASK_BAT_DIVSET_CMD,bat_task_divset_recive},
                              {CLD_REGISTER_RECIVE_CMD,account_sys_register_recive},
                              {CLD_CLOULDLOGIN_CMD,cld_account_login_recive},
@@ -73,14 +73,20 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {SYSSET_DIVFOUNT_CMD,sysset_divfound_recive},
                              {SYSSET_DIV_HOSTSET_CMD,divresearch_hostset_recive},
                              {CLD_TIMER_SYNC_CMD,cld_timer_sync_recive},
-							 {TEXT_TXPAGE_GET_CMD,text_get_txpage_recive},
+							 //{TEXT_TXPAGE_GET_CMD,text_get_txpage_recive}, //C001
 							 {ETH_CONTOL_DEBUG_CMD,eth_debug_contorl_recive},
                              {MUSIC_B807_BATRECHK_CMD,music_batrechk_recive},
                              {ETH_WAV_OPEN_CMD,wav_modeset_recive},
                              {SDCARD_SIZECHK_B809_CMD,sdcard_sizechk_recive},
                              {DIVLIST_IPCHK_CMD,divlist_ipchk_recive},
+                             #if ENABLE_AUD_TRAINSMIT
                              {BE0E_AUDTRAINSMIT_DIVLIST_CMD,set_audtrainsmit_divlist_recive},
+                             #endif
+                             {RTTASK_MUSICLIST_CHKCMD,rttask_musiclist_chk_recive},
+                             {RTTASK_MUSICLIST_SETCMD,rttask_musiclist_set_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
+                             {RTTASK_HOST_CONTORL_CMD,rttask_host_contorl_recive},
+                             
                             };
 	
 // 多包列表发送函数
@@ -93,6 +99,7 @@ sending_fun_lis_t sending_fun_lis[]={div_sending_decode,         //设备列表
                                      music_music_list_send_decode,  //
                                      ac_list_sending_decode,        //
                                      divsrc_sending_decode,         //
+                                     rttask_musiclist_chk_decode,
                                     };
 // 多包发送状态
 list_connsend_t t_list_connsend[MAX_SEND_LIST_NUM];
@@ -161,5 +168,7 @@ timetask_now_t timetask_now;
 rttask_lsit_t rttask_lsit;
 // 即时任务启动连接建立状态
 rttask_build_state_t rttask_build_state[MAX_RTTASK_CONTORL_NUM];
+
+rttask_info_list_t rttask_info_list[MAX_SEND_RTTASKINFO_NUM];
 
 //================================================================================

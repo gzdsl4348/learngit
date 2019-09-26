@@ -46,6 +46,7 @@ typedef struct g_val_t{
 	uint8_t audio_txen[NUM_MEDIA_INPUTS];
 	uint8_t audio_txvol[NUM_MEDIA_INPUTS];
     uint32_t aux_timestamp[NUM_MEDIA_INPUTS];
+    uint8_t play_state[NUM_MEDIA_INPUTS];
 	uint32_t silent_count;
 	uint8_t	 silent_lv;
 #if 0
@@ -57,7 +58,7 @@ typedef struct g_val_t{
 #endif    
     uint32_t sample_rate[NUM_MEDIA_INPUTS];
 
-	unsigned audio_tx_cnt;
+	//unsigned audio_tx_cnt;
 
 #if 0
     unsigned send_text_en[NUM_MEDIA_INPUTS];

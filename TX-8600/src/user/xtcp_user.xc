@@ -437,8 +437,11 @@ void user_fldat_init(){
 	//MAC 写入
 	// 72 4B
 	#if 0
+    
     i_user_flash->flash_sector_read(SYSTEM_0_DAT_SECTOR_BASE,g_tmp_union.buff);
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+    
+    //memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
     //
     host_info.mac[0]=0x42;
     host_info.mac[1]=0x4C;
@@ -508,6 +511,10 @@ void sys_gobalval_init(){
     //
     for(uint8_t i=0;i<MAX_SEND_LIST_NUM;i++){
 	    t_list_connsend[i].conn_state = LIST_SEND_INIT;
+    }
+    for(uint8_t i=0;i<MAX_SEND_RTTASKINFO_NUM;i++){
+        rttask_info_list[i].task_id=0xFFFF;
+        rttask_info_list[i].conn.id=0;
     }
 }
 
@@ -639,8 +646,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     xtcp_ipconfig_t ipconfig;
     if(!host_info.dhcp_en){
         //xtcp_debug_printf("te %d\n",host_info.div_type[0]);
-        xtcp_debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
-        xtcp_debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
+        //xtcp_debug_printf("st ip,%d,%d,%d,%d\n",host_info.ipconfig.ipaddr[0],host_info.ipconfig.ipaddr[1],host_info.ipconfig.ipaddr[2],host_info.ipconfig.ipaddr[3]);
+        //xtcp_debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
         memcpy(&ipconfig,&host_info.ipconfig,12);
     }
     if(mac_factory_init(i_xtcp,host_info.mac)==0){
@@ -1225,7 +1232,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     }//unsafe
 }
 
-                  
 void gateway_event(client xtcp_if i_xtcp){
     //static uint8_t gateresend_inc=0;
     static xtcp_ipconfig_t ipconfig;

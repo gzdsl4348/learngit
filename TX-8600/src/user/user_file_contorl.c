@@ -204,7 +204,7 @@ void music_file_config_recive(){
     uint8_t state = 0;
     uint32_t *patch_tol;
     dir_info_t *dir_info;
-    
+    uint8_t i;
     task_music_stop_all();
     if(g_sys_val.file_bat_contorl_s)
         goto file_config_end;
@@ -215,14 +215,16 @@ void music_file_config_recive(){
     file_patch_get(&xtcp_rx_buf[FILECON_DES_PATCHNAME],&xtcp_rx_buf[FILECON_SRC_MUSICNAME],g_sys_val.fdes);
 
     //-------------------------------------------------------------------------------
-    for(uint8_t i=0;i<(PATCH_NAME_NUM+MUSIC_NAME_NUM)/2;i++){
+    #if 0
+    for(i=0;i<(PATCH_NAME_NUM+MUSIC_NAME_NUM)/2;i++){
         xtcp_debug_printf("%x ",g_sys_val.fsrc[i]);
         if(g_sys_val.fsrc[i]==0)
             break;
     }
-    #if 1
+    #endif
+    #if 0
     xtcp_debug_printf("\n");
-    for(uint8_t i=0;i<(PATCH_NAME_NUM+MUSIC_NAME_NUM)/2;i++){
+    for(i=0;i<(PATCH_NAME_NUM+MUSIC_NAME_NUM)/2;i++){
         xtcp_debug_printf("%x ",g_sys_val.fdes[i]);
         if(g_sys_val.fdes[i]==0)
             break;
@@ -328,8 +330,8 @@ void bat_contorlobj_init(){
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].bat_state=1;
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].succeed_num=0;
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].fail_num =0;
-    debug_printf("\ninit bat num %d id %x %x %x %x %x %x\n\n",g_sys_val.bat_contorling,xtcp_rx_buf[POL_MAC_BASE],xtcp_rx_buf[POL_MAC_BASE+1],xtcp_rx_buf[POL_MAC_BASE+2],xtcp_rx_buf[POL_MAC_BASE+3],
-                                                        xtcp_rx_buf[POL_MAC_BASE+4],xtcp_rx_buf[POL_MAC_BASE+5]);
+    //debug_printf("\ninit bat num %d id %x %x %x %x %x %x\n\n",g_sys_val.bat_contorling,xtcp_rx_buf[POL_MAC_BASE],xtcp_rx_buf[POL_MAC_BASE+1],xtcp_rx_buf[POL_MAC_BASE+2],xtcp_rx_buf[POL_MAC_BASE+3],
+    //                                                    xtcp_rx_buf[POL_MAC_BASE+4],xtcp_rx_buf[POL_MAC_BASE+5]);
 }
 
 void bat_contorlobj_add(uint8_t state){

@@ -256,7 +256,8 @@ void fl_timertask_write(task_allinfo_tmp_t *task_allinfo_tmp, uint16_t id){
 void fl_rttask_read(rttask_dtinfo_t     *rttask_dtinfo,uint16_t id){
     if(id>MAX_RT_TASK_NUM-1)
         return;
-    user_fl_sector_read(RT_TASK_SECTOR+id);
+    user_fl_sector_read(RT_TASK_SECTOR+id*2);
+    user_fl_sector_read2sector(RT_TASK_SECTOR+id*2+1);
     sys_dat_read(rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
 }
 //--------------------------------------------------
@@ -266,7 +267,8 @@ void fl_rttask_write(rttask_dtinfo_t *rttask_dtinfo,uint16_t id){
     if(id>MAX_RT_TASK_NUM-1)
         return;
     sys_dat_write(rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
-    user_fl_sector_write(RT_TASK_SECTOR+id);
+    user_fl_sector_write(RT_TASK_SECTOR+id*2);
+    user_fl_sector_write2sector(RT_TASK_SECTOR+id*2+1);
 }
 
 //----------------------------------------------------------

@@ -203,7 +203,7 @@ void mes_send_acinfo(uint16_t id){
 
 // 任务更新通知
 void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
-    xtcp_debug_printf("mes wrptr %d\n",mes_send_list.wrptr);
+    //xtcp_debug_printf("mes wrptr %d\n",mes_send_list.wrptr);
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //备份发送数据

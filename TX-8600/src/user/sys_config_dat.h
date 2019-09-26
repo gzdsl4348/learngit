@@ -30,6 +30,8 @@ extern "C" {
 
 #define DISABLE_COULDOFFLINE_MODE    0 // 关闭云离线停止工作模式
 
+#define ENABLE_AUD_TRAINSMIT        0
+
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
 //---------------------------------
@@ -52,13 +54,13 @@ extern "C" {
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
 // 最大UDP连接数
-#define MAX_UDP_CONNET	180
+#define MAX_UDP_CONNET	160
 
-#define MAX_ACCOUNT_CONNET (30) //同时支持30个控制机
+#define MAX_ACCOUNT_CONNET (20) //同时支持30个控制机
+
+#define MAX_ENTER_ACCOUNT   20  //最大同时登录账号
 
 #define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
-
-#define MAX_ENTER_ACCOUNT   30  //最大同时登录账号
 
 //最大设备
 #define MAX_DIV_LIST    150
@@ -92,6 +94,8 @@ extern "C" {
 #define MAX_MUSIC_NUM   20   //20首歌曲 
 // 定时任务最大指定日期
 #define MAX_TASK_DATE_NUM   10  //最大指定10天   
+// 即时任务最大歌曲数
+#define MAX_RTMUSIC_NUM     50   //50首歌曲 
 
 #define SOLU_MAX_PLAYCH     8
 
@@ -116,7 +120,7 @@ extern "C" {
 // 
 #define MAX_SDCARD_MUSIC_NUM        100 //sd卡每个文件最大100个音乐
 //
-#define MES_STACK_NUM       10   //消息更新 堆栈数
+#define MES_STACK_NUM       8   //消息更新 堆栈数
 
 #define MAX_SEND_ACCOUNT_NUM_FORPACK    10  //每数据包发送多少个账号
 
@@ -135,6 +139,10 @@ extern char all_tx_buf[TX_BUFFER_SIZE];
 extern uint16_t user_sending_len;
 
 extern xtcp_connection_t conn;
+
+#define D_RTTASK_SOULID   0xFE
+
+#define MAX_SEND_RTTASKINFO_NUM     10  // 即时任务信息推送用户，最大10个
 
 //=================================================================
 // 日期信息
@@ -323,14 +331,18 @@ enum PLAY_MODE_E{
 
 typedef struct task_musicplay_t{
     uint16_t task_id;
-    uint8_t name[DIV_NAME_NUM];
-    uint8_t music_inc;
-    uint8_t music_tol;
-    uint8_t play_mode;
-    uint8_t sulo_id;
-    uint32_t time_inc;
-    uint32_t dura_time;
-    time_info_t time_info;  //开始时间
+    uint8_t name[DIV_NAME_NUM]; //任务名称
+    uint8_t music_inc;  //当前播放序号
+    uint8_t music_tol;  //音乐总数
+    uint8_t play_mode;  //播放模式
+    uint8_t sulo_id;    //方案id
+    uint32_t time_inc;  //播放时间
+    uint32_t dura_time; //持续时间
+    uint8_t rttask_f;
+    uint8_t task_vol;   //任务音量
+    uint16_t music_tolsec;  //曲目总时间
+    uint16_t music_sec;     //曲目当前时间
+    uint8_t  play_state;    //播放状态    0：播放  1：暂停
 }task_musicplay_t;
 
 // 现在任务信息
@@ -393,6 +405,17 @@ extern timetask_list_t timetask_list;
 
 //====================================================================
 //即时任务
+
+// 主机音源信息
+typedef struct rttask_host_t{
+    uint8_t music_tol;      // 音乐总数
+    uint8_t music_inc;      // 音乐计数
+    uint16_t music_time;    // 音乐运行时间
+    uint8_t play_modd;      // 播放模式
+    uint8_t play_state;     // 播放状态
+}rttask_host_t;
+
+
 // 即时任务详细信息
 typedef struct rttask_dtinfo_t{
     uint8_t     account_id; //所属账户编号
@@ -404,7 +427,11 @@ typedef struct rttask_dtinfo_t{
     uint8_t     task_key;   //遥控键值
     uint8_t     div_tol;    //设备总数
     uint8_t     prio;
-    taskmac_info_t des_info[MAX_DIV_LIST];     
+    taskmac_info_t des_info[MAX_DIV_LIST]; 
+    //
+    uint8_t    play_mode;
+    uint8_t    music_tol;
+    task_music_info_t music_info[MAX_RTMUSIC_NUM];
 }rttask_dtinfo_t;
 
 typedef struct rttask_info_t{
@@ -460,12 +487,12 @@ typedef union{
     xtcp_ipconfig_t ipconfig;
     xtcp_connection_t conn_tmp;
     audts_divlist_s audts_divlist;
+    uint8_t buff2[4*1024];
 }tmp_union_t;
 
 typedef union{
     task_allinfo_tmp_t task_allinfo_tmp;
     account_all_info_t account_all_info;
-    rttask_dtinfo_t rttask_dtinfo;
     uint8_t buff[4*1024];
     xtcp_ipconfig_t ipconfig;
 }tmp_union_l_t;
@@ -536,6 +563,7 @@ enum CONN_STATE_E{
     MUSICNAME_LIST_SENDING=0x06,
     AC_LIST_SENDING=0x07,
     DIVSRC_LIST_SENDING=0x08,
+    RTTASKMUSIC_LIST_SENDING=0x09,
 
 	LIST_SEND_END=0xFE,
     LIST_SEND_INIT=0xFF,
@@ -591,6 +619,12 @@ typedef struct divsrc_sending_t{
     uint8_t div_inc;
 }divsrc_sending_t;
 
+typedef struct rttaskmusic_sending_t{
+    uint8_t music_inc;
+    uint16_t task_id;
+}rttaskmusic_sending_t;
+
+
 //---------------------------------------------------------------------
 // senging 事件状态位 列表发送标记 同一时间只能往一个设备列表
 
@@ -604,6 +638,7 @@ typedef union{
     musiclist_sending_t musiclist;
     account_sending_t ac_list;
     divsrc_sending_t divsrc_list;
+    rttaskmusic_sending_t rttaskmusic_ilst;
 }conn_list_s;
 
 
@@ -675,6 +710,17 @@ typedef struct mes_send_list_t{
 }mes_send_list_t;
 
 extern mes_send_list_t mes_send_list;
+
+typedef struct rttask_info_list_t{
+    xtcp_connection_t conn;
+    uint16_t task_id;
+    uint16_t user_id;
+    uint8_t need_send;
+    uint8_t could_f;
+    uint8_t could_id[6];
+}rttask_info_list_t;
+
+extern rttask_info_list_t rttask_info_list[MAX_SEND_RTTASKINFO_NUM];
 
 //======================================================================
 void init_funlist_len();

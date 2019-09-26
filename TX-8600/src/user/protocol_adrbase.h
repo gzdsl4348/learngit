@@ -75,6 +75,14 @@
 #define RTTASK_BUILD_CMD        0xB407
 #define RTTASK_REBUILD_CMD      0xB40A
 
+#define RTTASK_MUSICLIST_CHKCMD 0xB40E
+#define RTTASK_MUSICLIST_SETCMD 0xB40F
+
+// 即时任务控制
+#define RTTASK_HOST_CONTORL_CMD 0xB405
+
+// 即时任务信息反馈
+#define RTTASK_INFOSEND_CMD     0xB406
 
 // 报警采集
 #define DIV_IPMAC_CHL_CMD       0xB709
@@ -799,8 +807,11 @@
 #define AC_LOGIN_IPMASK_B                   (AC_LOGIN_DHCP_EN_B+1)     //4
 #define AC_LOGIN_IPGATE_B                   (AC_LOGIN_IPMASK_B+4)      //4
 #define AC_LOGIN_RES_STATE_B                (AC_LOGIN_IPGATE_B+4)      //1
-#define AC_LOGIN_RES_DAY_B                  (AC_LOGIN_RES_STATE_B+1)   //2
-#define AC_LOGIN_DIV_TOL_B                  (AC_LOGIN_RES_DAY_B+2)     //1
+#define AC_LOGIN_RES_DAY_B                  (AC_LOGIN_RES_STATE_B+1)   //2  // 注册日期
+#define AC_LOGIN_BRAND_B                    (AC_LOGIN_RES_DAY_B+2)     //1
+#define AC_LOGIN_CLDSTATE_B                 (AC_LOGIN_BRAND_B+1)     //1
+
+#define AC_LOGIN_DIV_TOL_B                  (AC_LOGIN_CLDSTATE_B+1)     //1
 #define AC_LOGIN_DIV_MAC_B                  (AC_LOGIN_DIV_TOL_B+1)     //6*N
 
 //====================================================================================================
@@ -1018,6 +1029,85 @@
 #define AUD_TRAINS_AREA                     (AUD_TRAINS_DIVIP+4) //2
 #define AUD_TRAINS_DIVINFO_LEN              (AUD_TRAINS_AREA+2)
 
+//====================================================================================================
+// 即时任务音乐列表查询 B40E
+//====================================================================================================
+#define RTTASK_MUCLISTCHK_PACKTOL             (POL_DAT_BASE) //1
+#define RTTASK_MUCLISTCHK_PACKINC             (RTTASK_MUCLISTCHK_PACKTOL+1) //1
+#define RTTASK_MUCLISTCHK_ID                  (RTTASK_MUCLISTCHK_PACKINC+1)    //2
+#define RTTASK_MUCLISTCHK_MUSTOL              (RTTASK_MUCLISTCHK_ID+2) //1
+#define RTTASK_MUCLISTCHK_DATBASE             (RTTASK_MUCLISTCHK_MUSTOL+1)
+
+#define RTTASK_MUCLISTCHK_NUM                 (0)   //1
+#define RTTASK_MUCLISTCHK_PATCH               (RTTASK_MUCLISTCHK_NUM+1)
+#define RTTASK_MUCLISTCHK_MUSNAME             (RTTASK_MUCLISTCHK_PATCH+PATCH_NAME_NUM)
+#define RTTASK_MUCLISTCHK_DATLEN              (RTTASK_MUCLISTCHK_MUSNAME+MUSIC_NAME_NUM)
+//====================================================================================================
+// 即时任务音乐列表配置 B40F
+//====================================================================================================
+#define RTTASK_MUCLISTSET_PACKTOL             (POL_DAT_BASE) //1
+#define RTTASK_MUCLISTSET_PACKINC             (RTTASK_MUCLISTSET_PACKTOL+1) //1
+#define RTTASK_MUCLISTSET_ID                  (RTTASK_MUCLISTSET_PACKINC+1) //2
+#define RTTASK_MUCLISTSET_MUSTOL              (RTTASK_MUCLISTSET_ID+2) //1
+#define RTTASK_MUCLISTSET_DATBASE             (RTTASK_MUCLISTSET_MUSTOL+1)
+
+#define RTTASK_MUCLISTSET_PATCH               (0) //
+#define RTTASK_MUCLISTSET_MUSNAME             (RTTASK_MUCLISTSET_PATCH+PATCH_NAME_NUM)
+#define RTTASK_MUCLISTSET_DATLEN              (RTTASK_MUCLISTSET_MUSNAME+MUSIC_NAME_NUM)
+
+//====================================================================================================
+// 主机即时任务控制  B405
+//====================================================================================================
+#define RTTASK_CONTORL_TASKID                 (POL_DAT_BASE)                //2
+#define RTTASK_CONTORL_USERID                 (RTTASK_CONTORL_TASKID+2)     //2
+#define RTTASK_CONTORL_COMAND                 (RTTASK_CONTORL_USERID+2)     //1
+#define RTTASK_CONTORL_VALUE                  (RTTASK_CONTORL_COMAND+1)     //2
+
+#define RTTASK_CONTORL_DATLEN                 (RTTASK_CONTORL_VALUE+2)      //
+
+// 控制码
+#define RTTASK_CMD_PLAY         0x01    //播放
+#define RTTASK_CMD_PAUSE        0x02    //停止
+#define RTTASK_CMD_LASTMUS      0x03    //上一首
+#define RTTASK_CMD_NEXTMUS      0x04    //下一首
+#define RTTASK_CMD_STOP         0x05    //停止播放
+#define RTTASK_CMD_SELECT_MUSID 0x0D    //指定曲目
+#define RTTASK_CMD_VOL          0x0F    //音量配置
+#define RTTASK_CMD_INFORETURN   0x12    //返回信息
+#define RTTASK_CMD_SELECT_TIME  0x13    //选时播放
+#define RTTASK_CMD_STEPMODE     0x07    //顺序播放
+#define RTTASK_CMD_LOOPMODE     0x09    //循环播放
+#define RTTASK_CMD_RANDOMMODE   0x14    //随机播放
+
+
+//====================================================================================================
+// 主机即时任务回报  B406
+//====================================================================================================
+#define RTTASK_INFO_TASKID                    (POL_DAT_BASE)                //2
+#define RTTASK_INFO_USERID                    (RTTASK_INFO_TASKID+2)        //2
+#define RTTASK_INFO_MAC                       (RTTASK_INFO_USERID+2)        //6
+#define RTTASK_INFO_DIVTYPE                   (RTTASK_INFO_MAC+6)           //32
+#define RTTASK_INFO_VOL                       (RTTASK_INFO_DIVTYPE+DIV_TYPE_NUM)    //1
+#define RTTASK_INFO_MUSICTOL                  (RTTASK_INFO_VOL+1)          //2
+#define RTTASK_INFO_MUSICNUM                  (RTTASK_INFO_MUSICTOL+2)     //2
+#define RTTASK_INFO_PACKINFO                  (RTTASK_INFO_MUSICNUM+2)     //1
+#define RTTASK_INFO_MUSICTOLSEC               (RTTASK_INFO_PACKINFO+1)     //3
+#define RTTASK_INFO_MUSPLAYSEC                (RTTASK_INFO_MUSICTOLSEC+3)  //3
+#define RTTASK_INFO_SAVETYPE                  (RTTASK_INFO_MUSPLAYSEC+3)   //1
+#define RTTASK_INFO_PLAYSTATE                 (RTTASK_INFO_SAVETYPE+1)     //1
+#define RTTASK_INFO_CDSTATE                   (RTTASK_INFO_PLAYSTATE+1)     //1
+#define RTTASK_INFO_MUSTYPE                   (RTTASK_INFO_CDSTATE+1)       //1
+#define RTTASK_INFO_PLAYMODE                  (RTTASK_INFO_MUSTYPE+1)       //1
+#define RTTASK_INFO_NAMETYPE                  (RTTASK_INFO_PLAYMODE+1)      //1
+#define RTTASK_INFO_NAMELEN                   (RTTASK_INFO_NAMETYPE+1)      //1
+#define RTTASK_INFO_NAMEDAT                   (RTTASK_INFO_NAMELEN+1)      //1
+
+
+#define RTTASK_INFO_DATLEN                    (RTTASK_INFO_NAMEDAT+MUSIC_NAME_NUM)
+
 
 #endif //__PROTOCOL_ADRBASE_H
+
+
+
 

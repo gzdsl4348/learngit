@@ -59,7 +59,7 @@ on tile[0]:out buffered port:32   sdram_cas                   = XS1_PORT_1K;
 on tile[0]:out buffered port:32   sdram_ras                   = XS1_PORT_1I;
 on tile[0]:out buffered port:8    sdram_we                    = XS1_PORT_1L;
 on tile[0]:out port               sdram_clk                   = XS1_PORT_1J;
-on tile[0]:clock                  sdram_cb                    = XS1_CLKBLK_4;
+on tile[0]:clock                  sdram_cb                    = XS1_CLKBLK_5;
 
 enum SDRAM_CLIENT_T {
 	SDRAM_USER,
@@ -78,10 +78,10 @@ on tile[0]:buffered out port:32 p_sdclk = XS1_PORT_1E;
 on tile[0]:[[bidirectional]] buffered port:8 p_sdcmd = XS1_PORT_1F;
 on tile[0]:[[bidirectional]] buffered port:32 p_sddata = XS1_PORT_4D;
 
-on tile[0]:in port p_sdcarddetect = XS1_PORT_1O;
+//on tile[0]:in port p_sdcarddetect = XS1_PORT_1O;
 
-on tile[0]:clock cb1 = XS1_CLKBLK_2;
-on tile[0]:clock cb2 = XS1_CLKBLK_3;
+on tile[0]:clock cb1 = XS1_CLKBLK_3;
+on tile[0]:clock cb2 = XS1_CLKBLK_4;
 
 //-------------------------------------------------------------------------------------
 // wifi text
@@ -186,7 +186,7 @@ int main()
             file_process(c_sdram[SDRAM_FILE_SYSTEM], c_faction,sdif[0]);
         }
         
-        on tile[0]: [[distribute]] sd_host_native(sdif,1,p_sdclk,p_sdcmd,p_sddata,p_sdcarddetect,cb1,cb2);
+        on tile[0]: [[distribute]] sd_host_native(sdif,1,p_sdclk,p_sdcmd,p_sddata,cb1,cb2);
         on tile[0]:
         {
             set_core_high_priority_on();
@@ -200,8 +200,10 @@ int main()
     	 	        		  i_eth_tx_lp[ETH_TX_XTCP_DATA],	// eth tx client 1
      			        	  i_smi,		  // smi
       			         	  0);             // smi phy addr
-
+      			         	  
+        #if ENABLE_AUD_TRAINSMIT
         on tile[0]:aud_trainsmit_core(c_rx_hp,i_aud_trainsmit,i_eth_tx_lp[ETH_TX_AUD_TRAINSMIT]);
+        #endif
         //--------------------------------------------------------------------------------------------------
         // user process
         //--------------------------------------------------------------------------------------------------

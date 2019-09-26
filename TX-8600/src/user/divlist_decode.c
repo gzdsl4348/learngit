@@ -439,12 +439,13 @@ uint8_t div_online_tolist(){
                                 xtcp_rx_buf[ONLINE_PASSWORD_B+6],xtcp_rx_buf[ONLINE_PASSWORD_B+7],xtcp_rx_buf[ONLINE_PASSWORD_B+8],
                                 xtcp_rx_buf[ONLINE_PASSWORD_B+9],xtcp_rx_buf[ONLINE_PASSWORD_B+10],xtcp_rx_buf[ONLINE_PASSWORD_B+11]);
     */
-    if(sn_cmp(&xtcp_rx_buf[ONLINE_PASSWORD_B],host_info.sn)){
+    // ²»ÅÐ¶ÏÏµÍ³ÃÜÂë
+    //if(sn_cmp(&xtcp_rx_buf[ONLINE_PASSWORD_B],host_info.sn)){
         div_info_p->div_info.div_onlineok = 1;
         return 1;
-    }
+    //}
     //div_info_p->div_info.div_state = SN_ER;                                     
-    return 0;
+    //return 0;
 }
 
 //------------------------------------------------------------------------------

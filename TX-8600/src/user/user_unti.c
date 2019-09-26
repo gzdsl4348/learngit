@@ -20,13 +20,14 @@ uint8_t ip_cmp(uint8_t *a, uint8_t *b){
     //debug_printf("ip2 %d,%d,%d,%d\n",b[0],b[1],b[2],b[3]);
     return ((a[0]==b[0])&&(a[1]==b[1])&&(a[2]==b[2])&&(a[3]==b[3]));
 }
-
+// return 0 不相等
+// return 1 相等
 uint8_t charncmp(uint8_t *c1,uint8_t *c2,unsigned len){
     for(unsigned i=0;i<len;i++){
         if(c1[i]!=c2[i])
-            return 0;
+            return 0; //字符不相等
     }
-    return 1;
+    return 1;   //字符相等
 }
 
 

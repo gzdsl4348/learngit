@@ -6,6 +6,7 @@
 #include "eth_audio.h"
 #include "adpcm.h"
 #include "debug_print.h"
+#include "sys_log.h" 
 
 #include "src_fifo.h"
 
@@ -114,9 +115,11 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 				// i_eth_cfg.set_macaddr(0,g_t_val->macaddress);
 				//---------------------------------------------------------------------------------
 				// Add Eth Eth MAC Filter
+				#if ENABLE_AUD_TRAINSMIT
 				ethernet_macaddr_filter_t macaddr_filter;
                 memcpy(macaddr_filter.addr,g_t_val->macaddress,6);
                 i_eth_cfg.add_macaddr_filter(0, 1, macaddr_filter);
+                #endif
 #if 0
 				{
 				ethernet_macaddr_filter_t macaddr_filter;
@@ -240,21 +243,30 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 #endif                    
                     g_t_val->aux_timestamp[i] = timestamp[i];
                     g_t_val->audio_txen[i] = audio_txen[i];
+                    
+                    if(g_t_val->audio_txen[i])
+                        g_t_val->play_state[i] = 1;
                 }
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_txvol(uint8_t audio_val[NUM_MEDIA_INPUTS]):
 				//memcpy(g_t_val->audio_txvol,audio_val,NUM_MEDIA_INPUTS);
-				for(i=0; i<NUM_MEDIA_INPUTS; i++)
+				for(i=0; i<NUM_MEDIA_INPUTS; i++){
 					g_t_val->audio_txvol[i] = audio_val[i];
+                }
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_priolv(enum AUDIO_PRIOLV_E audio_priolv[NUM_MEDIA_INPUTS]):
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_silentlv(uint8_t audio_silentlv[NUM_MEDIA_INPUTS]):
 				break;
+            /*
 			case i_ethaud_cfg[uint8_t a].chk_txpage_cnt(unsigned &txch_cnt):
 				txch_cnt = g_t_val->audio_tx_cnt;
 				g_t_val->audio_tx_cnt=0;
 				break;
+		    */
+            case i_ethaud_cfg[uint8_t a].audio_play_stateset(uint8_t state,uint8_t ch):
+                g_t_val->play_state[ch] = state;
+                break;
 #if 0
             case i_ethaud_cfg[unsigned a].send_text_en(uint8_t audio_txen[NUM_MEDIA_INPUTS],unsigned timestamp[NUM_MEDIA_INPUTS],
                                                                           unsigned max_send_page[NUM_MEDIA_INPUTS],

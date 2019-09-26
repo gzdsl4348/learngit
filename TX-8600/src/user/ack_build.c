@@ -309,12 +309,34 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 2;
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
+
+    if(user_id==1){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 0;
+    }
+    else if(user_id==2){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 1;
+    }
+    else if(user_id==3){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 2;
+    }
+    else if(user_id==4){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 3;
+    }
+    else if(user_id==5){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 4;
+    }
     #endif
     //
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
     xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
 
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_MACHCODE_B],g_sys_val.maschine_code,10);
+
+    xtcp_tx_buf[AC_LOGIN_BRAND_B]=0;
+
+    xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=0;
+    if(g_sys_val.could_conn.id)
+        xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=1;
     //
     uint16_t mac_date_base = AC_LOGIN_DIV_MAC_B;
 
@@ -534,7 +556,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
         //-------------------------------------------------------
         xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S] = 0;
         for(uint8_t j=0;j<MAX_MUSIC_CH;j++){
-            if((timetask_now.ch_state[j]!=0xFF)&&(timetask_now.task_musicplay[j].task_id==tmp_p->task_id)){
+            if((timetask_now.ch_state[j]!=0xFF)&&(timetask_now.task_musicplay[j].task_id==tmp_p->task_id) && timetask_now.task_musicplay[j].rttask_f==0){
                 xtcp_tx_buf[data_base+TASK_CK_TEXTPLAY_S] = 1;
             }
         }
@@ -1442,6 +1464,7 @@ uint16_t taskview_page_build(uint16_t cmd){
 //===============================================================================
 // 查看收发包数量 C001
 //===============================================================================
+/*
 uint16_t chk_txpage_cnt_build(){
 	unsigned tmp_cnt;
 	user_get_txpage_cnt(&tmp_cnt);
@@ -1452,7 +1475,7 @@ uint16_t chk_txpage_cnt_build(){
 	
 	return build_endpage_decode(TEXT_TXCNT_DATEND,TEXT_TXPAGE_GET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
-
+*/
 //===============================================================================
 // DNS 查询
 //===============================================================================
@@ -1544,5 +1567,111 @@ uint16_t udp_trainsmit_headrt_build(){
     memcpy(&xtcp_tx_buf[POL_DAT_BASE],host_info.mac,6);
     memset(&xtcp_tx_buf[POL_DAT_BASE+6],0x00,64);
 	return build_endpage_decode(POL_DAT_BASE+6+64,APP_AUDTRAINSMIT_UDP_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+}
+
+uint16_t rttask_muslist_chk_build(uint8_t list_num){
+    uint8_t i=0;
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,t_list_connsend[list_num].list_info.rttaskmusic_ilst.task_id);
+
+    xtcp_tx_buf[RTTASK_MUCLISTCHK_ID] = t_list_connsend[list_num].list_info.rttaskmusic_ilst.task_id;
+    xtcp_tx_buf[RTTASK_MUCLISTCHK_ID+1] = t_list_connsend[list_num].list_info.rttaskmusic_ilst.task_id>>8;
+    xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKTOL] = g_tmp_union.rttask_dtinfo.music_tol/MAX_SEND_MUSIC;
+    if(g_tmp_union.rttask_dtinfo.music_tol%MAX_SEND_MUSIC || xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKTOL]==0){
+        xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKTOL]++;
+    }
+    xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKINC]=t_list_connsend[list_num].pack_inc;
+    uint16_t dat_base=RTTASK_MUCLISTCHK_DATBASE;
+    
+    xtcp_debug_printf("get mus %d\n",g_tmp_union.rttask_dtinfo.music_tol);
+    
+    for(;t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc<g_tmp_union.rttask_dtinfo.music_tol && i<MAX_SEND_MUSIC ;
+        t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc++,i++){
+        //包序号
+        xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_NUM] = t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc;
+        // 路径名
+        memcpy(&xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_PATCH],
+        g_tmp_union.rttask_dtinfo.music_info[t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc].music_path,PATCH_NAME_NUM);
+        // 歌曲名
+        memcpy(&xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_MUSNAME],
+        g_tmp_union.rttask_dtinfo.music_info[t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc].music_name,MUSIC_NAME_NUM);
+        //         
+        dat_base += RTTASK_MUCLISTCHK_DATLEN;
+    }
+    xtcp_tx_buf[RTTASK_MUCLISTCHK_MUSTOL] = i;
+
+    xtcp_debug_printf("sends mus %d\n",t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc);    
+    //
+    t_list_connsend[list_num].pack_inc++;
+
+    if(t_list_connsend[list_num].pack_inc >= xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKTOL]){
+        t_list_connsend[list_num].conn_state = LIST_SEND_END;
+    }
+    return build_endpage_decode(dat_base,RTTASK_MUSICLIST_CHKCMD,t_list_connsend[list_num].could_id);
+    
+}
+
+uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
+    fl_rttask_read(&g_tmp_union.rttask_dtinfo,timetask_now.task_musicplay[ch].task_id);
+
+    xtcp_tx_buf[RTTASK_INFO_TASKID] = rttask_info_list[list_num].task_id;
+    xtcp_tx_buf[RTTASK_INFO_TASKID+1] = rttask_info_list[list_num].task_id>>8;
+
+    xtcp_tx_buf[RTTASK_INFO_USERID] = rttask_info_list[list_num].user_id;
+    xtcp_tx_buf[RTTASK_INFO_USERID+1] = rttask_info_list[list_num].user_id>>8;
+
+    memcpy(&xtcp_tx_buf[RTTASK_INFO_MAC],host_info.mac,6);
+
+    memcpy(&xtcp_tx_buf[RTTASK_INFO_DIVTYPE],host_info.div_type,DIV_TYPE_NUM);
+
+    xtcp_tx_buf[RTTASK_INFO_VOL] = timetask_now.task_musicplay[ch].task_vol;
+
+    xtcp_tx_buf[RTTASK_INFO_MUSICTOL] = g_tmp_union.rttask_dtinfo.music_tol;
+    xtcp_tx_buf[RTTASK_INFO_MUSICTOL+1] = 0;
+
+    xtcp_tx_buf[RTTASK_INFO_MUSICNUM] = timetask_now.task_musicplay[ch].music_inc;
+    xtcp_tx_buf[RTTASK_INFO_MUSICNUM+1] = 0; 
+
+    xtcp_tx_buf[RTTASK_INFO_PACKINFO] = 0;
+
+    xtcp_tx_buf[RTTASK_INFO_MUSICTOLSEC]= timetask_now.task_musicplay[ch].music_tolsec/60/60;//时
+    xtcp_tx_buf[RTTASK_INFO_MUSICTOLSEC+1]= (timetask_now.task_musicplay[ch].music_tolsec/60)%60;//分
+    xtcp_tx_buf[RTTASK_INFO_MUSICTOLSEC+2]= timetask_now.task_musicplay[ch].music_tolsec%60;//秒
+
+    xtcp_tx_buf[RTTASK_INFO_MUSPLAYSEC] = timetask_now.task_musicplay[ch].music_sec/60/60;
+    xtcp_tx_buf[RTTASK_INFO_MUSPLAYSEC+1] = (timetask_now.task_musicplay[ch].music_sec/60)%60;//分
+    xtcp_tx_buf[RTTASK_INFO_MUSPLAYSEC+2] = timetask_now.task_musicplay[ch].music_sec%60;//秒
+
+    xtcp_tx_buf[RTTASK_INFO_SAVETYPE]=0;
+
+    xtcp_tx_buf[RTTASK_INFO_PLAYSTATE] = 2;
+    if(timetask_now.task_musicplay[ch].play_state)
+        xtcp_tx_buf[RTTASK_INFO_PLAYSTATE] = 1;
+    
+    xtcp_tx_buf[RTTASK_INFO_CDSTATE] = 6;
+
+    xtcp_tx_buf[RTTASK_INFO_MUSTYPE] = 4;
+
+    switch(timetask_now.task_musicplay[ch].play_mode){
+        case ORDER_PLAY_M:
+            xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 0;
+            break;
+        case LOOP_PLAY_M:
+            xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 2;
+            break;
+        case RANDOM_PLAY_M:
+            xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 5;
+            break;
+    }
+    
+    xtcp_tx_buf[RTTASK_INFO_NAMETYPE]=0;
+
+    xtcp_tx_buf[RTTASK_INFO_NAMELEN] = MUSIC_NAME_NUM;
+
+    for(uint8_t i=0;i<MUSIC_NAME_NUM/2;i++){
+        xtcp_tx_buf[RTTASK_INFO_NAMEDAT+i*2] = g_tmp_union.rttask_dtinfo.music_info[timetask_now.task_musicplay[ch].music_inc].music_name[i*2+1];
+        xtcp_tx_buf[RTTASK_INFO_NAMEDAT+i*2+1]= g_tmp_union.rttask_dtinfo.music_info[timetask_now.task_musicplay[ch].music_inc].music_name[i*2];
+    }
+
+    return build_endpage_decode(RTTASK_INFO_DATLEN,RTTASK_INFOSEND_CMD,rttask_info_list[list_num].could_id);
 }
 

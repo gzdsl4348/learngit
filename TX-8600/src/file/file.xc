@@ -453,11 +453,48 @@ void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if
     delay_milliseconds(1500);
     
     my_fatfs_init();
-
     
     tmr :> timeout;
     timeout += FILE_TRAINING_TICK;
     
+    #if 0
+    // TEXT  
+    uint8_t tmpbuf[8*1024];
+    unsigned t1,t2;
+    FIL logfile;
+    unsigned res,bw;
+    memset(tmpbuf,0x31,8*1024);
+    char text[12] = {0x31,0x00,0x31,0x00,0x31,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    res = f_open(&logfile,(const TCHAR *)text,FA_WRITE|FA_READ|FA_OPEN_ALWAYS);   //打开创建文件
+    
+    text_debug("\n\nsize %d\n\n",logfile.fsize);
+    
+    text_debug("open res %d\n",res);
+    for(uint8_t i=0;i<10;i++){
+        tmr :>t1;     
+        res = f_write(&logfile,(const TCHAR*)tmpbuf, 8*1024, &bw);
+        tmr :>t2; 
+        text_debug("file write t2-t1 %d res %d fptr %x bw %d\n",t2-t1,res,logfile.fptr,bw);
+    }
+    text_debug("\n\nend\n\n");
+    
+    text_debug("\n\nsize %d\n\n",logfile.fsize);
+    
+    logfile.fptr =0;
+    for(uint8_t i=0;i<10;i++){
+        tmr :>t1;     
+        res = f_read(&logfile,(const TCHAR*)tmpbuf,8*1024 , &bw);
+        tmr :>t2; 
+        text_debug("file read t2-t1 %d res %d fptr %x bw %d\n",t2-t1,res,logfile.fptr,bw);
+    }
+    text_debug("\n\nend\n\n");
+
+    text_debug("\n\nsize %d\n\n",logfile.fsize);
+    
+    f_close(&logfile);
+    while(1);
+    #endif 
+    //---------------------------------------------------------------------------------------------------
     while(1)
     {
         select{
@@ -485,4 +522,10 @@ void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if
 
 }
 
+unsigned get_timer(){
+    static timer tmr;
+    unsigned tmp;
+    tmr :> tmp;
+    return tmp;
+}
 
