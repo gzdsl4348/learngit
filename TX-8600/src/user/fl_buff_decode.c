@@ -98,6 +98,9 @@ void fl_hostinfo_init(){
         // 已经烧录烧录MAC 使用FLASH数据
         memcpy(&host_info_tmp,&host_info,sizeof(host_info_t));
     }    
+    if(host_info.mac_write_f==0xAB){
+        memcpy(&host_info_tmp,&host_info,sizeof(host_info_t));
+    }
     // 或得账号信息数据
     memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
     // 烧录两页数据

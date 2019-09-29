@@ -25,6 +25,7 @@
 #include "sys_log.h"
 #include "user_log.h"
 #include "user_wifi_contorl.h"
+#include "sdcard_host.h"
 
 #include "debug_print.h"
 #include "string.h"
@@ -82,6 +83,7 @@ void mac_writeflash(uint8_t macadr[6]){
     unsafe{
     int init_string = 0;
     memcpy(host_info.mac,macadr,6);
+    host_info.mac_write_f = 0xAB;
 	// Get Host info
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
 	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
@@ -209,6 +211,7 @@ void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_d
             {
                 tftp_block_wait = 0;
                 g_sys_val.tftp_dat_ack = 1;
+                g_sys_val.tftp_dat_needack=1;
                 // 延时控制回复
                 debug_printf("ack reply\n");
                 tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
@@ -224,6 +227,43 @@ void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_d
     }
 
 }
+
+void tftp_ack_delay(client xtcp_if i_xtcp){
+    unsafe{
+    static uint8_t t_500us=0;
+    static uint8_t t_delay_us=0;
+    static uint8_t delay_lv;
+    static uint8_t delay_lv_tmp;
+    if(g_sys_val.tftp_dat_needack){
+        t_500us++;
+        if(t_500us+1>t_delay_us){
+            t_500us=0;
+            g_sys_val.tftp_dat_needack=0;
+            //调整速度等级
+            delay_lv_tmp=0;
+            for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+                if(timetask_now.ch_state[i]!=0xFF){
+                    delay_lv_tmp++;
+                }
+            }
+            if(delay_lv_tmp!=delay_lv){
+                if(delay_lv_tmp==0)
+                    t_delay_us=0;
+                if(delay_lv_tmp)
+                    t_delay_us=2; //2ms 512KB
+                if(delay_lv_tmp>8)
+                    t_delay_us=4;
+            }
+            tftp_block_wait = 0;
+                
+            tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
+        }
+
+    }
+    }
+}
+
+
 
 int tftp_app_transfer_begin(unsigned char filename[], int tsize, int blksize, int write_mode)
 {
@@ -283,6 +323,7 @@ void tftp_app_timer(int interval_ms)
         if(tftp_type != TFTP_TYPE_FILE) return;
         if(tftp_block_wait && pi_fs->file_upload_get_fifo_size() >= tftp_blksize)
         {
+
             tftp_block_wait = 0;
             tftp_send_ack(*i_user_xtcp, TFTP_ACK_SUCCEED, 0);
         }
@@ -818,9 +859,14 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 debug_printf("im out in\n");
                 break;
             }     
-            case tftptime when timerafter(time_tftp+500000):> time_tftp:
+            case tftptime when timerafter(time_tftp+50000):> time_tftp: //500us
             {            
-                tftp_tmr_poll(i_xtcp, 5);                
+                static uint8_t tmp_5ms=0;
+                tmp_5ms++;
+                if(tmp_5ms>=10)
+                    tmp_5ms=0;
+                tftp_tmr_poll(i_xtcp, tmp_5ms);   
+                //tftp_ack_delay(i_xtcp);
                 break;
             }
         			

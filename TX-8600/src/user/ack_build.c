@@ -1120,7 +1120,7 @@ uint16_t sysonline_chk_build(uint8_t state){
     uint16_t data_base = SYS_ONLINE_CHK_TASKID_B;
     uint16_t tol_task = 0;
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        if((timetask_now.ch_state[i]!=0xFF)){
+        if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].rttask_f==0)){
             xtcp_tx_buf[data_base] = timetask_now.task_musicplay[i].task_id;
             xtcp_tx_buf[data_base+1] = timetask_now.task_musicplay[i].task_id>>8;
             tol_task++;
@@ -1172,7 +1172,7 @@ uint16_t taskinfo_upgrade_build(task_allinfo_tmp_t *task_allinfo_tmp,uint8_t con
 
     xtcp_tx_buf[TASK_SE_PLAY_STATE] = 0;
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==task_allinfo_tmp->task_coninfo.task_id)){
+        if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==task_allinfo_tmp->task_coninfo.task_id)&&(timetask_now.task_musicplay[i].rttask_f==0)){
             xtcp_tx_buf[TASK_SE_PLAY_STATE] = 1;
         }
     }    

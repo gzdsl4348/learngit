@@ -239,6 +239,8 @@ typedef struct g_sys_val_t{
     // tftp 标志位
     uint8_t tftp_busy_f;
     uint8_t tftp_dat_ack;
+    // 
+    uint8_t tftp_dat_needack;
     //备份数据恢复状态
     uint8_t backup_busy_f;
     uint8_t backup_bar;
