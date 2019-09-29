@@ -28,7 +28,7 @@ void tasklist_sending_decode(uint8_t list_num);
 void task_dtinfo_check_recive();
 
 // 任务播放
-void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f);
+void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_musicinc,uint8_t set_vol);
 
 // 方案配置
 void solution_config_recive();
@@ -104,7 +104,7 @@ void task_pol_decode_process();
 void timer_rttask_run_process();
 
 // 音乐事件处理
-void task_musicevent_change(uint8_t ch,char event,char data);
+void task_musicevent_change(uint8_t ch,char event,char data,uint8_t set_musinc_f);
 
 // 1S 定时任务计时
 void timer_taskmusic_check();
@@ -116,6 +116,7 @@ void task_10hz_mutich_play();
 
 // 任务停止
 void task_music_config_stop(uint8_t ch);
+
 // 停止所以播放任务
 void task_music_stop_all();
 
@@ -123,7 +124,7 @@ void task_music_stop_all();
 void rttask_build_overtime10hz();
 
 // 关闭运行中即时任务
-void close_running_rttask(uint8_t *mac);
+void close_running_rttask(uint8_t *mac,uint16_t tid);
 
 void task_pageshow_recive();
 
@@ -145,6 +146,9 @@ void rttask_host_contorl_recive();
 void rttask_infosend_process();
 
 void task_secinc_process();
+
+void rttask_runningtask_stop_start(uint16_t id,uint8_t state,uint8_t del_en);
+
 
 
 #endif  //__TASK_DECODE_H_

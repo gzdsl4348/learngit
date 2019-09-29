@@ -102,6 +102,7 @@ void create_alltask_list(){
 //---------------------------------------------------------------
 // 关闭音频模块播放
 void task_music_config_stop(uint8_t ch){
+    timetask_now.task_musicplay[ch].play_state=0;
     timetask_now.ch_state[ch] = 0xFF;
     task_music_stop(ch);
     user_disptask_refresh();
@@ -117,15 +118,17 @@ void task_music_stop_all(){
 
 //-------------------------------------------------------------------------------------------
 // 曲目事件切换
-uint8_t random_music_tab[MAX_MUSIC_NUM] = {17,8,3,0,16,12,19,15,4,18,7,13,2,6,1,10,5,9,11,14};
+uint8_t random_music_tab[MAX_RTMUSIC_NUM] = {17,8,3,0,16,12,19,15,4,18,7,13,2,6,1,10,5,9,11,14,25,49,46,33,32,21,48,47,29,43,30,22,23,31,37,
+                                             26,34,44,24,45,39,42,36,38,20,35,41,28,40,27};
 uint8_t random_inc[MAX_MUSIC_CH] = {0};
 
-uint8_t random_play_inc(uint8_t ch){
-    for(uint8_t i=0;i<MAX_MUSIC_NUM;i++){
+uint8_t random_play_inc(uint8_t ch,uint8_t mustol){
+    for(uint8_t i=0;i<mustol;i++){
         random_inc[ch]++;
-        if(random_inc[ch]>=MAX_MUSIC_NUM )
+        if(random_inc[ch]>=mustol )
             random_inc[ch] =0;
         if(random_music_tab[random_inc[ch]] < timetask_now.task_musicplay[ch].music_tol){
+            timetask_now.task_musicplay[ch].music_inc = random_music_tab[random_inc[ch]];
             return random_music_tab[random_inc[ch]];
         } 
     }
@@ -133,9 +136,11 @@ uint8_t random_play_inc(uint8_t ch){
 }
 
 // 音乐播放切换
-void task_musicevent_change(uint8_t ch,char event,char data){
+void task_musicevent_change(uint8_t ch,char event,char data,uint8_t set_musinc_f){
+    uint16_t id_tmp;
+    task_music_info_t *p_music_info;
     static uint8_t music_inc[MAX_MUSIC_CH] = {0};
-    
+    //
     if(timetask_now.ch_state[ch]==0xFF)
         return;
     // 错误音乐超过一定次数，关闭任务
@@ -145,8 +150,14 @@ void task_musicevent_change(uint8_t ch,char event,char data){
         user_disptask_refresh();
         return;
     }    
+    // 指定曲目
+    if(set_musinc_f){
+        music_inc[ch] = timetask_now.task_musicplay[ch].music_inc;
+        goto plya_music_begin;
+    }
     // 下一首曲目
-    timetask_now.task_musicplay[ch].music_inc++;
+    if(timetask_now.task_musicplay[ch].play_mode!=ONCE_PLAY_M && timetask_now.task_musicplay[ch].play_mode!=ONCE_LOOPPLAY_M)
+        timetask_now.task_musicplay[ch].music_inc++;
     //timetask_now.task_musicplay[ch].play_mode = LOOP_PLAY_M;
     //xtcp_debug_printf("play mode %d\n", timetask_now.task_musicplay[ch].play_mode);
     // 判断播放模式 顺序/循环/随机 播放
@@ -154,11 +165,20 @@ void task_musicevent_change(uint8_t ch,char event,char data){
         // 顺序播放
         case ORDER_PLAY_M:
             if(timetask_now.task_musicplay[ch].music_inc == timetask_now.task_musicplay[ch].music_tol){
-                timetask_now.ch_state[ch] = 0xFF;
-                user_audio_send_dis(ch);
-                user_disptask_refresh();
+                //即时任务停止播放
+                if(timetask_now.task_musicplay[ch].rttask_f){
+                    timetask_now.task_musicplay[ch].music_inc=0;
+                    if(data==0){
+                        user_playstate_set(0,ch);                
+                        timetask_now.task_musicplay[ch].play_state=0;
+                    }
+                }else{
+                    timetask_now.ch_state[ch] = 0xFF;
+                    user_audio_send_dis(ch);
+                    user_disptask_refresh();
+                    return;
+                }
                 //task_music_config_stop(ch);
-                return;
             }
             // 获得音乐编号
             music_inc[ch] = timetask_now.task_musicplay[ch].music_inc;
@@ -177,14 +197,38 @@ void task_musicevent_change(uint8_t ch,char event,char data){
         // 随机播放
         case RANDOM_PLAY_M:
             // 获得音乐编号
-            music_inc[ch] = random_play_inc(ch);
+            if(timetask_now.task_musicplay[ch].rttask_f){
+                music_inc[ch] = random_play_inc(ch,MAX_RTMUSIC_NUM);
+            }
+            else{
+                music_inc[ch] = random_play_inc(ch,MAX_MUSIC_CH);
+            }
+            break;
+        // 单曲播放
+        case ONCE_PLAY_M:
+            music_inc[ch] = timetask_now.task_musicplay[ch].music_inc;
+            //即时任务停止播放
+            if(timetask_now.task_musicplay[ch].rttask_f){
+                timetask_now.task_musicplay[ch].music_inc=0;
+                if(data==0){
+                    user_playstate_set(0,ch);                
+                    timetask_now.task_musicplay[ch].play_state=0;
+                }
+            }else{
+                timetask_now.ch_state[ch] = 0xFF;
+                user_audio_send_dis(ch);
+                user_disptask_refresh();
+                return;
+            }
+            break;
+        // 单曲循环
+        case ONCE_LOOPPLAY_M:
+            music_inc[ch] = timetask_now.task_musicplay[ch].music_inc;
             break;
     }
-    //切换音乐
-    uint16_t id_tmp;
-    task_music_info_t *p_music_info;
+    plya_music_begin:
     
-    xtcp_debug_printf("play inc m %d c%d %d %d\n",timetask_now.task_musicplay[ch].play_mode,timetask_now.task_musicplay[ch].music_inc,music_inc[ch],timetask_now.task_musicplay[ch].rttask_f);
+    //xtcp_debug_printf("play inc m %d c%d %d %d\n",timetask_now.task_musicplay[ch].play_mode,timetask_now.task_musicplay[ch].music_inc,music_inc[ch],timetask_now.task_musicplay[ch].rttask_f);
     if(timetask_now.task_musicplay[ch].rttask_f){
         // 读取即时任务
         fl_rttask_read(&g_tmp_union.rttask_dtinfo,timetask_now.task_musicplay[ch].task_id);
@@ -234,21 +278,22 @@ void timer_taskmusic_check(){
 }
 //---------------------------------------------------------------------------------------------------------------
 // 配置发送目标与任务参数
-void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f){
+void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_musicinc,uint8_t set_vol){
     g_sys_val.play_error_inc[ch] = 0;
     // 置通道播放状态
     timetask_now.ch_state[ch]=ch;
     // 初始化现在任务状态1
     timetask_now.task_musicplay[ch].task_id = id;
     timetask_now.task_musicplay[ch].time_inc = 0;
-    timetask_now.task_musicplay[ch].music_inc = 0;
+    if(set_musicinc==0)
+        timetask_now.task_musicplay[ch].music_inc = 0;
     timetask_now.task_musicplay[ch].rttask_f = rttask_f;
     // 随机模式处理
     uint8_t tmp_inc;
     tmp_inc = timetask_now.task_musicplay[ch].music_inc;
     if(timetask_now.task_musicplay[ch].play_mode == RANDOM_PLAY_M){
         random_inc[ch] = g_sys_val.time_info.second%20;
-        tmp_inc = random_play_inc(ch);
+        tmp_inc = random_play_inc(ch,MAX_MUSIC_CH);
     }
     // 初始化现在任务状态2
 
@@ -265,17 +310,19 @@ void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f){
         timetask_now.task_musicplay[ch].dura_time = g_tmp_union.rttask_dtinfo.dura_time; //获得持续时间
         timetask_now.task_musicplay[ch].play_mode = g_tmp_union.rttask_dtinfo.play_mode; //获得播放模式
         timetask_now.task_musicplay[ch].music_tol = g_tmp_union.rttask_dtinfo.music_tol;   //音乐总数 
-        timetask_now.task_musicplay[ch].task_vol = g_tmp_union.rttask_dtinfo.task_vol;
+        if(set_vol==0){
+            timetask_now.task_musicplay[ch].task_vol = g_tmp_union.rttask_dtinfo.task_vol;
+        }
         timetask_now.task_musicplay[ch].rttask_f=1;
         //
         timetask_now.task_musicplay[ch].sulo_id = D_RTTASK_SOULID;
-        memcpy(timetask_now.task_musicplay[ch].name,g_tmp_union.rttask_dtinfo.name,DIV_NAME_NUM);
+        //memcpy(timetask_now.task_musicplay[ch].name,g_tmp_union.rttask_dtinfo.name,DIV_NAME_NUM);
         // 播放任务,使能播放列表
         task_music_send(ch,
                         g_tmp_union.rttask_dtinfo.des_info,
                         g_tmp_union.rttask_dtinfo.div_tol,
                         g_tmp_union.rttask_dtinfo.prio,
-                        g_tmp_union.rttask_dtinfo.task_vol);
+                        timetask_now.task_musicplay[ch].task_vol);
 
         task_music_play(ch,tmp_inc,&g_tmp_union.rttask_dtinfo.music_info[timetask_now.task_musicplay[ch].music_inc]);
         
@@ -290,7 +337,7 @@ void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f){
         timetask_now.task_musicplay[ch].music_tol = g_tmp_union.task_allinfo_tmp.task_coninfo.music_tolnum;   //音乐总数 
         timetask_now.task_musicplay[ch].sulo_id = g_tmp_union.task_allinfo_tmp.task_coninfo.solution_sn;
         timetask_now.task_musicplay[ch].rttask_f=0;
-        memcpy(timetask_now.task_musicplay[ch].name,g_tmp_union.task_allinfo_tmp.task_coninfo.task_name,DIV_NAME_NUM);
+        //memcpy(timetask_now.task_musicplay[ch].name,g_tmp_union.task_allinfo_tmp.task_coninfo.task_name,DIV_NAME_NUM);
         // 播放任务,使能播放列表
         task_music_send(ch,
                         g_tmp_union.task_allinfo_tmp.task_maclist.taskmac_info,
@@ -368,7 +415,7 @@ void task_10hz_mutich_play(){
                 if(timetask_now.ch_state[i]==0xFF){
                     xtcp_debug_printf("play task:%d\n",g_sys_val.music_task_id[j]);
                     //task_music_config_play(i,g_sys_val.music_task_id[j]);
-                    task_music_config_play(i,g_sys_val.music_task_id[j],g_sys_val.play_rttask_f[j]);
+                    task_music_config_play(i,g_sys_val.music_task_id[j],g_sys_val.play_rttask_f[j],0,0);
                     // 任务信息更新
                     if(g_sys_val.play_rttask_f[j]==0){
                     	g_sys_val.task_config_s = 2; //任务编辑
@@ -1682,8 +1729,11 @@ void rttask_config_recive(){
     }
     // 删除任务
     else if(xtcp_rx_buf[RTTASK_CFG_CONTORL]==1){
+        // 关闭音乐播放
+        close_rttask_musicplay(id);
         //删除运行中任务，停止任务
         rttask_runningtask_stop_start(id,1,1);
+        
         // 删除整个任务节点
         if(delete_rttask_node(id)){
             g_tmp_union.rttask_dtinfo.rttask_id = 0xFFFF;
@@ -1695,6 +1745,9 @@ void rttask_config_recive(){
         fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
         //编辑中改变音源停止任务
         if(!charncmp(g_tmp_union.rttask_dtinfo.src_mas,&xtcp_rx_buf[RTTASK_CFG_SRCMAC],6)){
+            // 关闭音乐播放
+            close_rttask_musicplay(id);
+            // 停止运行即时任务
             rttask_runningtask_stop_start(id,1,0);
         }
     }
@@ -1758,13 +1811,13 @@ void rttask_config_recive(){
 //====================================================================================================
 // 关闭运行中的即时任务 
 //====================================================================================================
-void close_running_rttask(uint8_t *mac){
+void close_running_rttask(uint8_t *mac,uint16_t tid){
     // 查找同一音源是否有旧任务并关闭
     rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
     while(runtmp_p!=null){
         fl_rttask_read(&g_tmp_union.rttask_dtinfo,runtmp_p->rttask_id);       
         //比较MAC
-        if(charncmp(g_tmp_union.rttask_dtinfo.src_mas,mac,6)){
+        if(charncmp(g_tmp_union.rttask_dtinfo.src_mas,mac,6) && (tid==runtmp_p->rttask_id)){
             delete_rttask_run_node(runtmp_p->rttask_id);
             //有运行中任务 
             xtcp_debug_printf("del old rttask\n");
@@ -1804,13 +1857,9 @@ void rttask_contorl_recive(){
         // 启动即时任务
         if(xtcp_rx_buf[RTTASK_PLAY_CONTORL]){
             // 关闭运行中的即时任务 
-            close_running_rttask(&xtcp_rx_buf[POL_MAC_BASE]);
+            close_running_rttask(&xtcp_rx_buf[POL_MAC_BASE],id);
             // 关闭音乐播放
-            for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-                if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-                    task_music_config_stop(i);
-                }
-            }
+            close_rttask_musicplay(id);
             //---------------------------------------------------------------------------------------------------------
             // 创建新任务
             if(!(rttask_run_chk(id))){
@@ -1840,18 +1889,19 @@ void rttask_contorl_recive(){
                             if(create_rttask_run_node(id)==0){
                                 goto host_rttask_build_end;
                             }  
-
-                            state = 1;
+                            //初始化 运行任务状态
                             rttask_lsit.run_end_p->user_id = user_id;
                             rttask_lsit.run_end_p->dura_time = g_tmp_union.rttask_dtinfo.dura_time;
                             rttask_lsit.run_end_p->over_time = 0;
                             rttask_lsit.run_end_p->run_state = 01;
-
+                            // 
                             g_sys_val.play_rttask_f[i] = 1;                            
                             g_sys_val.music_task_id[i] = id;
-                            timetask_now.task_musicplay[i].play_state = 1;
-                            task_music_config_play(i,g_sys_val.music_task_id[i],g_sys_val.play_rttask_f[i]);
+                            // 播放音乐
+                            task_music_config_play(i,g_sys_val.music_task_id[i],g_sys_val.play_rttask_f[i],0,0);
                             user_disptask_refresh();   
+                            
+                            state = 1;
                             break;
                         }
                     }
@@ -1860,22 +1910,19 @@ void rttask_contorl_recive(){
         }
         // 关闭即时任务
         else{
+            // 关闭音乐播放
+            close_rttask_musicplay(id);
             // 关闭运行中的即时任务 
-            close_running_rttask(g_tmp_union.rttask_dtinfo.src_mas);
+            close_running_rttask(g_tmp_union.rttask_dtinfo.src_mas,id);
             
             // 关闭即时任务信息推送
             for(uint8_t i=0;i<MAX_SEND_RTTASKINFO_NUM;i++){
-                if(conn.id == rttask_info_list[i].conn.id)
+                if(conn.id == rttask_info_list[i].conn.id){
                     rttask_info_list[i].conn.id=0;
-            }
-            
-            // 关闭音乐播放
-            for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-                //xtcp_debug_printf("text chk %d %d\n",timetask_now.ch_state[i],timetask_now.task_musicplay[i].task_id);
-                if((timetask_now.ch_state[i]!=0xFF)&&(timetask_now.task_musicplay[i].task_id==id)&&(timetask_now.task_musicplay[i].rttask_f)){
-                    task_music_config_stop(i);
+                    break;
                 }
             }
+           
             state =1;
         }
         // 即时任务建立完成回复
@@ -1958,7 +2005,7 @@ void rttask_build_recive(){
                 xtcp_debug_printf("creat run rt %d\n",rttask_build_state[i].rttask_id);
                 //---------------------------------------------------------------------------------------------------------
                 // 关闭运行中的即时任务 
-                close_running_rttask(&xtcp_rx_buf[POL_MAC_BASE]);
+                close_running_rttask(&xtcp_rx_buf[POL_MAC_BASE],rttask_build_state[i].rttask_id);
                 //---------------------------------------------------------------------------------------------------------
                 // 创建新任务
                 if(!(rttask_run_chk(rttask_build_state[i].rttask_id))){
@@ -2129,7 +2176,11 @@ void timer_rttask_run_process(){
                                                         RTTASK_BUILD_CMD,00);
                 user_xtcp_send(div_conn_p->conn,0);
                 close_rttask:
+                // 停止音乐播放
+                close_rttask_musicplay(tmp_p->rttask_id);
+                // 停止运行任务
                 delete_rttask_run_node(tmp_p->rttask_id);
+                
                 // 信息更新
                 mes_send_rttaskinfo(g_tmp_union.rttask_dtinfo.rttask_id,2,0);
             }
@@ -2209,9 +2260,10 @@ void rttask_musiclist_chk_decode(uint8_t list_num){
 }
 
 //====================================================================================================
-// B40F 配置主机音源 即时任务音乐列表
+// B40F 配置主机音源 即时任务音乐列表  BF04
 //====================================================================================================
 void rttask_musiclist_set_recive(){
+    uint8_t ch,i,j;
     uint16_t task_id = xtcp_rx_buf[RTTASK_MUCLISTSET_ID]|(xtcp_rx_buf[RTTASK_MUCLISTSET_ID+1]<<8);
     fl_rttask_read(&g_tmp_union.rttask_dtinfo,task_id);
     // 起始包
@@ -2219,10 +2271,10 @@ void rttask_musiclist_set_recive(){
         g_tmp_union.rttask_dtinfo.music_tol = 0;
     }
     // 
-    xtcp_debug_printf("get music tol %d\n",xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL]);
+    xtcp_debug_printf("get music tol %d %d\n",xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL],task_id);
     // 获得曲目
     uint16_t dat_base=RTTASK_MUCLISTSET_DATBASE;
-    for(uint8_t i=0;i<xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL];i++){
+    for(i=0;i<xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL];i++){
         // 获得路径名
         memcpy(g_tmp_union.rttask_dtinfo.music_info[g_tmp_union.rttask_dtinfo.music_tol+i].music_path,&xtcp_rx_buf[dat_base+RTTASK_MUCLISTSET_PATCH],PATCH_NAME_NUM);
         // 获得音乐名
@@ -2237,11 +2289,49 @@ void rttask_musiclist_set_recive(){
     // 结束包 包结束
     if((xtcp_rx_buf[RTTASK_MUCLISTSET_PACKINC]+1)==xtcp_rx_buf[RTTASK_MUCLISTSET_PACKTOL]){
         // 判断是否有任务执行
-        for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-            if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==task_id && timetask_now.task_musicplay[i].rttask_f){
-                // 先结束旧任务播放
-                //rttask_music_stop(task_id);
-                // 开启新列表音乐播放
+        for(ch=0;ch<MAX_MUSIC_CH;ch++){
+            if(timetask_now.ch_state[ch]!=0xFF && timetask_now.task_musicplay[ch].task_id==task_id && timetask_now.task_musicplay[ch].rttask_f){
+                timetask_now.task_musicplay[ch].music_tol = g_tmp_union.rttask_dtinfo.music_tol;
+                //---------------------------------------------------------------------------------------------------------------------------------
+                // 没有歌曲停止音乐播放
+                if(g_tmp_union.rttask_dtinfo.music_tol ==0){
+                    timetask_now.task_musicplay[ch].play_state=0;            
+                    timetask_now.task_musicplay[ch].music_inc=0;
+                    task_music_stop(ch);
+                    memset(&g_sys_val.rttask_musinfo,0xFF,sizeof(task_music_info_t));
+                    user_rttask_musname_put(&g_sys_val.rttask_musinfo,ch);
+                    break;
+                }
+                //---------------------------------------------------------------------------------------------------------------------------------
+                // 判断是否有旧音乐
+                uint8_t have_music=1;
+                user_rttask_musname_get(&g_sys_val.rttask_musinfo,ch);
+                for(j=0;j<g_tmp_union.rttask_dtinfo.music_tol;j++){
+                    if(charncmp(g_tmp_union.rttask_dtinfo.music_info[j].music_path,g_sys_val.rttask_musinfo.music_path,PATCH_NAME_NUM)&&
+                       charncmp(g_tmp_union.rttask_dtinfo.music_info[j].music_name,g_sys_val.rttask_musinfo.music_name,MUSIC_NAME_NUM))
+                    {
+                        timetask_now.task_musicplay[ch].music_inc=j;
+                        have_music=0;
+                        break;
+                    }
+                }
+                //---------------------------------------------------------------------------------------------------------------------------------
+                //旧音乐被删除     跳下一首 开启新列表音乐播放
+                if(have_music){
+                    if(timetask_now.task_musicplay[ch].music_inc>=timetask_now.task_musicplay[ch].music_tol){
+                        timetask_now.task_musicplay[ch].music_inc=0;
+                    }                    
+                    //初始没有曲目时不播放
+                    if(timetask_now.task_musicplay[ch].play_state==0){
+                        task_music_config_play(ch,g_sys_val.music_task_id[ch],g_sys_val.play_rttask_f[ch],1,1);
+                        timetask_now.task_musicplay[ch].play_state=0;
+                        user_playstate_set(0,ch);
+                    }
+                    //改变曲目时继续播放
+                    else{
+                        task_music_config_play(ch,g_sys_val.music_task_id[ch],g_sys_val.play_rttask_f[ch],1,1);
+                    }
+                }
                 //rttask_music_play(task_id);
                 break;
             }
@@ -2261,8 +2351,8 @@ void rttask_host_contorl_recive(){
     uint16_t user_id = xtcp_rx_buf[RTTASK_CONTORL_USERID]|(xtcp_rx_buf[RTTASK_CONTORL_USERID]<<8);
     uint16_t contorl_cmd = xtcp_rx_buf[RTTASK_CONTORL_VALUE]|(xtcp_rx_buf[RTTASK_CONTORL_VALUE+1]<<8);
     uint16_t ch=0xFF;
+    // 找播放的音乐通道
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 关闭音乐播放
         if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==task_id && timetask_now.task_musicplay[i].rttask_f){
             ch=i;
         }
@@ -2274,8 +2364,12 @@ void rttask_host_contorl_recive(){
     }
     switch(xtcp_rx_buf[RTTASK_CONTORL_COMAND]){
         case RTTASK_CMD_PLAY:{
-            user_playstate_set(1,ch);
-            timetask_now.task_musicplay[ch].play_state=1;
+            if(timetask_now.task_musicplay[ch].music_tol==0)
+                break;
+            if(timetask_now.task_musicplay[ch].music_tol){
+                user_playstate_set(1,ch);
+                timetask_now.task_musicplay[ch].play_state=1;
+            }
             break;
         }
         case RTTASK_CMD_PAUSE:{
@@ -2284,32 +2378,50 @@ void rttask_host_contorl_recive(){
             break;
         }
         case RTTASK_CMD_LASTMUS:{
+            if(timetask_now.task_musicplay[ch].music_tol==0)
+                break;
             // 找到上一首歌算法  
-            timetask_now.task_musicplay[ch].music_inc+=timetask_now.task_musicplay[ch].music_tol-2;
+            timetask_now.task_musicplay[ch].music_inc+=timetask_now.task_musicplay[ch].music_tol-1;
             if(timetask_now.task_musicplay[ch].music_inc>=timetask_now.task_musicplay[ch].music_tol){
                 timetask_now.task_musicplay[ch].music_inc -=timetask_now.task_musicplay[ch].music_tol;
             }
             //
             xtcp_debug_printf("set last %d\n",timetask_now.task_musicplay[ch].music_inc);
-            task_musicevent_change(ch,0,0);        
+            task_musicevent_change(ch,0,1,1);  
+            if(timetask_now.task_musicplay[ch].music_tol){
+                user_playstate_set(1,ch);
+                timetask_now.task_musicplay[ch].play_state=1;
+            }
             break;
         }
         case RTTASK_CMD_NEXTMUS:{
-            task_musicevent_change(ch,0,0);
+            if(timetask_now.task_musicplay[ch].music_tol==0)
+                break;
+            timetask_now.task_musicplay[ch].music_inc++;
+            if(timetask_now.task_musicplay[ch].music_inc>=timetask_now.task_musicplay[ch].music_tol)
+                timetask_now.task_musicplay[ch].music_inc=0;
+            task_musicevent_change(ch,0,1,1);
+            if(timetask_now.task_musicplay[ch].music_tol){
+                user_playstate_set(1,ch);
+                timetask_now.task_musicplay[ch].play_state=1;
+            }
             //rttask_music_next(task_id);
             break;
         }
         case RTTASK_CMD_STOP:{
             break;
         }
-        case RTTASK_CMD_SELECT_MUSID:{            
+        case RTTASK_CMD_SELECT_MUSID:{
+            if(timetask_now.task_musicplay[ch].music_tol==0)
+                break;
             // 找到指定歌算法  
-            timetask_now.task_musicplay[ch].music_inc = contorl_cmd;
-            timetask_now.task_musicplay[ch].music_inc+=timetask_now.task_musicplay[ch].music_tol-1;
-            if(timetask_now.task_musicplay[ch].music_inc>=timetask_now.task_musicplay[ch].music_tol){
-                timetask_now.task_musicplay[ch].music_inc -=timetask_now.task_musicplay[ch].music_tol;
+            timetask_now.task_musicplay[ch].music_inc = contorl_cmd-1;
+            // 不停止音乐
+            task_musicevent_change(ch,0,1,1);
+            if(timetask_now.task_musicplay[ch].music_tol){
+                user_playstate_set(1,ch);
+                timetask_now.task_musicplay[ch].play_state=1;
             }
-            task_musicevent_change(ch,0,0);
             //rttask_music_select(task_id,contorl_cmd);
             break;
         }
@@ -2350,7 +2462,7 @@ void rttask_host_contorl_recive(){
         }
         case RTTASK_CMD_SELECT_TIME:{
             timetask_now.task_musicplay[ch].music_sec=contorl_cmd;
-            
+            user_setmusic_sec(ch,contorl_cmd);
             break;
         }
         case RTTASK_CMD_STEPMODE:{
@@ -2425,7 +2537,8 @@ void rttask_infosend_process(){
 
 void task_secinc_process(){
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        timetask_now.task_musicplay[i].music_sec++;
+        if(timetask_now.task_musicplay[i].play_state)
+            timetask_now.task_musicplay[i].music_sec++;
     }
 }
 

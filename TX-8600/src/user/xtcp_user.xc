@@ -24,6 +24,7 @@
 #include "could_serve.h"
 #include "sys_log.h"
 #include "user_log.h"
+#include "user_wifi_contorl.h"
 
 #include "debug_print.h"
 #include "string.h"
@@ -765,7 +766,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 xtcp_debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
                             }
                             if(data.event == 0)
-                                task_musicevent_change(i,data.event,data.result);
+                                task_musicevent_change(i,data.event,0,0);
                         }
                         xtcp_debug_printf("music_status[%d]:%d %d\n", i, 
                         data.music_status[i].status,g_sys_val.play_error_inc[i]);
@@ -784,11 +785,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;
                         xtcp_debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
-                        task_musicevent_change(last_ch,data.event,data.result);
+                        task_musicevent_change(last_ch,data.event,0,0);
                     }
                     if(data.music_status[last_ch].status == MUSIC_DECODER_START){
                         g_sys_val.play_error_inc[last_ch] = 0;
                     }
+                    // SD卡拔出检测
                     if(g_sys_val.sd_state != data.sdcard_status){
                         g_sys_val.sd_state = data.sdcard_status;
                         if(data.sdcard_status){
@@ -1151,9 +1153,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 device_reboot();      
             } 
             // wifi按键长按
-            if(g_sys_val.key_wait_release==KEY_WIFI_RELEASE && g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE && g_sys_val.key_wait_inc>30){  //长按3秒
+            if(g_sys_val.key_wait_release==KEY_WIFI_RELEASE && g_sys_val.key_wait_inc>30){  //长按3秒
                 // DHCP使能
                 //xtcp_debug_printf("dhcp en\n");
+                wifi_open();
                 g_sys_val.wifi_mode=WIFI_DHCPEN_MODE;
                 dhcp_disp_en();
             }
@@ -1161,6 +1164,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             // wifi 模式控制
             wifi_contorl_mode();
             break;
+            
         //------------------------------------------------------------------------------
         // KEY process
         //------------------------------------------------------------------------------
@@ -1175,6 +1179,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             if((g_sys_val.key_state&0x04) && (g_sys_val.key_delay == 0)){
                 // 防抖
                 g_sys_val.key_delay = 1;
+                g_sys_val.key_wait_inc=0;
                 // 关闭wifi模块
                 if(g_sys_val.wifi_mode!=0){ 
                     g_sys_val.wifi_mode = 0;
@@ -1183,18 +1188,13 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     wifi_ioset(0);
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,2);
                     dhcp_disp_none();
+                    g_sys_val.key_wait_release=KEY_WIFI_RELEASE;
                     //xtcp_debug_printf("key wifi off\n");
                 }
                 else{
                     // 开启wifi模块
-                    g_sys_val.key_wait_release = KEY_WIFI_RELEASE;
-                    g_sys_val.wifi_contorl_state = WIFI_WAIT_POWERON;
-                    g_sys_val.key_wait_inc = 0;
-                    g_sys_val.wifi_timer = 0;
-                    g_sys_val.wifi_mode = WIFI_DHCPDIS_MODE;
-                    g_sys_val.wifi_io_tmp = D_IO_WIFI_POWER|D_IO_WIFI_CONTORL;
-                    user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,1);
-                    wifi_ioset(g_sys_val.wifi_io_tmp);
+                    wifi_open();
+                    wifi_open_disp();
                     //xtcp_debug_printf("key wifi on\n");
                 }
             }

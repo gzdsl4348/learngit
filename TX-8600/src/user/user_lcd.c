@@ -256,7 +256,9 @@ void user_disptask_refresh(){
             //有正在运行的任务
             g_sys_val.disp_furef=1;
             g_sys_val.disp_ch[g_sys_val.disp_num] = i; 
-            disp_taskname(timetask_now.task_musicplay[i].name);
+        
+            user_rttask_musname_get(&g_sys_val.rttask_musinfo,i);
+            disp_taskname(g_sys_val.rttask_musinfo.music_name);
             g_sys_val.disp_task_id[g_sys_val.disp_num]=timetask_now.task_musicplay[i].task_id;
             //
             g_sys_val.disp_num++;
@@ -574,3 +576,11 @@ void dhcp_getin_over_disp(uint8_t state){
 void dhcp_getin_clear(){
     ip_conflict_disp(0);
 }
+
+void wifi_open_disp(){
+    char wifiopen[]={0x00,0x57,0x00,0x49,0x00,0x46,0x00,0x49,0x5D,0xF2,0x62,0x53,0x5F,0x00}; //14  
+    memcpy(&disp_buff[DAT_DISP_BASE],wifiopen,14);
+    disp_len = DAT_DISP_BASE+14;
+    send_buff(DISP_DHCPS_ID);
+}
+

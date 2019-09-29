@@ -50,7 +50,7 @@ uint16_t audio_page_build(uint8_t txbuff[],
                               uint16_t &iptmp,
                               uint16_t &udptmp,
                               uint32_t mp3_frame_size,
-                              uint8_t ch)
+                              uint8_t ch,uint8_t music_inc)
 {
     //==========================================================================
     //--------------------------- RAM Define--------------------------
@@ -97,7 +97,7 @@ uint16_t audio_page_build(uint8_t txbuff[],
 	//
 	txbuff[len+AUDIO_AUXTYPE_ADR] = audio_type ; //音频类型
 	txbuff[len+AUDIO_CHID_ADR] = ch;				    //音频通道ID
-	txbuff[len+AUDIO_CHPRIO_ADR] = 100;				//音频优先级
+	txbuff[len+AUDIO_CH_AUDNUM_ADR] = music_inc;				//音频曲目序号
 	txbuff[len+AUDIO_CHVOL_ADR] = volume;		    //音频音量
 	txbuff[len+AUDIO_SILENT_ADR] = 0;				//默音等级
     // 采样数据长度

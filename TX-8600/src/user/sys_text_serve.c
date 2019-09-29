@@ -21,7 +21,7 @@ void eth_debug_contorl_recive(){
 	}
 	else{
 		//¹Ø±ÕÍøÂç´òÓ¡
-		xtcp_debug_printf("debug_off\n");
+		//xtcp_debug_printf("debug_off\n");
 		g_sys_val.eth_debug_f=0;
 		debug_conn_colse();
 	}

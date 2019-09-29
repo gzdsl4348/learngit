@@ -402,6 +402,17 @@ void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static cons
 			sdram_complete(c_sdram, sdram_state);
 			memcpy(buff,pw_buff,1472);
 			break;
+        // 
+        case if_fl_manage[unsigned a].rttask_nameinfo_get(task_music_info_t &music_info,uint8_t ch):
+			sdram_read(c_sdram, sdram_state, USER_RTTASKINFO_BASE+sizeof(task_music_info_t)*ch, sizeof(task_music_info_t), pw_buff);
+            sdram_complete(c_sdram, sdram_state);
+			memcpy(&music_info,pw_buff,sizeof(task_music_info_t));
+            break;
+        case if_fl_manage[unsigned a].rttask_nameinfo_put(task_music_info_t music_info,uint8_t ch):
+            memcpy(tmp_buff,&music_info,sizeof(task_music_info_t));
+            sdram_write(c_sdram, sdram_state, USER_RTTASKINFO_BASE+sizeof(task_music_info_t)*ch, sizeof(task_music_info_t), pw_buff);
+            sdram_complete(c_sdram, sdram_state);
+            break;
 		// wifi´®¿Ú
         case if_fl_manage[unsigned a].uart0_tx(uint8_t data[],uint8_t len,uint8_t mode):
             switch(mode){

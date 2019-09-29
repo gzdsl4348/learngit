@@ -72,6 +72,11 @@ typedef struct
     uint32_t datastart;                  //数据帧开始的位置(在文件里面的偏移)
 
     uint32_t curnamepos;                 //当前文件偏移
+
+    uint8_t music_inc;                  //曲目序号
+    uint8_t seconde_set_f;
+    unsigned select_sec;
+    DWORD filedat_index;
 }music_decoderdev_t;
 
 
@@ -95,6 +100,8 @@ int music_decode_stop(unsigned char ch, unsigned char change_status);
 int music_decode_play(unsigned char ch);
 int music_decode_pause(unsigned char ch);
 int update_music_decoder_status(music_decoder_status_t s[]);
+
+void set_music_secjump(uint8_t ch,uint16_t sec);
 
 
 #endif

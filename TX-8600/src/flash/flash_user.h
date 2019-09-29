@@ -80,6 +80,10 @@ typedef interface fl_manage_if{
 	void if_messend_buff_put(uint8_t wptr,uint8_t buff[]);
 
 	void if_messend_buff_get(uint8_t rptr,uint8_t buff[]);
+
+    void rttask_nameinfo_get(task_music_info_t &music_info,uint8_t ch);
+    
+    void rttask_nameinfo_put(task_music_info_t music_info,uint8_t ch);
 }fl_manage_if;
 
 //

@@ -49,9 +49,9 @@
 //
 #define AUDIO_CHID_ADR          (AUDIO_AUXTYPE_ADR+1)   //1Byte    // 音频通道id
 //
-#define AUDIO_CHPRIO_ADR        (AUDIO_CHID_ADR+1)   //1Byte       //音频优先级 保留
+#define AUDIO_CH_AUDNUM_ADR     (AUDIO_CHID_ADR+1)   //1Byte       //音频优先级 保留
 //
-#define AUDIO_CHVOL_ADR         (AUDIO_CHPRIO_ADR+1)   //1Byte     //通道音量
+#define AUDIO_CHVOL_ADR         (AUDIO_CH_AUDNUM_ADR+1)   //1Byte     //通道音量
 //
 #define AUDIO_SILENT_ADR        (AUDIO_CHVOL_ADR+1)   //1Byte      //默音等级
 // 

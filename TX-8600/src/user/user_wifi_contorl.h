@@ -8,5 +8,7 @@
 
 void wifi_contorl_mode();
 
+void wifi_open();
+
 #endif
 

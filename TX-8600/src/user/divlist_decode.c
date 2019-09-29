@@ -560,10 +560,10 @@ void research_lan_revice(){
     g_sys_val.search_div_tol++;
     // 关闭广播端口
     if(conn.local_port == LISTEN_BROADCAST_LPPORT){
-        xtcp_debug_printf("close conn %x\n",conn.id);
+        //xtcp_debug_printf("close conn %x\n",conn.id);
         user_udpconn_close(conn);
     }
-    xtcp_debug_printf("have div %d \n",g_sys_val.search_div_tol);
+    //xtcp_debug_printf("have div %d \n",g_sys_val.search_div_tol);
 }
 
 //=====================================================================================================
@@ -601,7 +601,7 @@ void divfound_over_timeinc(){
             g_sys_val.divsreach_f=0;
             //-----------------------------------
             //搜索列表特殊处理
-            xtcp_debug_printf("send divsreach list %d\n",g_sys_val.search_div_tol);
+            //xtcp_debug_printf("send divsreach list %d\n",g_sys_val.search_div_tol);
             t_list_connsend[list_num].conn = g_sys_val.divsearch_conn;
             t_list_connsend[list_num].list_info.divsrc_list.div_inc = 0;
             //

@@ -314,6 +314,7 @@ typedef struct g_sys_val_t{
 
     // 即时任务-主机音源
     //uint16_t rttask_music_recid;
+    task_music_info_t  rttask_musinfo;
 }g_sys_val_t;
 
 extern g_sys_val_t g_sys_val;

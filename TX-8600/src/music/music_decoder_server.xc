@@ -9,7 +9,7 @@
 #define SAMPLERATE_TICK_44100 2612245
 #define SAMPLERATE_TICK_48000 2400000
 
-extern uint32_t get_mp3_frame(unsigned char ch, uint32_t &length, uint32_t &frame_num, uint32_t &samplerate,uint32_t &music_type);
+extern uint32_t get_mp3_frame(unsigned char ch, uint32_t &length, uint32_t &frame_num, uint32_t &samplerate,uint32_t &music_type,uint8_t &music_inc);
 extern void clear_mp3_frame(unsigned char ch);
 
 struct adpcm_state s_adpcm_state[MUSIC_CHANNEL_NUM];
@@ -23,16 +23,19 @@ void music_decoder_server(server interface music_decoder_output_if if_mdo)
     while(1) {
         select {
             case if_mdo.get_mp3_frame(uint8_t ch, uint8_t mp3_frame[], uint32_t &length, uint32_t &frame_num, uint32_t &samplerate,
-                                      uint8_t &music_type,uint8_t wav_format):
+                                      uint8_t &music_type,uint8_t wav_format,uint8_t &music_inc):
             {
                 unsafe {
                     uint32_t l, n, s,t;
-                    p_mp3_frame = (uint8_t *unsafe)get_mp3_frame(ch, l, n, s,t);
+                    uint8_t inc;
+                    
+                    p_mp3_frame = (uint8_t *unsafe)get_mp3_frame(ch, l, n, s,t,inc);
                     if(p_mp3_frame)
                     {
                         frame_num = n;
                         samplerate = s;
                         music_type = t;
+                        music_inc = inc;
                         // WAV 增加帧头
                         if(t){
                             // 获取帧头标识
@@ -112,7 +115,7 @@ void music_decoder_server(server interface music_decoder_output_if if_mdo)
                         length = 0;
                         frame_num = 0;
                         samplerate = 0;
-                    }
+                    }                    
                 }
                 break;
             }

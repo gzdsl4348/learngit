@@ -43,7 +43,7 @@ void user_fl_sector_write(unsigned sector_num);
 
 void user_fl_sector_write2sector(unsigned sector_num);
 
-void user_music_play(uint8_t ch);
+void user_music_play(uint8_t ch,task_music_info_t *p_music_info);
 
 void user_music_stop(uint8_t ch);
 
@@ -124,6 +124,13 @@ uint8_t app_trainsmit_ch_chk();
 void app_trainsmit_divlist_set();
 
 void user_playstate_set(uint8_t state,uint8_t ch);
+
+void user_setmusic_sec(uint8_t ch,uint16_t sec);
+
+void user_rttask_musname_get(task_music_info_t *music_info,uint8_t ch);
+
+void user_rttask_musname_put(task_music_info_t *music_info,uint8_t ch);
+
 
 #endif //__USER_XCCODE_H_
 

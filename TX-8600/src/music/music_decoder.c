@@ -353,6 +353,13 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     
     //清空数据
     memset(p_dev, 0, sizeof(music_decoderdev_t));
+    
+    uint8_t type=mf_typetell(f_name);    //获得类型
+      //
+    if(type == 1)//mp3文件
+    {
+      p_dev->totsec = get_mp3_totsec(f_name);
+    }
 
     res = f_open(&p_dev->file, (const TCHAR*)f_name, FA_READ);
     if(res != FR_OK)
@@ -371,6 +378,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
         }
 
         res = f_lseek(&p_dev->file, f_offset);
+        p_dev->filedat_index = f_offset;
         if(res != FR_OK)
         {
             return res;
@@ -427,10 +435,21 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
         // 获取数据长度
         f_read(&p_dev->file, tag, 4, &br); //找data数据段
         p_dev->wav_datlen = (tag[0]|(tag[1]<<8)|(tag[2]<<16)|(tag[3]<<24));
+        // 获取音频文件数据偏移值
+        p_dev->filedat_index = p_dev->file.fptr;
+       
         if(br==0 || p_dev->wav_datlen==0){ 
             p_dev->decoder_status = MUSIC_DECODER_FILE_END;
             return FR_NO_FILE;
         }
+        // 计算文件时长
+        unsigned tmp;
+        // 计算单通道字节长度 总字节/通道数
+        tmp = p_dev->wav_datlen/p_dev->wav_nchanal;
+        // 计算多少个采样点       字节数/位宽
+        tmp = tmp/(p_dev->wav_bitwith/8);
+        // 计算时长 采样点总数/采样率
+        p_dev->totsec = tmp/(p_dev->wav_samplerate);
         //----------------------------------------------------------------------------------------------------
         s_adpcm_state[ch].index=0;
         s_adpcm_state[ch].valprev=0;
@@ -438,6 +457,8 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
         p_dev->decoder_status = MUSIC_DECODER_START;
         // WAV模式
         p_dev->file_type = 1;
+
+        
     }
     else{;}
     return FR_OK;
@@ -516,7 +537,23 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
            p_dev->file_over_flag==0 &&
            (p_dev->file_buff_size[0]==0||p_dev->file_buff_size[1]==0))
         {
+            //-------------------------------------------------------------------------------------------------------------------------------------
+            //WAV 文件选时
+            if(p_dev->seconde_set_f){
+                p_dev->seconde_set_f=0;
+                DWORD select_index;
+                if(p_dev->file_type){
+                    select_index = p_dev->filedat_index + p_dev->wav_nchanal*p_dev->wav_samplerate*(p_dev->wav_bitwith/8)*(p_dev->select_sec);
+                
+                }
+                else{
+                    select_index = p_dev->filedat_index + p_dev->bitrate/8 *(p_dev->select_sec);
+                }    
+                f_lseek(&p_dev->file, select_index);
+            }
+            //-------------------------------------------------------------------------------------------------------------------------------------
             res = f_read(&p_dev->file, g_file_buff, MUSIC_FILE_BUFF_SZ, &br);
+            
             if(br == 0)
             {
                 p_dev->file_over_flag = 1;
@@ -527,7 +564,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
             }
             else
             {
-                //debug_printf("f_read[%d] %d\n", ch, br);
+               //text_debug("f_read[%d] %d\n", ch, br);
                 // 进同步锁
                 swlock_acquire(&g_mp3_lock[ch]);
                 if(p_dev->file_buff_size[0]==0)
@@ -558,6 +595,8 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
                 }
                 // 出同步锁
                 swlock_release(&g_mp3_lock[ch]);
+                
+                //text_debug("f_read out[%d] %d\n", ch, br);
             }
         }
 
@@ -584,7 +623,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
 
 /*********************************************************************************************************************************/
 #define _USE_IN_MUSIC_DECOEDR_SERVER_TASK_
-uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, uint32_t *samplerate,uint32_t *music_type)
+uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, uint32_t *samplerate,uint32_t *music_type,uint8_t *music_inc)
 {
     if(ch >= gt_mmdm.ch_num || gt_mmdm.ch_dev[ch].mp3_frame_full==0) 
     {  
@@ -603,6 +642,8 @@ uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, 
         *samplerate = gt_mmdm.ch_dev[ch].wav_samplerate;
     else
         *samplerate = gt_mmdm.ch_dev[ch].samplerate;    
+
+    *music_inc = gt_mmdm.ch_dev[ch].music_inc;
     
     return (uint32_t)gt_mmdm.ch_dev[ch].mp3_frame;
 }
@@ -696,14 +737,14 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
             p_dev = &gt_mmdm.ch_dev[ch];
             //------------------------------------------------------------------------------------------------------------
             // WAV 解码模式
-            if(p_dev->file_type){
+            if(p_dev->file_type){        
                 //-----------------------------------------------------------------------------------
                 if(p_dev->decoder_status != MUSIC_DECODER_START) continue;
                 
                 //mp3 frame需要填充时才调用
                 if(p_dev->mp3_frame_full) continue;
                 
-                if(p_dev->file_buff_size[0]==0 && p_dev->file_buff_size[1]==0) continue;
+                if(p_dev->file_buff_size[0]==0 && p_dev->file_buff_size[1]==0) continue;                
                 //-----------------------------------------------------------------------------------
                 // 进出同步锁间操作, 耗时0.1ms
                 // 进同步锁
@@ -778,6 +819,8 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                 p_dev->mp3_frame_full = 1;
                 // 出同步锁
                 swlock_release(&g_mp3_lock[ch]);
+                static uint8_t tmp=0;
+
             }
             //------------------------------------------------------------------------------------------------------------
             // MP3 解码模式
@@ -835,6 +878,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                     {
                         p_dev->file_over_flag = 0;
                         p_dev->decoder_status = MUSIC_DECODER_FILE_END;
+                        p_dev->music_inc++;
                     }
                     else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
                     {
@@ -887,6 +931,8 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                                 p_dev->bitrate = mp3decinfo.bitrate; 
                                 p_dev->samplerate = mp3decinfo.samprate;
                             }
+                            //更新时间
+                            
                             
                             // put mp3 frame buff
                             memcpy(p_dev->mp3_frame, readptr, p_dev->mp3_frame_size);
@@ -907,6 +953,26 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
     }
 }
 
+void set_music_secjump(uint8_t ch,uint16_t sec){
+    music_decoderdev_t * p_dev = &gt_mmdm.ch_dev[ch];
+    p_dev->seconde_set_f=1;
+    p_dev->select_sec=sec;
+    /*
+    DWORD select_index;
+    //WAV 文件选时
+    if(p_dev->file_type){
+        select_index = p_dev->filedat_index + p_dev->wav_nchanal*p_dev->wav_samplerate*(p_dev->wav_bitwith/8)*sec;
+
+    }
+    else{
+        select_index = p_dev->filedat_index + p_dev->bitrate/8 *sec;
+    }    
+    f_lseek(&p_dev->file, select_index);
+    */
+}
+
+
 /*********************************************************************************************************************************/
+
 
 

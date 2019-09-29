@@ -95,8 +95,10 @@ void fl_hostinfo_init(){
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
     // 判断MAC地址是否已经烧录
     if((host_info.mac[0]==0x42)&&(host_info.mac[1]==0x4C)&&(host_info.mac[2]==0x45)){
+        // 已经烧录烧录MAC 使用FLASH数据
         memcpy(&host_info_tmp,&host_info,sizeof(host_info_t));
     }    
+    // 或得账号信息数据
     memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
     // 烧录两页数据
 	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);

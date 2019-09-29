@@ -15,7 +15,6 @@ const uint8_t CHECK_DEV_INFO[6] = {0x5A,0,0,0,0,0};
 const uint8_t CONFIG_DEV_INFO[2] = {0x5A,0x01}; 
 const uint8_t NUM_TAB[11]={"0123456789"};
 
-
 static void num2char(uint8_t num, uint8_t out_tmp[])
 {
 	if(num < 10)
@@ -80,7 +79,7 @@ static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_p
 	uint8_t mac_head[]     = {" MAC: "};
 	uint8_t iptype_head[]  = {" IPTYPE: "};
 	//uint8_t send_buf[256]={"IP: 172.16.13.166 SUBNETMASK: 255.255.255.0 GATEWAY: 172.16.13.254 SERVER: 172.16.13.112 MAC: 42-4c-45-00-ac-4f IPTYPE: 0"};
-	uint8_t send_buf[256];
+	//uint8_t send_buf[256];
     uint8_t index = 0;
     uint8_t tmp_tab[5]={0,0,0,0,0}; 
 
@@ -88,77 +87,77 @@ static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_p
     i_xtcp.get_ipconfig(ipconfig);
 
     //IP
-    memcpy(&send_buf[index], ip_head, strlen(ip_head)); 
+    memcpy(&all_tx_buf[index], ip_head, strlen(ip_head)); 
     index += strlen(ip_head);
     for(uint8_t i=0; i<4; i++)
     {
 		num2char(old_param.ipcfg.ipaddr[i], tmp_tab);
-		memcpy(&send_buf[index], tmp_tab, strlen(tmp_tab)); 
+		memcpy(&all_tx_buf[index], tmp_tab, strlen(tmp_tab)); 
 		index += strlen(tmp_tab);
     }
     index -= 1;
 
     //SUBNETMASK
-    memcpy(&send_buf[index], netmask_head, strlen(netmask_head)); 
+    memcpy(&all_tx_buf[index], netmask_head, strlen(netmask_head)); 
     index += strlen(netmask_head);
     for(uint8_t i=0; i<4; i++)
     {
 		num2char(old_param.ipcfg.netmask[i], tmp_tab);
-		memcpy(&send_buf[index], tmp_tab, strlen(tmp_tab)); 
+		memcpy(&all_tx_buf[index], tmp_tab, strlen(tmp_tab)); 
 		index += strlen(tmp_tab);
     }
     index -= 1;
 
     //GATEWAY
-    memcpy(&send_buf[index], gateway_head, strlen(gateway_head)); 
+    memcpy(&all_tx_buf[index], gateway_head, strlen(gateway_head)); 
     index += strlen(gateway_head);
     for(uint8_t i=0; i<4; i++)
     {
 		num2char(old_param.ipcfg.gateway[i], tmp_tab);
-		memcpy(&send_buf[index], tmp_tab, strlen(tmp_tab)); 
+		memcpy(&all_tx_buf[index], tmp_tab, strlen(tmp_tab)); 
 		index += strlen(tmp_tab);
     }
     index -= 1;
 
 	//SERVER
-    memcpy(&send_buf[index], server_head, strlen(server_head)); 
+    memcpy(&all_tx_buf[index], server_head, strlen(server_head)); 
     index += strlen(server_head);
     for(uint8_t i=0; i<4; i++)
     {
 		num2char(old_param.server_ip[i], tmp_tab);
-		memcpy(&send_buf[index], tmp_tab, strlen(tmp_tab)); 
+		memcpy(&all_tx_buf[index], tmp_tab, strlen(tmp_tab)); 
 		index += strlen(tmp_tab);
     }
     index -= 1;
  
     //MAC
     uint8_t mactmp[3]={0,0,0};
-    memcpy(&send_buf[index], mac_head, strlen(mac_head)); 
+    memcpy(&all_tx_buf[index], mac_head, strlen(mac_head)); 
     index += strlen(mac_head);
     for(uint8_t i=0; i<6; i++)
     {
 		mac_hex2char(old_param.mac[i], mactmp);
-		memcpy(&send_buf[index], mactmp, 3); 
+		memcpy(&all_tx_buf[index], mactmp, 3); 
 		index += 3;
     }
     index -= 1;
  
     //IPTYPE
-	memcpy(&send_buf[index], iptype_head, strlen(iptype_head)); 
+	memcpy(&all_tx_buf[index], iptype_head, strlen(iptype_head)); 
     index += strlen(iptype_head);
     if(old_param.iptype)
     {
-		send_buf[index] = '1';
+		all_tx_buf[index] = '1';
     }
     else
     {
-		send_buf[index] = '0';
+		all_tx_buf[index] = '0';
     }
     index += 1;
     
     if(ackflag == 0)
     {
-		i_xtcp.send_udp(conn, send_buf, index);
+		i_xtcp.send_udp(conn, all_tx_buf, index);
     }
     else
     {
@@ -167,7 +166,7 @@ static void feedback_dev_info(client xtcp_if i_xtcp, xtcp_connection_t conn, n_p
 		{
 		    return;
 		}
-		i_xtcp.send_udp(g_tmp_union.conn_tmp, send_buf, index);
+		i_xtcp.send_udp(g_tmp_union.conn_tmp, all_tx_buf, index);
 		i_xtcp.close_udp(g_tmp_union.conn_tmp);
     }
 	

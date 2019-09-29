@@ -20,6 +20,7 @@ void task_music_send(uint8_t ch,taskmac_info_t *p_taskmac_info,uint8_t div_tol,u
     t_audio_txlist.num_info=0;
     // 配置发送目标
     for(uint8_t i=0;i<div_tol;i++){
+        /*
         //查找目标设备与IP
         xtcp_debug_printf("des mca: %x,%x,%x,%x,%x,%x\n",p_taskmac_info[i].mac[0],
                                                 p_taskmac_info[i].mac[1],
@@ -27,6 +28,7 @@ void task_music_send(uint8_t ch,taskmac_info_t *p_taskmac_info,uint8_t div_tol,u
                                                 p_taskmac_info[i].mac[3],
                                                 p_taskmac_info[i].mac[4],
                                                 p_taskmac_info[i].mac[5]);
+        */
         div_tmp_p = get_div_info_p(p_taskmac_info[i].mac);
         if(div_tmp_p==null){
             //i++;
@@ -122,6 +124,9 @@ void taskmusic_name_get(){
 
 void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
     xtcp_debug_printf("\n\n\nmusic play \n\n");
+    
+    timetask_now.task_musicplay[ch].play_state = 1;
+    user_rttask_musname_put(p_music_info,ch);
     //获取歌曲路径名
     uint8_t i,j,ch_tmp;
     uint8_t task_id_right=0;
@@ -133,13 +138,14 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
             break;
         }
     }
+    /*
     for(i=0;i<(PATCH_NAME_NUM/2);i++){
         if(((uint16_t *)p_music_info->music_path)[i]==0)
             break;
         ((uint16_t *)f_name)[i] = ((uint16_t *)p_music_info->music_path)[i];
     }
     ((uint16_t *)f_name)[i] = 0x002F;
-    i++;
+    i++;s
     // 更新曲目名
     for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
         if(((uint16_t *)p_music_info->music_name)[j]==0)
@@ -147,6 +153,8 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
         ((uint16_t *)f_name)[i] = ((uint16_t *)p_music_info->music_name)[j];
     }
     ((uint16_t *)f_name)[i] = 0x00;
+    */
+    //
     if(task_id_right){     
         uint8_t playing_char[]={0x6B,0x63,0x57,0x28,0x64,0xAD,0x65,0x3E,0x00,0x3A};
         memcpy(g_sys_val.disinfo2buf[ch_tmp],playing_char,10);
@@ -180,11 +188,11 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
     }
     #endif
     // 播放通道音乐
-    user_music_play(ch);
+    user_music_play(ch,p_music_info);
     // 获得播放时间
     if(timetask_now.task_musicplay[ch].rttask_f){
-        memcpy(f_name,p_music_info,sizeof(task_music_info_t));
-        timetask_now.task_musicplay[ch].music_tolsec = get_music_tolsec((task_music_info_t *)f_name);
+        memcpy(&g_sys_val.rttask_musinfo,p_music_info,sizeof(task_music_info_t));
+        timetask_now.task_musicplay[ch].music_tolsec = get_music_tolsec(&g_sys_val.rttask_musinfo);
         timetask_now.task_musicplay[ch].music_sec=0;
     }
     //xtcp_debug_printf("music play out\n");
@@ -199,73 +207,12 @@ void rttask_music_play(uint16_t id){
     }
 }
 
-void rttask_music_stop(uint16_t id){
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 关闭音乐播放
-        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-            user_audio_send_dis(i);
-        }
-    }
-}
-
-void rttask_music_last(uint16_t id){
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 找到正在播放通道
-        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-            // 找到上一首歌算法  
-            timetask_now.task_musicplay[i].music_inc+=MAX_RTMUSIC_NUM-2;
-            if(timetask_now.task_musicplay[i].music_inc>=MAX_RTMUSIC_NUM){
-                timetask_now.task_musicplay[i].music_inc -=MAX_RTMUSIC_NUM;
-            }
-            //
-            task_musicevent_change(i,0,0);
-        }
-    }
-}
-
-void rttask_music_next(uint16_t id){
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 找到正在播放通道
-        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-            task_musicevent_change(i,0,0);
-        }
-    }
-}
-
-void rttask_music_select(uint16_t id,uint8_t mus_inc){
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 找到正在播放通道
-        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-            // 找到指定歌算法  
-            timetask_now.task_musicplay[i].music_inc = mus_inc;
-            timetask_now.task_musicplay[i].music_inc+=MAX_RTMUSIC_NUM-1;
-            if(timetask_now.task_musicplay[i].music_inc>=MAX_RTMUSIC_NUM){
-                timetask_now.task_musicplay[i].music_inc -=MAX_RTMUSIC_NUM;
-            }
-            task_musicevent_change(i,0,0);
-        }
-    }
-}
-
 void rttask_music_totimer(uint16_t id,uint16_t music_sec){
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
         if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
             timetask_now.task_musicplay[i].music_sec=music_sec;
         }
     }
-}
-
-void rttask_music_setmode(uint16_t id,uint8_t mode){
-    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
-        // 找到正在播放通道
-        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
-            timetask_now.task_musicplay[i].play_mode = mode;
-        }
-    }
-}
-
-void rttask_music_setvol(uint16_t id,uint8_t vol){
-    set_audio_vol(id,vol);
 }
 
 uint16_t get_music_tolsec(task_music_info_t *p_music_info){
@@ -283,12 +230,20 @@ uint16_t get_music_tolsec(task_music_info_t *p_music_info){
             // 比较文件夹
             for(uint16_t j=0;j<*music_tol;j++){
                 if(charncmp(p_music_info->music_name,music_info[j].name,MUSIC_NAME_NUM)==1){
-                    xtcp_debug_printf("get music sec %d\n",music_info[j].totsec);
+                    //xtcp_debug_printf("get music sec %d\n",music_info[j].totsec);
                     return music_info[j].totsec;
                 }
             }
         }
     }
     return music_sec;
+}
+
+void close_rttask_musicplay(uint16_t id){
+    for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
+        if(timetask_now.ch_state[i]!=0xFF && timetask_now.task_musicplay[i].task_id==id && timetask_now.task_musicplay[i].rttask_f){
+            task_music_config_stop(i);
+        }
+    }
 }
 

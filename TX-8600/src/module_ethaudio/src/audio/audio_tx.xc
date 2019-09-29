@@ -109,7 +109,8 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                         //---------------------------------------------------------------------------------------------------------
                         uint32_t len;
                         uint8_t file_type;
-                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr,file_type,format);
+                        uint8_t music_inc;
+                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr,file_type,format,music_inc);
                         //sys_timer :> t2;
                         // 无数据
                         if(len==0) continue;
@@ -133,7 +134,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                                          g_t_val->audio_txvol[ch],
                                                          g_t_val->aux_timestamp[ch],
                                                          iptmp,udptmp,
-                                                         len,ch);
+                                                         len,ch,music_inc);
                         //sys_timer :> t3;
 #if NEW_SEND_LIST_MODE_ENABLE
                         for(uint8_t i=0; i<MAX_SENDCHAN_NUM; i++){ //MAX_SENDCHAN_NUM
@@ -171,8 +172,8 @@ void audio_tx(  client music_decoder_output_if if_mdo,
 			        for(uint8_t ch=0; ch<NUM_MEDIA_INPUTS; ch++){
 						if(sample_error_f[ch]>=2){
 							uint32_t num, sr, len,format;
-                            uint8_t file_type;
-	                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr,file_type,format);
+                            uint8_t file_type,music_inc;
+	                        if_mdo.get_mp3_frame(ch,txbuff+AUDIO_CHDATA_BASE_ADR+AUDIO_DATABASE_ADR,len,num,sr,file_type,format,music_inc);
 	                        //sys_timer :> t2;
 	                        // 无数据
 							sample_error_f[ch]=0;;

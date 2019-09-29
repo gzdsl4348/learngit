@@ -7,10 +7,12 @@
 #include "checksum.h"
 #include "debug_print.h"
 
-static uint8_t audio_ch_state[MAX_APP_AUD_TRAINSMIT_NUM];   //Ñ°ºôÍ¨µÀ×´Ì¬
-static uint8_t audio_ch_timer[MAX_APP_AUD_TRAINSMIT_NUM];
+//static uint8_t audio_ch_state[MAX_APP_AUD_TRAINSMIT_NUM];   //Ñ°ºôÍ¨µÀ×´Ì¬
+//static uint8_t audio_ch_timer[MAX_APP_AUD_TRAINSMIT_NUM];
 
-audts_divlist_s s_audts_divlist[MAX_APP_AUD_TRAINSMIT_NUM];
+//audts_divlist_s s_audts_divlist[MAX_APP_AUD_TRAINSMIT_NUM];
+
+/*
 xtcp_ipconfig_t host_ip;
 uint8_t host_mac[6];
 static char rxbuff[1500];
@@ -105,14 +107,14 @@ void aud_trainsmit_build(uint8_t txbuff[],uint8_t des_ip[],uint8_t des_mac[],uin
     txbuff[UDP_HEADERSUM_ADR+1] = sum_tmp;
 	
 }
-					
+*/
 
-
+/*
 void aud_trainsmit_core(streaming chanend c_rx_hp,server aud_trainsmit_if if_aud_trainsmit,client ethernet_tx_if i_eth_tx){
 	// Eth Recive Packet Info
 	ethernet_packet_info_t packet_info;
     memset(audio_ch_state,0xFF,MAX_APP_AUD_TRAINSMIT_NUM);
-    text_debug("aud init\n");
+    //text_debug("aud init\n");
 
     timer timer_cnt;
     unsigned timer_tmp;
@@ -191,7 +193,7 @@ void aud_trainsmit_core(streaming chanend c_rx_hp,server aud_trainsmit_if if_aud
         }
     }
 }
-
+*/
    
 
 

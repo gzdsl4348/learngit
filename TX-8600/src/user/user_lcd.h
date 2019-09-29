@@ -50,5 +50,7 @@ void dhcp_getin_over_disp(uint8_t state);
 
 void dhcp_getin_clear();
 
+void wifi_open_disp();
+
 #endif
 

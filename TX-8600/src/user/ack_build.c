@@ -309,6 +309,9 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 2;
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
+    //
+    xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = 100;//host_info.regiser_days;
+    xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = 0;//host_info.regiser_days>>8;
 
     if(user_id==1){
         xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 0;
@@ -325,10 +328,20 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     else if(user_id==5){
         xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 4;
     }
+    else if(user_id==6){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 3;
+        xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = 1;
+        xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = 0;
+
+    }
+    else if(user_id==7){
+        xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 1;
+        xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = 1;
+        xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = 0;
+    }
+
+    xtcp_debug_printf("uid %d\n",user_id);
     #endif
-    //
-    xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
-    xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
 
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_MACHCODE_B],g_sys_val.maschine_code,10);
 
@@ -1582,12 +1595,12 @@ uint16_t rttask_muslist_chk_build(uint8_t list_num){
     xtcp_tx_buf[RTTASK_MUCLISTCHK_PACKINC]=t_list_connsend[list_num].pack_inc;
     uint16_t dat_base=RTTASK_MUCLISTCHK_DATBASE;
     
-    xtcp_debug_printf("get mus %d\n",g_tmp_union.rttask_dtinfo.music_tol);
+    //xtcp_debug_printf("get mus %d\n",g_tmp_union.rttask_dtinfo.music_tol);
     
     for(;t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc<g_tmp_union.rttask_dtinfo.music_tol && i<MAX_SEND_MUSIC ;
         t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc++,i++){
-        //°üÐòºÅ
-        xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_NUM] = t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc;
+        //ÐòºÅ
+        xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_NUM] = t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc+1;
         // Â·¾¶Ãû
         memcpy(&xtcp_tx_buf[dat_base+RTTASK_MUCLISTCHK_PATCH],
         g_tmp_union.rttask_dtinfo.music_info[t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc].music_path,PATCH_NAME_NUM);
@@ -1599,7 +1612,7 @@ uint16_t rttask_muslist_chk_build(uint8_t list_num){
     }
     xtcp_tx_buf[RTTASK_MUCLISTCHK_MUSTOL] = i;
 
-    xtcp_debug_printf("sends mus %d\n",t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc);    
+    //xtcp_debug_printf("sends mus %d\n",t_list_connsend[list_num].list_info.rttaskmusic_ilst.music_inc);    
     //
     t_list_connsend[list_num].pack_inc++;
 
@@ -1628,7 +1641,7 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
     xtcp_tx_buf[RTTASK_INFO_MUSICTOL] = g_tmp_union.rttask_dtinfo.music_tol;
     xtcp_tx_buf[RTTASK_INFO_MUSICTOL+1] = 0;
 
-    xtcp_tx_buf[RTTASK_INFO_MUSICNUM] = timetask_now.task_musicplay[ch].music_inc;
+    xtcp_tx_buf[RTTASK_INFO_MUSICNUM] = timetask_now.task_musicplay[ch].music_inc+1;
     xtcp_tx_buf[RTTASK_INFO_MUSICNUM+1] = 0; 
 
     xtcp_tx_buf[RTTASK_INFO_PACKINFO] = 0;

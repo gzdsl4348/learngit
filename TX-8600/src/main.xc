@@ -177,9 +177,10 @@ int main()
         on tile[0]:{
             [[combine]]par{
                 music_decoder_server(if_mdo);
-                file_server(if_fs, c_faction);
             }
         }
+        on tile[0]: file_server(if_fs, c_faction);
+        
         on tile[0]:
         {
             set_core_high_priority_on();
@@ -238,7 +239,7 @@ int main()
         on tile[1]: {
 			[[combine]]par{
 		    // UART TX MODULE	
-		    uart_tx_buffered(i_uart_tx[UART_USER],null,1024,115200,UART_PARITY_NONE,8,1,p_uart_tx,i_smi, p_smi_mdio, p_smi_mdc);
+		    uart_tx_buffered(i_uart_tx[UART_USER],null,800,115200,UART_PARITY_NONE,8,1,p_uart_tx,i_smi, p_smi_mdio, p_smi_mdc);
 			}
 		}        
     }//Par

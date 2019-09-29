@@ -5,6 +5,7 @@
 #include <platform.h>
 #include <stdint.h>
 #include "music_decoder.h"
+#include "sys_config_dat.h"
 #ifdef __XC__
 #include "flash_user.h"
 #include "sdram.h"
@@ -184,9 +185,11 @@ typedef interface file_server_if
     int file_upload_put_data(uint8_t buff[], unsigned buff_size, uint8_t last_buff, int &fifo_size);
     int file_upload_forced_stop();
     int file_upload_get_fifo_size();
-    int music_start(uint8_t ch, uint8_t f_name[n], static const unsigned n, unsigned f_offset);
+    int music_start(uint8_t ch, task_music_info_t music_info, unsigned f_offset);
     int music_stop(uint8_t ch);
     int music_stop_all();
+
+    void music_jumpsec(uint8_t ch,uint16_t second);
 
     //
     int log_mklog(uint8_t new_fname[newlen],unsigned newlen,uint8_t old_fname[oldlen],unsigned oldlen);

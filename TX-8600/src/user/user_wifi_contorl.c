@@ -24,6 +24,7 @@ void wifi_apply(){
     user_lan_uart0_tx(wifiapply,12,0);
 }
 
+
 // mode=0:设置ip     mode=1:设置掩码
 void wifi_ipset(uint8_t ip[],uint8_t mode){
     uint8_t ip_tmp[32];
@@ -159,5 +160,16 @@ void wifi_contorl_mode(){
             }
             break;
     }
+}
+
+void wifi_open(){
+    // 开启wifi模块
+    g_sys_val.key_wait_release = KEY_WIFI_RELEASE;
+    g_sys_val.wifi_contorl_state = WIFI_WAIT_POWERON;
+    g_sys_val.wifi_timer = 0;
+    g_sys_val.wifi_mode = WIFI_DHCPDIS_MODE;
+    g_sys_val.wifi_io_tmp = D_IO_WIFI_POWER|D_IO_WIFI_CONTORL;
+    user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,1);
+    wifi_ioset(g_sys_val.wifi_io_tmp);      
 }
 

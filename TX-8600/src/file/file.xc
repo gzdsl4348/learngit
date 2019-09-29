@@ -55,7 +55,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
     while(1)
     {
         select{
-            case if_fs.music_start(uint8_t ch, uint8_t f_name [n], static const unsigned n, unsigned f_offset) -> int res:
+            case if_fs.music_start(uint8_t ch, task_music_info_t music_info, unsigned f_offset) -> int res:
             {
                 res = FOR_SUCCEED;
                 if(fopr.event != FOE_IDLE)
@@ -64,8 +64,26 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     break;
                 }
                 fopr.data.music.ch = ch;
-                fopr.data.music.foffset = f_offset;
-                memcpy(fopr.data.music.fname, f_name, n);
+                fopr.data.music.foffset = f_offset;                
+                //------------------------------------------------------------------------------------------------------------
+                uint8_t i,j;
+                // 合成路径名
+                for(i=0;i<(PATCH_NAME_NUM/2);i++){
+                    if(((uint16_t *)music_info.music_path)[i]==0)
+                        break;
+                    ((uint16_t *)fopr.data.music.fname)[i] = ((uint16_t *)music_info.music_path)[i];
+                }
+                ((uint16_t *)fopr.data.music.fname)[i] = 0x002F;
+                i++;
+                // 文件名
+                for(j=0; j<(MUSIC_NAME_NUM/2); i++,j++){
+                    if(((uint16_t *)music_info.music_name)[j]==0)
+                        break;
+                    ((uint16_t *)fopr.data.music.fname)[i] = ((uint16_t *)music_info.music_name)[j];
+                }
+                ((uint16_t *)fopr.data.music.fname)[i] = 0x00;
+                //------------------------------------------------------------------------------------------------------------
+                
                 fopr.event = FOE_MUSIC_START;
                 
                 decoder_status[ch].status = MUSIC_DECODER_START;
@@ -96,6 +114,9 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 res = FOR_SUCCEED;
                 break;
             }
+            case if_fs.music_jumpsec(uint8_t ch,uint16_t second):
+                set_music_secjump(ch,second);
+                break;
             case if_fs.get_sdcard_size(unsigned &tol_mb,unsigned &free_mb)-> int res:
                 unsafe{
                 unsigned long tol_mb_tmp,free_mb_tmp;

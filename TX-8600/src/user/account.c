@@ -66,7 +66,7 @@ void account_login_recive(){
             filename_decoder(&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
             user_sending_len = account_login_ack_build(02,0,null,ACCOUNT_LOGIN_CMD);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
-            xtcp_debug_printf("sn error\n");
+            //xtcp_debug_printf("sn error\n");
             return; //fail
         }
         // 判断登录用户
@@ -188,7 +188,7 @@ void account_config_recive(){
     // 账户重名判断 手机号重名判断
     if(xtcp_rx_buf[A_CONFIG_CONTORL_B]!=2){
         for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
-            xtcp_debug_printf("id %d %d\n",account_info[i].id,id);
+            //xtcp_debug_printf("id %d %d\n",account_info[i].id,id);
             if((account_info[i].id!=0xFF)&&((account_info[i].id!=id)||(xtcp_rx_buf[A_CONFIG_CONTORL_B]==0))){
                 if(charncmp(account_info[i].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM)){
                     // 账号重复
@@ -208,7 +208,7 @@ void account_config_recive(){
                 if((xtcp_rx_buf[A_CONFIG_PHONE_NUM_B]!=0 || xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+1]!=0)&&
                     charncmp(account_info[i].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM)
                   ){
-                    xtcp_debug_printf("ac phone same\n");
+                    //xtcp_debug_printf("ac phone same\n");
                     // 手机号重复
                     state = 3;
                     goto fail_account_config;
@@ -318,6 +318,8 @@ void account_sys_register_recive(){
     uint8_t key_tmp;
     uint8_t maschien_code[10];
     key_tmp = (xtcp_rx_buf[POL_DAT_BASE+13]^0xFF);
+    if(host_info.div_have_register==0)
+        return;
     /*
     xtcp_debug_printf("dat:");
     for(uint8_t i=0;i<13;i++){
@@ -328,7 +330,6 @@ void account_sys_register_recive(){
     for(uint8_t i=0;i<10;i++){
         maschien_code[i] = (xtcp_rx_buf[POL_DAT_BASE+i]^key_tmp);
     }
-    xtcp_debug_printf("\n");
     //比较机器码
     if(charncmp(maschien_code,g_sys_val.maschine_code,10)){
         //--------------------------------------------------------------------------------------
@@ -344,7 +345,7 @@ void account_sys_register_recive(){
         host_info.regiser_days = (xtcp_rx_buf[POL_DAT_BASE+11]^key_tmp)|((xtcp_rx_buf[POL_DAT_BASE+12]^key_tmp)<<8);
         host_info.regiser_state = xtcp_rx_buf[POL_DAT_BASE+10]^key_tmp;
         //
-        xtcp_debug_printf("BE02 rec %d regday %d \n",host_info.regiser_state,host_info.regiser_days);
+        //xtcp_debug_printf("BE02 rec %d regday %d \n",host_info.regiser_state,host_info.regiser_days);
         //------------------------------------------------------------------------------------------------------------------------------------
         #if REGITSER_NEWVESION_DISP
         //------------------------------------------------------------------------------------------------------------------------------------
@@ -399,9 +400,9 @@ void account_sys_register_recive(){
                 user_xtcp_send(g_sys_val.regsiter_conn,g_sys_val.register_could_f);
             g_sys_val.regsiter_conn.id = 0;
             g_sys_val.register_need_send = 0;
-            xtcp_debug_printf("B90D resend %d %d\n",g_sys_val.register_rec_s_tmp,host_info.regiser_state);
+            //xtcp_debug_printf("B90D resend %d %d\n",g_sys_val.register_rec_s_tmp,host_info.regiser_state);
         }
-        xtcp_debug_printf("regsied updat state %d, day %d\n\n",host_info.regiser_state,host_info.regiser_days);
+        //xtcp_debug_printf("regsied updat state %d, day %d\n\n",host_info.regiser_state,host_info.regiser_days);
         // flash info 
         fl_hostinfo_write();    //烧写主机信息
     }
@@ -413,7 +414,7 @@ void account_sys_register_recive(){
 void cld_register_request(){
     user_sending_len = cld_resiger_request_build();
     user_could_send(1);    
-    xtcp_debug_printf("register request\n");
+    //xtcp_debug_printf("register request\n");
 }
 
 //===============================================================================
@@ -423,7 +424,12 @@ void cld_register_recive(){
     //保存注册状态
     g_sys_val.register_rec_s_tmp = xtcp_rx_buf[POL_DAT_BASE];
     g_sys_val.register_need_send = 1;
-    xtcp_debug_printf("reg BE08 rec %d\n",g_sys_val.register_rec_s_tmp);
+    //xtcp_debug_printf("reg BE08 rec %d\n",g_sys_val.register_rec_s_tmp);
+    // 注册成功,判断注册状态 品牌
+    if(g_sys_val.register_rec_s_tmp==0){
+        g_sys_val.register_code;
+    }
+    
     //申请注册状态
     register_could_chk();
     
@@ -444,6 +450,7 @@ void app_register_request(){
     g_sys_val.register_could_f = xtcp_rx_buf[POL_COULD_S_BASE];
     memcpy(g_sys_val.register_code,&xtcp_rx_buf[POL_DAT_BASE],10);
     memcpy(g_sys_val.register_could_id,&xtcp_rx_buf[POL_ID_BASE],6);
+    /*
     xtcp_debug_printf("mach code ");
     for(uint8_t i=0;i<10;i++){
         xtcp_debug_printf("%x ",g_sys_val.maschine_code[i]);
@@ -453,6 +460,7 @@ void app_register_request(){
         xtcp_debug_printf("%x ",g_sys_val.register_code[i]);
     }
     xtcp_debug_printf("\n");
+    */
     if(g_sys_val.could_conn.id==0){
         g_sys_val.register_rec_s_tmp=3;
         user_sending_len = cld_appregsied_request_build();   
@@ -482,7 +490,7 @@ void account_list_updat(){
 void cld_timesysnc_request(){
     user_sending_len = cld_timesysnc_request_build();
     user_could_send(1);    
-    xtcp_debug_printf("time request\n");
+    //xtcp_debug_printf("time request\n");
 }
 
 //===============================================================================
@@ -513,7 +521,7 @@ void cld_account_login_recive(){
     }   
     // 云登录信息推送
     user_sending_len = account_login_ack_build(1,0,null,CLD_REGISTER_INFO_CMD); 
-    xtcp_debug_printf("could len %d\n",user_sending_len);
+    //xtcp_debug_printf("could len %d\n",user_sending_len);
     user_could_send(0);    
 }
 
@@ -548,8 +556,6 @@ void app_sysonline_recive(){
 //================================================================================
 void mic_userlist_chk_recive(){
     
-    xtcp_debug_printf("user list chk \n");
-
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
         //获得用户详细信息
         fl_account_read(&g_tmp_union.account_all_info,i);
@@ -760,7 +766,7 @@ void account_login_overtime(){
             fl_account_read(&g_tmp_union.account_all_info,i);
             g_tmp_union.account_all_info.account_info = account_info[i];
             fl_account_write(&g_tmp_union.account_all_info,i);
-            xtcp_debug_printf("account logout\n");
+            //xtcp_debug_printf("account logout\n");
         }
     }
 }

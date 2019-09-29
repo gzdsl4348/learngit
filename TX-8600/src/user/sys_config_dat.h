@@ -13,7 +13,7 @@ extern "C" {
 #define VERSION_L    (0x25)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (25)
+#define VERSION_TEN_L    (26)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -31,6 +31,8 @@ extern "C" {
 #define DISABLE_COULDOFFLINE_MODE    0 // 关闭云离线停止工作模式
 
 #define ENABLE_AUD_TRAINSMIT        0
+
+#define DIV_PROBATION_DAY       90 //出厂试用期
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID
@@ -183,11 +185,13 @@ typedef struct host_info_t{
     uint16_t regiser_days;              //注册天数
     xtcp_ipconfig_t ipconfig;           //ip 信息
     uint8_t div_brand[DIV_NAME_NUM];              //设备品牌
-    uint8_t sys_dhcp_state;
-    uint8_t log_daycnt;
-    uint8_t log_filename[MAX_LOGDATE_NUM][64];
+    uint8_t div_have_register;  //是否已被注册
+    uint8_t sys_dhcp_state; //WIFI的DHCP打开状态
+    uint8_t log_daycnt;     //日志计数
+    uint8_t log_filename[MAX_LOGDATE_NUM][64];//日志名称
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
     //
+    
     date_info_t online_date_info;          // 记录日期
     uint8_t offline_mode;           // 离线模式
     //uint8_t noneed_register;  // 0 无需注册   1 需要注册
@@ -327,11 +331,13 @@ enum PLAY_MODE_E{
     ORDER_PLAY_M = 0,
     LOOP_PLAY_M,
     RANDOM_PLAY_M,
+    ONCE_PLAY_M,
+    ONCE_LOOPPLAY_M,
 };
 
 typedef struct task_musicplay_t{
     uint16_t task_id;
-    uint8_t name[DIV_NAME_NUM]; //任务名称
+    //uint8_t name[DIV_NAME_NUM]; //任务名称
     uint8_t music_inc;  //当前播放序号
     uint8_t music_tol;  //音乐总数
     uint8_t play_mode;  //播放模式

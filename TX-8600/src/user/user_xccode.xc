@@ -14,6 +14,7 @@
 #include "sys_log.h"
 #include "ack_build.h"
 #include "aud_trainsmit_core.h"
+#include "task_decode.h"
 
 
 extern client interface xtcp_if  * unsafe i_user_xtcp;
@@ -30,7 +31,7 @@ static uint8_t user_audio_txen[MAX_MUSIC_CH]={0};
 
 #define MUSIC_FNAME_NUM (MUSIC_NAME_NUM+PATCH_NAME_NUM)
 
-uint8_t f_name[MUSIC_FNAME_NUM];
+//uint8_t f_name[MUSIC_FNAME_NUM];
 
 
 on tile[1]: out port p_wifi_io = XS1_PORT_4B; 
@@ -63,6 +64,9 @@ void stop_all_timetask(){
     //sxtcp_debug_printf("stop all task\n");
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
         timetask_now.ch_state[i]=0xFF;
+        // 停止主机即时任务
+        if(timetask_now.task_musicplay[i].rttask_f)
+            rttask_runningtask_stop_start(timetask_now.task_musicplay[i].task_id,1,1);
     }
     i_fs_user->music_stop_all();
     for(uint8_t i=0;i<MAX_MUSIC_CH;i++){
@@ -114,10 +118,10 @@ void set_audio_vol(uint8_t ch,uint8_t vol){
     }
 }
 
-void user_music_play(uint8_t ch){
+void user_music_play(uint8_t ch,task_music_info_t *p_music_info){
     unsafe{
         //i_fs_user->music_start(ch,f_name,MUSIC_FNAME_NUM,0);
-        i_fs_user->music_start(ch,f_name,MUSIC_FNAME_NUM,0);
+        i_fs_user->music_start(ch,*p_music_info,0);
     }
 }
 
@@ -611,6 +615,24 @@ void app_trainsmit_divlist_set(){
 void user_playstate_set(uint8_t state,uint8_t ch){
     unsafe{
         i_ethaud_cfg->audio_play_stateset(state,ch);
+    }
+}
+
+void user_setmusic_sec(uint8_t ch,uint16_t sec){
+    unsafe{
+        i_fs_user->music_jumpsec(ch,sec);
+    }
+}
+
+void user_rttask_musname_get(task_music_info_t *music_info,uint8_t ch){
+    unsafe{
+        i_user_flash->rttask_nameinfo_get(*music_info,ch);
+    }
+}
+
+void user_rttask_musname_put(task_music_info_t *music_info,uint8_t ch){
+    unsafe{
+        i_user_flash->rttask_nameinfo_put(*music_info,ch);
     }
 }
 
