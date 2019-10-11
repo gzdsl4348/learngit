@@ -128,6 +128,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                         if(num == 0) ;
                         
                         //sys_timer :> t2;
+                        //text_debug("inc %d\n",music_inc);
                         len = audio_page_build(txbuff,g_t_val->ipaddr,
                                                          g_t_val->audio_format,
                                                          g_t_val->audio_type[ch],

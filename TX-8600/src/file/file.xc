@@ -10,6 +10,8 @@
 
 #include "sdram_def.h"
 
+#include "file_operation.h"
+
 extern kfifo_t upload_fifo;
 
 extern uint8_t file_scaning_flag;
@@ -21,7 +23,7 @@ void scan_musictosec_process(); //2MS
 
 #define FILE_SERVER_TRAINING  (50000)//0.5ms
 
-#define FILE_TRAINING_TICK  (100000)//2ms
+#define FILE_TRAINING_TICK  (100000)//1ms
 
 uint8_t file_busy_decode(){
     //debug_printf("file control busy \n");
@@ -211,16 +213,16 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             
             case if_fs.get_fcopy_progress(uint8_t & progress) -> int res:
             {
-                if(fopr.event==FOE_FCOPY || fopr.event==FOE_FMOVE)
-                {
-                    progress = get_fcopy_progress();
-                    res = FOR_SUCCEED;                    
-                }
-                else
-                {
-                    progress = 0;
-                    res = FOR_FAILED;
-                }
+                //if(fopr.event==FOE_FCOPY || fopr.event==FOE_FMOVE)
+                //{
+                progress = get_fcopy_progress();
+                res = FOR_SUCCEED;                    
+                //}
+                //else
+                //{
+                //    progress = 0;
+                //    res = FOR_FAILED;
+                // }
                 break;
             }
             case if_fs.fcopy_forced_stop() -> int res:
@@ -340,6 +342,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 data.error_code = fopr.error_code;
                 data.sdcard_status = get_sdcard_status();
                 data.scan_file_over = file_scaning_overf;
+                data.f_contorl_state = fopr.f_contorl_event;
                 file_scaning_overf = 0;
                 for(uint8_t i=0; i<MUSIC_CHANNEL_NUM; i++)
                 {
@@ -370,6 +373,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 {
                     fopr.event = FOE_IDLE;
                     fopr.result = FOR_IDLE;
+                    fopr.f_contorl_event = F_CONTORL_IDLE;
                 }
                 fopr.error_code = 0;//ADD:20181023
 
@@ -523,11 +527,14 @@ void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if
             {
 
                 sdcard_hot_swap_check();
+                
                 music_file_handle(c_sdram, sdram_state);
 
                 upload_handle(1);
-
+                                
                 scan_musictosec_process();
+
+                file_copy_process();
                 
                 tmr :> timeout;
                 timeout += FILE_TRAINING_TICK;

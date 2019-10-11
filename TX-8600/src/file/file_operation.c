@@ -4,10 +4,154 @@
 #include "mymalloc.h"
 #include "ff.h"
 #include "mystring.h"
+#include "file.h"
+
 
 extern void printfstr(TCHAR *str);
 
 extern FATFS fatfs;
+extern file_contorl_s file_contorl; 
+extern void update_music_filelist(uint8_t path[], uint8_t is_del);
+
+extern f_opr_mgr_t g_fopr_mgr;
+
+uint8_t file_contorl_init(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *pexit,uint8_t fwmode,uint8_t contorl_state){
+    uint8_t res;
+    // 初始化
+    file_contorl.bat_contorl_f = 1;
+    file_contorl.bat_progress = pcurpct;
+    file_contorl.bat_exit = pexit;
+    file_contorl.bat_mode = fwmode;
+    file_contorl.bat_state = contorl_state;
+    file_contorl.cpdsize = 0;
+    
+    for(uint8_t i=0;i<200/2;i++){
+        file_contorl.f_srcname[i*2] = psrc[i*2];
+        file_contorl.f_srcname[i*2+1] = psrc[i*2+1];
+        if((psrc[i*2]==0)&&(psrc[i*2+1]==0)){
+            break;
+        }
+    }
+    
+    for(uint8_t i=0;i<200/2;i++){
+        file_contorl.f_desname[i*2] = pdst[i*2];
+        file_contorl.f_desname[i*2+1] = pdst[i*2+1];
+        if((pdst[i*2]==0)&&(pdst[i*2+1]==0)){
+            break;
+        }
+    }
+
+    //wstrcpy((TCHAR*)file_contorl.f_srcname, (TCHAR*)psrc);
+    //wstrcpy((TCHAR*)file_contorl.f_desname, (TCHAR*)pdst);
+    
+    *pcurpct = 0;          //更新百分比
+    //
+    if(fwmode&0x01)
+        fwmode=FA_CREATE_ALWAYS;//覆盖存在的文件
+    else
+        fwmode=FA_CREATE_NEW;//不覆盖
+    
+    res=f_open(&file_contorl.src_file,(const TCHAR*)psrc,FA_READ|FA_OPEN_EXISTING);   //打开只读文件
+    if(res==0)res=f_open(&file_contorl.des_file,(const TCHAR*)pdst,FA_WRITE|fwmode);  //第一个打开成功,才开始打开第二个
+    
+    if(res==0)//两个都打开成功了
+    {
+        file_contorl.totsize=file_contorl.src_file.fsize;
+        // 文件容量判断
+        //debug_printf("cl tol %d size %d\n",file_contorl.src_file.fsize/512);
+        if((fatfs.free_clust-2)<(file_contorl.src_file.fsize/512/64)){//>(fatfs.n_fatent-2)){
+            res = 0xFF;
+        }
+    }
+    if(res){ // 打开失败 关闭
+        file_contorl.bat_contorl_f = 0;
+        f_close(&file_contorl.src_file);
+        f_close(&file_contorl.des_file);
+    }
+    return res;
+}
+
+#define CONTORL_FILESIZE 8*1024
+
+void file_copy_process(){
+    static uint8_t tim=0;
+    tim++;
+    if(tim<16) return; //32ms
+    tim=0;
+
+    uint8_t res;
+    uint8_t *fbuf = NULL;
+    uint16_t br = 0;
+    uint16_t bw = 0;
+    uint16_t curpct;
+    fbuf=(uint8_t*)mymalloc(CONTORL_FILESIZE);
+    if(fbuf==NULL) return;
+    if(file_contorl.need_ack){
+        if(g_fopr_mgr.item[0].result==FOR_IDLE){
+            
+            g_fopr_mgr.item[0].result = FOR_SUCCEED;
+            //
+            if(file_contorl.bat_state == FOE_FMOVE){
+                g_fopr_mgr.item[0].f_contorl_event = F_MOVE_SUCCEED;
+            }else{
+                g_fopr_mgr.item[0].f_contorl_event = F_COPY_SUCCEED;
+            }
+            file_contorl.need_ack=0;
+        }
+        myfree(fbuf);
+        return;
+    }
+        
+    if(file_contorl.bat_contorl_f){
+        //开始复制
+        res=f_read(&file_contorl.src_file,fbuf,CONTORL_FILESIZE,(UINT*)&br);  //源头读出512字节
+        if(res==0 && br!=0){
+            res=f_write(&file_contorl.des_file,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
+            //
+            file_contorl.cpdsize+=bw;
+            curpct=(file_contorl.cpdsize*100)/file_contorl.totsize;
+            *file_contorl.bat_progress = curpct;//更新百分比
+            
+            //text_debug("\n\nbat pro %d\n\n",*file_contorl.bat_progress);
+            //
+            if(*file_contorl.bat_exit)
+            {
+                res=0XFF;//强制退出
+                *file_contorl.bat_exit=0;
+            }   
+        }
+        // 复制完成
+        if(res || bw<br || (br==0)){        
+            myfree(fbuf);
+            text_debug("\n\nbat over %d %d %d \n\n",res,bw,br);
+            file_contorl.bat_contorl_f=0;
+            // 操作失败, 删除目标文件
+            if(res){
+                mf_unlink(file_contorl.f_desname);
+            }else{
+                // 操作成功                
+
+                text_debug("\n\nbat succse %d %d %d %d \n\n",res,bw,br,file_contorl.bat_state);
+                f_close(&file_contorl.src_file);
+                f_close(&file_contorl.des_file);
+
+                if(file_contorl.bat_state == FOE_FMOVE){           
+                    //删除源文件
+                    mf_unlink(file_contorl.f_srcname);
+                    update_music_filelist(file_contorl.f_srcname, 1);
+                }
+                
+                update_music_filelist(file_contorl.f_desname, 0);
+                file_contorl.need_ack=1;
+            }
+            //
+            f_close(&file_contorl.src_file);
+            f_close(&file_contorl.des_file);
+        }
+    }    
+    myfree(fbuf);
+}
+
 
 //fwmode : bit0 - 0 不覆盖
 //                1 覆盖

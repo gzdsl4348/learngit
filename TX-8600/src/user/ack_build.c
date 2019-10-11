@@ -310,9 +310,11 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     #else
     xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = host_info.regiser_state;
     //
-    xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = 100;//host_info.regiser_days;
-    xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = 0;//host_info.regiser_days>>8;
+    
+    xtcp_tx_buf[AC_LOGIN_RES_DAY_B] = host_info.regiser_days;
+    xtcp_tx_buf[AC_LOGIN_RES_DAY_B+1] = host_info.regiser_days>>8;
 
+    /*
     if(user_id==1){
         xtcp_tx_buf[AC_LOGIN_RES_STATE_B] = 0;
     }
@@ -341,6 +343,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     }
 
     xtcp_debug_printf("uid %d\n",user_id);
+    */
     #endif
 
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_MACHCODE_B],g_sys_val.maschine_code,10);
@@ -1299,6 +1302,20 @@ uint16_t sync_hostip_build(uint8_t mac[],uint8_t *ipaddr){
 }
 
 //==========================================================================================
+// 同步主机IP 协议  BF0B
+//==========================================================================================
+uint16_t sync_ipinfo_build(uint8_t mac[]){
+    xtcp_tx_buf[SYSIP_STATE] = 0;
+    memcpy(&xtcp_tx_buf[SYSIP_DESMAC],mac,6);
+    xtcp_tx_buf[SYSIP_SETFLAG]=3;
+    memcpy(&xtcp_tx_buf[SYSIP_HOSTIP],host_info.ipconfig.ipaddr,4);
+    xtcp_tx_buf[SYSIP_DHCPEN]=1;
+    
+    return build_endpage_decode(SYSIP_DATLEN,SYSSET_IPSET_CMD,g_sys_val.con_id_tmp);
+}
+
+
+//==========================================================================================
 // 备份控制 协议  B90A
 //==========================================================================================
 uint16_t backup_contorl_build(uint8_t state,uint8_t *data){
@@ -1659,8 +1676,11 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
     xtcp_tx_buf[RTTASK_INFO_PLAYSTATE] = 2;
     if(timetask_now.task_musicplay[ch].play_state)
         xtcp_tx_buf[RTTASK_INFO_PLAYSTATE] = 1;
-    
+
     xtcp_tx_buf[RTTASK_INFO_CDSTATE] = 6;
+    if(g_sys_val.rttask_musicset_f[ch]){
+        xtcp_tx_buf[RTTASK_INFO_CDSTATE]=7;
+    }
 
     xtcp_tx_buf[RTTASK_INFO_MUSTYPE] = 4;
 

@@ -680,6 +680,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	sys_info_init();	    //系统信息 列表 获取及初始化
     ds1302_init();          //ds1302 及日期初始化
     maschine_code_init();   //生成机器码
+    divboot_registerday_decode(); //离线注册日期判断
     if_fs.setwav_mode(host_info.wav_mode);  // 设置wav模式
 	//----------------------------------------------------------------------
 	// Config xtcp ethernet info
@@ -821,7 +822,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 }
                 else
                 {
-                    debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
+                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
                     data.error_code,data.scan_file_over);
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;
@@ -844,7 +845,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     if(data.scan_file_over){
                         mes_send_listinfo(MUSICLIS_INFO_REFRESH,0);
                     }
-                    if(data.result!=255){
+                    if(data.result!=FOR_IDLE && data.f_contorl_state==F_CONTORL_IDLE){
+                        file_contorl_ack_decode(data.error_code);
+                    }
+                    if(data.result!=FOR_IDLE && data.f_contorl_state!=F_CONTORL_IDLE){
                         file_bat_contorl_event(data.error_code);
                         file_contorl_ack_decode(data.error_code);
                     }
@@ -863,10 +867,11 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             {            
                 static uint8_t tmp_5ms=0;
                 tmp_5ms++;
-                if(tmp_5ms>=10)
+                if(tmp_5ms>=10){
                     tmp_5ms=0;
-                tftp_tmr_poll(i_xtcp, tmp_5ms);   
-                //tftp_ack_delay(i_xtcp);
+                    tftp_tmr_poll(i_xtcp, 5);
+                }   
+                tftp_ack_delay(i_xtcp);
                 break;
             }
         			

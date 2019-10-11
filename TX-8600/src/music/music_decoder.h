@@ -30,7 +30,7 @@ extern "C" {
 
 #define MP3DEC_CHANNAL_NUM  MUSIC_CHANNEL_NUM
 
-#define MP3_DECODER_ERROR_MAX_CNT   50
+#define MP3_DECODER_ERROR_MAX_CNT   50*100
 
 // 每个WAV数据包长度
 #define WAV_PACK_SAMPLENUM      512

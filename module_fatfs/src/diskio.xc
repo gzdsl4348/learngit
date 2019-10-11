@@ -63,6 +63,12 @@ DSTATUS disk_initialize (
     DSTATUS stat=RES_PARERR;
     BYTE result;
 
+    text_debug("disk init in\n");
+    
+    unsafe{
+    result = sd_hi->sd_initialize();
+    }
+    /*
     switch (pdrv) {
     case SD :
 
@@ -82,6 +88,18 @@ DSTATUS disk_initialize (
     case USB :
         break;
     }
+    */
+        if (result){
+            stat = RES_ERROR;
+        }
+        else{
+            stat = RES_OK;
+        }
+
+    
+    text_debug("disk init out %d\n",stat);
+
+    
     return stat ;
 }
 

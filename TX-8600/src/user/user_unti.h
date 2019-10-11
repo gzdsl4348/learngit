@@ -133,6 +133,7 @@ typedef struct g_sys_val_t{
     uint16_t music_task_id[MAX_MUSIC_CH];
     uint8_t play_error_inc[MAX_MUSIC_CH];
     uint8_t play_rttask_f[MAX_MUSIC_CH];
+    uint8_t rttask_musicset_f[MAX_MUSIC_CH];
     //-------------------------------------
     date_info_t today_date;     //今日日期
     //----------------------------------------

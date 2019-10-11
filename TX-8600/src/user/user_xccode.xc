@@ -400,6 +400,7 @@ uint8_t user_file_progress(uint8_t *progress){
     uint8_t tmp,tmp1;
     tmp = i_fs_user->get_fcopy_progress(tmp1);
     *progress = tmp1;
+    
     return tmp;
     }//unsafe
 }

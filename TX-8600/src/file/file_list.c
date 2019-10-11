@@ -791,11 +791,9 @@ void update_music_filelist(uint8_t path[], uint8_t is_del)
     dir_tbl_t *dir_tbl_sdram = mymalloc(F_DIR_TBL_BYTE_SIZE);
     music_tbl_t *music_tbl = mymalloc(F_MUSIC_TBL_BYTE_SIZE);
 
-    debug_printf("updat in\n");
-
     if(dir_tbl_sdram==NULL || music_tbl==NULL || dir_name==NULL || music_name==NULL)
     {
-        debug_printf("update_music_filelist malloc failed\n");
+        //text_debug("update_music_filelist malloc failed\n");
         goto FUN_END;
     }
         
@@ -804,7 +802,7 @@ void update_music_filelist(uint8_t path[], uint8_t is_del)
 
     if(wstrlen((TCHAR*)dir_name) != 0) i++;
     if(wstrlen((TCHAR*)music_name) != 0) i++;
-    debug_printf("update_music_filelist %d level\n", i);
+    //text_debug("update_music_filelist %d level\n", i);
     if(i == 0)          // 错误路径
     {
         goto FUN_END;
@@ -846,7 +844,8 @@ filelist_layer_2:   //二层路径处理逻辑
     //读取对应音乐文件夹的音乐文件夹列表
     fl_read_flielist(dir_sector, (uint8_t*)music_tbl, F_MUSIC_TBL_BYTE_SIZE);
     
-    DBG_PRINTF("update_music_filelist sector[%d] music_num[%d]\n", dir_sector, *(unsigned int*)music_tbl);
+    
+    //text_debug("update_music_filelist sector[%d] music_num[%d]\n", dir_sector, *(unsigned int*)music_tbl);
     
     //查找对应文件的音乐文件index
     for(i=0; i<music_tbl->num; i++)
@@ -866,7 +865,7 @@ filelist_layer_2:   //二层路径处理逻辑
     }else{
         music_totsec=0;
     }
-    DBG_PRINTF("music_totsec[%d] music_index[%d]\n", music_totsec, music_index);
+    text_debug("music_totsec[%d] music_index[%d] type %d\n", music_totsec, music_index,type);
     //音乐列表中找不到该音乐信息
     if(music_index == -1)
     {
@@ -882,7 +881,7 @@ filelist_layer_2:   //二层路径处理逻辑
                 if(++music_tbl->num)
                     dir_tbl_sdram->m[dir_index].music_num_full = 0;
                 dir_tbl_sdram->m[dir_index].music_num = music_tbl->num;
-                DBG_PRINTF("  add new music_totsec dir_music_num:%d\n", dir_tbl_sdram->m[dir_index].music_num);
+                text_debug("  add new music_totsec dir_music_num:%d\n", dir_tbl_sdram->m[dir_index].music_num);
             }
             else
             {

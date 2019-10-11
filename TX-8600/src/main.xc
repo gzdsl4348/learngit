@@ -183,7 +183,7 @@ int main()
         
         on tile[0]:
         {
-            set_core_high_priority_on();
+            set_core_fast_mode_on();
             file_process(c_sdram[SDRAM_FILE_SYSTEM], c_faction,sdif[0]);
         }
         

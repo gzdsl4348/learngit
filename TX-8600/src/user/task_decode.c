@@ -379,20 +379,20 @@ void task_check_and_play(){
                     break;
                 }
             }
-            // 
-            if(g_sys_val.file_bat_contorl_s==0){
+            // 处理文件时可播放音乐 
+            //if(g_sys_val.file_bat_contorl_s==0){
                 g_sys_val.music_task_id[play_num] = timetask_list.today_timetask_head->id;
                 g_sys_val.task_wait_state[play_num] = 1;
                 g_sys_val.play_rttask_f[play_num] = 0; // 定时任务播放
                 g_sys_val.play_ok = 1;
-            }
+            //}
             //--------------------------------------------------------------
             // 切换   下一个今日任务
             next_task_play:
             timetask_list.today_timetask_head = timetask_list.today_timetask_head->today_next_p;
-            if(g_sys_val.file_bat_contorl_s){
+            //if(g_sys_val.file_bat_contorl_s){
                 user_disptask_refresh();
-            }
+            //}
             continue;
         }
         // 没有任务执行
@@ -2291,6 +2291,12 @@ void rttask_musiclist_set_recive(){
         // 判断是否有任务执行
         for(ch=0;ch<MAX_MUSIC_CH;ch++){
             if(timetask_now.ch_state[ch]!=0xFF && timetask_now.task_musicplay[ch].task_id==task_id && timetask_now.task_musicplay[ch].rttask_f){
+                g_sys_val.rttask_musicset_f[ch]=1;
+                for(uint8_t i=0;i<MAX_SEND_RTTASKINFO_NUM;i++){
+                    if(rttask_info_list[i].conn.id!=0 && (rttask_info_list[i].task_id==task_id)){
+                        rttask_info_list[i].need_send=1;
+                    }
+                }
                 timetask_now.task_musicplay[ch].music_tol = g_tmp_union.rttask_dtinfo.music_tol;
                 //---------------------------------------------------------------------------------------------------------------------------------
                 // 没有歌曲停止音乐播放
@@ -2533,6 +2539,7 @@ void rttask_infosend_process(){
             rttask_host_info_send(rttask_info_list[i].task_id,i);
         }
     }
+    memset(g_sys_val.rttask_musicset_f,0x00,MAX_MUSIC_CH);
 }
 
 void task_secinc_process(){

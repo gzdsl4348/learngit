@@ -205,7 +205,7 @@ void music_file_config_recive(){
     uint32_t *patch_tol;
     dir_info_t *dir_info;
     uint8_t i;
-    task_music_stop_all();
+    //task_music_stop_all();
     if(g_sys_val.file_bat_contorl_s)
         goto file_config_end;
 //    xtcp_debug_printf("file contorl %d\n",xtcp_rx_buf[FILECON_CONTORL_B]);
@@ -330,8 +330,8 @@ void bat_contorlobj_init(){
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].bat_state=1;
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].succeed_num=0;
     g_sys_val.bat_contorlobj[g_sys_val.bat_contorling].fail_num =0;
-    //debug_printf("\ninit bat num %d id %x %x %x %x %x %x\n\n",g_sys_val.bat_contorling,xtcp_rx_buf[POL_MAC_BASE],xtcp_rx_buf[POL_MAC_BASE+1],xtcp_rx_buf[POL_MAC_BASE+2],xtcp_rx_buf[POL_MAC_BASE+3],
-    //                                                    xtcp_rx_buf[POL_MAC_BASE+4],xtcp_rx_buf[POL_MAC_BASE+5]);
+    xtcp_debug_printf("\ninit bat num %d id %x %x %x %x %x %x\n\n",g_sys_val.bat_contorling,xtcp_rx_buf[POL_MAC_BASE],xtcp_rx_buf[POL_MAC_BASE+1],xtcp_rx_buf[POL_MAC_BASE+2],xtcp_rx_buf[POL_MAC_BASE+3],
+                                                        xtcp_rx_buf[POL_MAC_BASE+4],xtcp_rx_buf[POL_MAC_BASE+5]);
 }
 
 void bat_contorlobj_add(uint8_t state){
@@ -359,7 +359,7 @@ void music_batrechk_recive(){
 void music_bat_contorl_recive(){
     if(xtcp_rx_buf[MUSIC_BAT_TOL_NUM]>25)
         return;
-    task_music_stop_all();
+    //task_music_stop_all();
     // 停止操作
     if(xtcp_rx_buf[MUSIC_BAT_CONTORL]==3){
         //xtcp_debug_printf("bat contorl stop\n");
@@ -502,7 +502,7 @@ void file_bat_contorl_event(uint8_t error_code){
     if(g_sys_val.file_bat_contorl_s){ 
         //-----------------------------------------------------------------------------------------------------
         // 文件操作错误
-        //xtcp_debug_printf("folar error %d\n",error_code);
+        xtcp_debug_printf("folar error %d\n",error_code);
         if(error_code!=0){
             file_state=1;
         }
@@ -644,7 +644,6 @@ void bat_filecontorl_resend_tim(){
             user_sending_len = file_progress_build(0,file_process,g_sys_val.file_bat_id,
                                g_sys_val.file_bat_nametmp,g_sys_val.file_bat_srcpatch);
             user_xtcp_send(g_sys_val.file_bat_conn,g_sys_val.file_bat_could_f);
-            //xtcp_debug_printf("send %d\n",file_process);
         }
     }
     //---------------------------------------------------------------

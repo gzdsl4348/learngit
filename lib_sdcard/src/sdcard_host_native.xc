@@ -123,6 +123,36 @@ typedef unsigned char RESP[17]; // type for SD responses
 #define CMD55  (55)    /* APP_CMD */
 #define CMD58  (58)    /* READ_OCR */
 
+static int gs_timeout_tick = 4000000;
+
+static void sync_sdclk(buffered out port:32 p_sdclk,
+           [[bidirectional]] buffered port:8 p_sdcmd,
+           [[bidirectional]] buffered port:32 p_sddata,
+                             clock cb)
+{
+    stop_clock(cb);
+    
+    setc(p_sddata,0x0);
+    setc(p_sddata,0x8);
+    setc(p_sddata,0x200f);
+    settw(p_sddata,DAT_WIDTH);
+
+    setc(p_sdcmd,0x0);
+    setc(p_sdcmd,0x8);
+    setc(p_sdcmd,0x200f);
+    settw(p_sdcmd,CMD_WIDTH);
+
+    setc(p_sdclk,0x0);
+    setc(p_sdclk,0x8);
+    setc(p_sdclk,0x200f);
+    settw(p_sdclk,CLK_WIDTH);
+    
+    start_clock(cb);    
+    
+    p_sdclk <:  SDCLK_8CLOCKS;
+    sync(p_sdclk);       
+
+}
 
 /*-----------------------------------------------------------------------
 * Send a command token to the card and receive a response
@@ -137,7 +167,6 @@ static unsigned char send_cmd(unsigned char Cmd,
            [[bidirectional]] buffered port:8 p_sdcmd,
            [[bidirectional]] buffered port:32 p_sddata,
                              clock cb){
-
 
     unsigned int i=0, Crc0 = 0;
     unsigned int RespStat, RespLen;
@@ -160,12 +189,15 @@ static unsigned char send_cmd(unsigned char Cmd,
     crc32(Crc0, 0, CRC7_POLY); // flush crc engine
     Crc0 |= 0x80; // build last byte of command: crc7 and stop bit
 
+    sync(p_sdclk);
+
     /*Trasmit Command*/
     p_sdcmd <: i;
     p_sdclk <: SDCLK_8CLOCKS;
 
     /*Trasmit Argument*/
     p_sdcmd <: >>arg;
+
     p_sdclk <: SDCLK_8CLOCKS;
 
     p_sdcmd <: >>arg;
@@ -176,10 +208,11 @@ static unsigned char send_cmd(unsigned char Cmd,
 
     p_sdcmd <: >>arg;
     p_sdclk <: SDCLK_8CLOCKS;
-
+    
     /*Trasmit CRC*/
     p_sdcmd <: Crc0;
     p_sdclk <: SDCLK_8CLOCKS;
+    
     sync(p_sdclk);
 
     i = 0;
@@ -194,10 +227,14 @@ static unsigned char send_cmd(unsigned char Cmd,
         start_clock(cb);
 
         /* Check for Start Bit of Response*/
-        i = 4000000;
+        i = gs_timeout_tick;
         do{
             p_sdclk <: 0; p_sdclk <: 1; p_sdcmd :> >>R;
-            if(!i--) return MD_ERROR; // timeout
+            if(!i--) // timeout
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);    
+                return MD_ERROR;
+            }
         }while(R == 0xFF);
 
         /* Collect the Response Packets*/
@@ -225,6 +262,7 @@ static unsigned char send_cmd(unsigned char Cmd,
             p_sdcmd :> Resp[i];
             i++;
         }while (i<RespLen);
+
     }// Response Read End
 
     /* Command Response Check*/
@@ -239,27 +277,48 @@ static unsigned char send_cmd(unsigned char Cmd,
             crc8shr(Crc0, Resp[0], CRC7_POLY);
             i = bitrev(Resp[0]) >> 24;
             if(i != Cmd)
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);  
                 return MD_ERROR;
+            }
             Arg = (Resp[4] << 24) | (Resp[3] << 16) | (Resp[2] << 8) | Resp[1];
             crc32(Crc0, Arg, CRC7_POLY);
             Arg = bitrev(Arg); // if R1: card status; if R6: RCA; if R7: voltage accepted, echo pattern
             crc32(Crc0, 0, CRC7_POLY); // flush crc engine
-            if(Crc0 != (Resp[5] & 0x7F))
-                return MD_ERROR; //crc error
-            if((Resp[5] & 0x80) == 0)
-                return MD_ERROR; //end bit error
+            if(Crc0 != (Resp[5] & 0x7F)) //crc error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);     
+                return MD_ERROR;
+            }
+            if((Resp[5] & 0x80) == 0)//end bit error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);
+                return MD_ERROR;
+            }            
             break;
         case R2: // 136 bit response
-            if(0xFC != Resp[0])
-                return MD_ERROR; // R2 beginning error
-            if(0x80 != (Resp[16] & 0x80))
-                return MD_ERROR; // R2 end bit error
+            if(0xFC != Resp[0])// R2 beginning error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);
+                return MD_ERROR;
+            }            
+            if(0x80 != (Resp[16] & 0x80))// R2 end bit error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);    
+                return MD_ERROR;
+            }            
             break;
         case R3:
-            if(0xFC != Resp[0])
-                return MD_ERROR; // R3 beginning error
-            if(0xFF != Resp[5])
-                return MD_ERROR; // R3 end byte error
+            if(0xFC != Resp[0])// R3 beginning error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);
+                return MD_ERROR;
+            }            
+            if(0xFF != Resp[5])// R3 end byte error
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb); 
+                return MD_ERROR;
+            }            
             break;
     }
 
@@ -274,10 +333,14 @@ static unsigned char send_cmd(unsigned char Cmd,
     // Wait for busy state clearing.
     if(R1B == RespType)
     {
-        i = 4000000;
+        i = gs_timeout_tick;
         do {
-           p_sdclk <: 0; p_sdclk <: 1;p_sddata :> Dat;
-             if(!i--) return MD_ERROR; // busy timeout
+            p_sdclk <: 0; p_sdclk <: 1;p_sddata :> Dat;
+            if(!i--)// busy timeout
+            {
+                sync_sdclk(p_sdclk, p_sdcmd, p_sddata, cb);
+                return MD_ERROR;
+            }             
         } while(!(Dat & 0x8));//0x1
     }
 
@@ -331,7 +394,7 @@ static unsigned char read_datablock(int DataBlocks,
         start_clock(cb);
 
         /* Check for Start Bit of Data Packet*/
-       int i = 4000000;
+       int i = gs_timeout_tick;
         do
         {
            p_sdclk <: 0;p_sdclk <: 1; p_sddata :>  >> R;
@@ -517,7 +580,7 @@ static unsigned char write_datablock(int DataBlocks,
         start_clock(cb);
         
         //CRC token start detection
-        i = 4000000;
+        i = gs_timeout_tick;
         do{
             p_sdclk <: 0; p_sdclk <: 1;p_sddata :> R;
             if(!i--) 
@@ -558,7 +621,7 @@ static unsigned char write_datablock(int DataBlocks,
         }
         
         // Wait for busy state clearing.
-        i = 4000000;
+        i = gs_timeout_tick;
         do {
             p_sdclk <: 0; p_sdclk <: 1; p_sddata :> Dat;
             if(!i--)
@@ -594,19 +657,18 @@ static int wait_ready(unsigned char timeout,
             [[bidirectional]]   buffered port:8 p_sdcmd,
             [[bidirectional]]   buffered port:32 p_sddata,
                                 clock cb){
-
-RESP Resp;
-unsigned int tmr;
+    RESP Resp;
+    unsigned int tmr;
 
     if(!(sd_reg.CardRCA)) return 0;
-    tmr = (timeout * 4000000);
+    tmr = (timeout * gs_timeout_tick);
     do
     {
-     if(MD_OK == send_cmd(CMD13, sd_reg.CardRCA, R1, Resp,p_sdclk,p_sdcmd,p_sddata,cb))
-             if (!(tmr--)) break;
+        if(MD_OK == send_cmd(CMD13, sd_reg.CardRCA, R1, Resp,p_sdclk,p_sdcmd,p_sddata,cb))
+            if (!(tmr--)) break;
     }while((Resp[3] & 0x70) != 0x10);
 
-return tmr? 1: 0;
+    return tmr? 1: 0;
 }
 
 /******* private functions ********/
@@ -621,21 +683,28 @@ MDSTATUS initialize(sd_host_reg_t &sd_reg,
   [[bidirectional]] buffered port:32 p_sddata,
                     clock cb){
 
-  unsigned int i=0, BlockLen;
-  RESP Resp;
-  int loop_count = 6;
-  unsigned int retval;
+    unsigned int i=0, BlockLen;
+    RESP Resp;
+    int loop_count = 6;
+    unsigned int retval;
 
 
     if (Stat & ST_NODISK) return Stat;
+    
+    // Changing the SD Clock to Transfer Rate
+    stop_clock(cb);
+    configure_clock_rate(cb, 100, INIT_CLOCK);
+    start_clock(cb);
+
+    gs_timeout_tick = 16000*20;
 
     /*Provide 74 Clocks to wake-up SD Card.*/
     do{
-     p_sdclk<: SDCLK_16CLOCKS;
+        p_sdclk<: SDCLK_16CLOCKS;
     }while(loop_count--);
 
     sync(p_sdclk);
-
+    
     /* initialize card*/
     sd_reg.CardRCA = 0;
     /* Put the card into idle state */
@@ -643,37 +712,40 @@ MDSTATUS initialize(sd_host_reg_t &sd_reg,
 
     /*---- Card is 'idle' state ----*/
 
-    if (MD_OK !=send_cmd(CMD8, 0x1AA, R7, Resp,p_sdclk,p_sdcmd,p_sddata,cb)) return ST_NOINIT; /* SDC Ver2 */
+    if (MD_OK != send_cmd(CMD8, 0x1AA, R7, Resp,p_sdclk,p_sdcmd,p_sddata,cb)) return ST_NOINIT; /* SDC Ver2 */
     retval = bitrev(Resp[1] | (Resp[2] << 8) | (Resp[3] << 16) | (Resp[4] << 24));
 
     /* The card can work at vdd range of 2.7-3.6V only */
     /* The card can be  SDHC/XC or SDSC. */
     if ((retval & 0xFFF) == 0x1AA) /* SDC Ver2 */
     {
-      /* ACMD41 */
-       i = 4000000;
+        /* ACMD41 */
+        i = gs_timeout_tick;
+      
         do /* Wait while card is busy state (use ACMD41 with HCS bit) */
         {
             if (MD_OK != send_cmd(CMD55, 0, R1, Resp,p_sdclk,p_sdcmd,p_sddata,cb))return ST_NOINIT ;
             if (MD_OK != send_cmd(CMD41, 0x50FF8000, R3, Resp,p_sdclk,p_sdcmd,p_sddata,cb))return ST_NOINIT;
-         if(!i--) return ST_NOINIT; // busy timeout
+            if(!i--) return ST_NOINIT; // busy timeout
         } while((Resp[1] & 1) == 0); // repeat while busy
 
-      sd_reg.CCS = ((Resp[1] & 2)) ? 1 : 0;
-      CardType = (sd_reg.CCS)? CT_SD2|CT_BLOCK : CT_SD2;
+        sd_reg.CCS = ((Resp[1] & 2)) ? 1 : 0;
+        CardType = (sd_reg.CCS)? CT_SD2|CT_BLOCK : CT_SD2;
 
     }
     else /* SDC Ver1 */
     {
-    /* ACMD41 */
-     i = 4000000;
+        /* ACMD41 */
+        i = gs_timeout_tick;
+    
         do /* Wait while card is busy state (use ACMD41 with HCS bit) */
         {
             if (MD_OK != send_cmd(CMD55, 0, R1, Resp,p_sdclk,p_sdcmd,p_sddata,cb))return ST_NOINIT;
             if (MD_OK != send_cmd(CMD41, 0x00FF8000, R3, Resp,p_sdclk,p_sdcmd,p_sddata,cb))return ST_NOINIT;
-         if(!i--) return ST_NOINIT; // busy timeout
+            if(!i--) return ST_NOINIT; // busy timeout
         } while((Resp[1] & 1) == 0); // repeat while busy
-    CardType = CT_SD1;
+        
+        CardType = CT_SD1;
     }
 
     /* Save OCR */
@@ -733,6 +805,8 @@ MDSTATUS initialize(sd_host_reg_t &sd_reg,
     configure_clock_rate(cb, 100,TF_CLOCK);
     start_clock(cb);
 
+    gs_timeout_tick = 4000000;
+    
     Stat= ST_INIT;
     return Stat;
 }
@@ -849,20 +923,26 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
     while(1){
             select {
             case i[int x].sd_initialize(void)->unsigned char status:{
+                Stat = ST_NOINIT;
+                // Changing the SD Clock to Transfer Rate            
                 status = initialize(sd_reg,p_sdclk,p_sdcmd,p_sddata,sdClkblk);
             }
             break;
             case i[int x].sd_status(unsigned char drv)->unsigned char status: {
 
                 //p_sdcarddetect:> CardDetect;
-                if ((CardDetect & 0x1) != 0) 
+                /*if ((CardDetect & 0x1) != 0) 
                 {
                     Stat |= (ST_NODISK | ST_NOINIT);
                 }
                 else
                 {
                     Stat &= ~ST_NODISK;
-                }
+                }*/
+                if (Stat & ST_NOINIT) 
+                    Stat |= ST_NOINIT;
+                else if(send_cmd(CMD13, sd_reg.CardRCA, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
+                    Stat |= ST_NOINIT;  
                 status = Stat;
             }
             break;

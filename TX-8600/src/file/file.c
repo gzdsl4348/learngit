@@ -21,6 +21,9 @@ extern void scan_musictosec_init();
 extern void scan_musictosec_clear();
 
 FATFS fatfs;
+
+file_contorl_s file_contorl={0}; 
+
 int my_fatfs_init()
 {
     int res= f_mount(0, &fatfs);
@@ -66,9 +69,8 @@ void get_sdcard_size(unsigned long *tol_mb,unsigned long *free_mb){
 
 void sdcard_hot_swap_check()
 {
-    if(disk_status(0) != 0)
+    if(disk_status(0) != 0)// && g_fopr_mgr.sdcard_status != SD_CARD_NO_FOUND)
     {
-        //debug_printf("SD CARD not found\n");
         g_fopr_mgr.sdcard_status = SD_CARD_NO_FOUND;
     }
     
@@ -158,6 +160,7 @@ void fopr_handle()
         {
             error = mf_unlink(p_fopr_file->fsrc);
             update_music_filelist(p_fopr_file->fsrc, 1);
+            pitem->f_contorl_event = F_DLE_SUCCEED;
             break;
         }
         case FOE_FRENAME:
@@ -165,20 +168,27 @@ void fopr_handle()
             //debug_printf("\n\n rename %d\n\n",error);
             error = mf_rename(p_fopr_file->fsrc, p_fopr_file->fdes);
             update_music_filelist(p_fopr_file->fdes, 0);
+            pitem->f_contorl_event = F_RENAME_SUCCEED;
             break;
         }
         case FOE_FCOPY:
-        {
+        {    
+            error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FCOPY);
+
+            #if 0
             error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
             if(error != 0)// 操作失败, 删除目标文件
             {
                 mf_unlink(p_fopr_file->fdes);
             }
             update_music_filelist(p_fopr_file->fdes, 0);
+            #endif
             break;
         }        
         case FOE_FMOVE:
         {
+            error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FMOVE);
+            #if 0
             error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
             if(error != 0)// 操作失败, 删除目标文件
             {
@@ -191,6 +201,7 @@ void fopr_handle()
                 update_music_filelist(p_fopr_file->fdes, 0);
                 update_music_filelist(p_fopr_file->fsrc, 1);
             }
+            #endif
             break;
         }  
         case FOE_FUPLOAD:
@@ -391,3 +402,4 @@ void upload_handle(int interval_ms)
     }
 
 }
+

@@ -215,6 +215,20 @@
 #define POL_DAT_BASE    (POL_NULL_BASE+9)
 
 //====================================================================================================
+// BF0B
+//====================================================================================================
+#define SYSIP_STATE          (POL_DAT_BASE)  //1
+#define SYSIP_DESMAC         (SYSIP_STATE+1)  //6
+#define SYSIP_SETFLAG        (SYSIP_DESMAC+6)  //1
+#define SYSIP_HOSTIP         (SYSIP_SETFLAG+1)  //4
+#define SYSIP_DHCPEN         (SYSIP_HOSTIP+4)  //1
+#define SYSIP_IPADR          (SYSIP_DHCPEN+1)  //4
+#define SYSIP_MASK           (SYSIP_IPADR+4)  //4
+#define SYSIP_GATEWAY        (SYSIP_MASK+4)  //4
+
+#define SYSIP_DATLEN         (SYSIP_GATEWAY+4)  //4
+
+//====================================================================================================
 // 云服务心跳包
 //====================================================================================================
 #define CLD_HEART_IP        (POL_DAT_BASE)      // 4主机本地IP

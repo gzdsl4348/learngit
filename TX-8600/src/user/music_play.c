@@ -118,9 +118,6 @@ void task_music_stop(uint8_t ch){
     //xtcp_debug_printf("music stop\n");
 }
 
-void taskmusic_name_get(){
-    uint8_t i,j,ch_tmp;
-}
 
 void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
     xtcp_debug_printf("\n\n\nmusic play \n\n");

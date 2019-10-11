@@ -96,6 +96,9 @@ void account_list_updat();
 
 void backup_sendmes_10hz();
 
+void divboot_registerday_decode();
+
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

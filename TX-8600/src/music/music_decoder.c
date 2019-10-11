@@ -181,6 +181,7 @@ static unsigned char mp3_get_info(TCHAR *pname, MP3_Info *p_info)
     {
         f_open(fmp3,(const TCHAR*)pname,FA_READ);//打开文件
         res=f_read(fmp3,(char*)buf,buf_size,&br);
+        //text_debug("get mp3 sec ok %d\n",res);
         if(res==0)//读取文件成功,开始解析ID3V2/ID3V1以及获取MP3信息
         {
             p_info->datastart = get_mp3_datastart(buf, buf_size);
@@ -352,7 +353,9 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     }
     
     //清空数据
+    uint8_t tmp=p_dev->music_inc;
     memset(p_dev, 0, sizeof(music_decoderdev_t));
+    p_dev->music_inc = tmp;
     
     uint8_t type=mf_typetell(f_name);    //获得类型
       //
@@ -812,6 +815,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                 if(file_buff_left<pack_allsample_len && p_dev->file_over_flag)
                 {
                     p_dev->file_over_flag = 0;
+                    p_dev->music_inc++;
                     p_dev->decoder_status = MUSIC_DECODER_FILE_END;
                 }
                 // 取帧完成
@@ -867,13 +871,14 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
     			{
                     //没找到帧同步字符
                     //TUDO:设置状态标志，可以找下一帧
-                    debug_printf("MP3FindSyncWord failed [%d]\n", ch);
-                    debug_printf("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
+                    text_debug("MP3FindSyncWord failed [%d]\n", ch);
+                    text_debug("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
                                  p_dev->mp3_frame_num, p_dev->file_buff_for_used,
                                  p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
                                  p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
                                  file_buff_left);
-
+                    
+                text_debug("inc %d\n",p_dev->music_inc);
                     if(p_dev->file_over_flag)
                     {
                         p_dev->file_over_flag = 0;
@@ -883,32 +888,37 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                     else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
                     {
                         p_dev->decoder_status = MUSIC_DECODER_ERROR1;  
+                        p_dev->music_inc++;
                     }
                     else
                     {
                         // 处理file_buff_offset数据
+                        p_dev->music_inc++;
                         set_file_buff_offset(p_dev, file_buff_left/2);
                     }
+                    
+                    text_debug("inc 2 %d\n",p_dev->music_inc);
                     
     			}
                 else//找到同步字符了
     			{
                     readptr += offset;//MP3读指针偏移到同步字符处.
-                    
                     if((UnpackFrameHeader(&mp3decinfo, readptr)==-1) || (mp3decinfo.layer!=3))
                     {
-                        debug_printf("UnpackFrameHeader failed [%d] %d\n", ch, mp3decinfo.layer);
-                        debug_printf("file_buff_offset:%d offset:%d frame_num:%d %d\n", p_dev->file_buff_offset[p_dev->file_buff_for_used], offset, p_dev->mp3_frame_num, p_dev->file_over_flag);
+                        text_debug("UnpackFrameHeader failed [%d] %d\n", ch, mp3decinfo.layer);
+                        text_debug("file_buff_offset:%d offset:%d frame_num:%d %d\n", p_dev->file_buff_offset[p_dev->file_buff_for_used], offset, p_dev->mp3_frame_num, p_dev->file_over_flag);
                                                 
                         if(p_dev->file_over_flag)
                         {
                             p_dev->file_over_flag = 0;
                             p_dev->decoder_status = MUSIC_DECODER_FILE_END;
+                            p_dev->music_inc++;
                         }
                         else if(p_dev->decoder_status != MUSIC_DECODER_STOP && p_dev->decoder_error_cnt++ > MP3_DECODER_ERROR_MAX_CNT)
                         {
                             p_dev->decoder_status = MUSIC_DECODER_ERROR2;  
-                            debug_printf("MP3 MUSIC_DECODER_ERROR2\n");
+                            p_dev->music_inc++;
+                            text_debug("MP3 MUSIC_DECODER_ERROR2\n");
                         }
                         else
                         {
@@ -941,6 +951,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                         }
                         else if(p_dev->file_over_flag)
                         {
+                            p_dev->music_inc++;
                             p_dev->file_over_flag = 0;
                             p_dev->decoder_status = MUSIC_DECODER_FILE_END;
                         }

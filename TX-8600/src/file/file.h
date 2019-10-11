@@ -118,6 +118,14 @@ typedef struct
     char lsat_buff;
 }f_opr_upload_t;
 
+typedef enum
+{
+    F_CONTORL_IDLE = 0,
+    F_COPY_SUCCEED ,
+    F_MOVE_SUCCEED,
+    F_DLE_SUCCEED,
+    F_RENAME_SUCCEED,
+}F_OPR_CONTORLEVENT_E;
 
 typedef struct
 {
@@ -128,6 +136,8 @@ typedef struct
     char event;
     char result;
     
+    char f_contorl_event;
+
     char f_copy_mode;
     
     int error_code;
@@ -161,7 +171,27 @@ typedef struct
     char scan_file_over;
     char uplaod_reply_type;
     char uplaod_reply_data;
+    char f_contorl_state;
 }file_server_notify_data_t;
+
+#ifndef __XC__
+
+typedef struct file_contorl_s{
+    uint8_t f_srcname[2*128];
+    uint8_t f_desname[2*128];
+    FIL src_file;
+    FIL des_file;
+    uint8_t need_ack;
+    uint8_t bat_contorl_f;
+    uint8_t bat_state;
+    uint8_t bat_mode;
+    uint8_t *bat_progress;
+    uint8_t *bat_exit;
+    uint32_t totsize;
+    uint32_t cpdsize;
+}file_contorl_s;
+
+#endif
 
 #ifdef __XC__
 
@@ -225,10 +255,11 @@ uint8_t get_fcopy_progress();
 void fcopy_forced_stop();
 void fopr_handle();
 
-
-
 int file_upload_forced_stop();
+
 void upload_handle(int interval_ms);
+
+uint8_t mf_unlink(uint8_t *pname);
 
 extern f_opr_mgr_t g_fopr_mgr;
 

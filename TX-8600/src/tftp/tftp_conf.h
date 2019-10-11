@@ -3,7 +3,7 @@
 #define TFTP_CONF_H_
 
 #ifndef TFTP_DEBUG_PRINT
-#define TFTP_DEBUG_PRINT      0 
+#define TFTP_DEBUG_PRINT      0
 #endif
 
 #ifndef TFTP_DEFAULT_PORT
