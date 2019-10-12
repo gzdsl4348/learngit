@@ -37,6 +37,8 @@ extern "C" {
 
 typedef struct
 {
+    FIL file;    
+    uint8_t mp3_frame[/*1024*2*/1200];
     int decoder_status;
     int decoder_error_cnt;
     // 文件格式
@@ -49,7 +51,7 @@ typedef struct
     uint32_t wav_datlen;
     
     // mp3文件解码 
-    FIL file;    
+
     uint8_t file_over_flag;
     uint8_t file_close_flag;
     
@@ -59,7 +61,6 @@ typedef struct
     uint8_t file_buff_for_used;     // 0 - 先被消费 1 - 先被消费
 
     // mp3 frame data
-    uint8_t mp3_frame[/*1024*2*/1200];
     uint8_t mp3_frame_full;
     uint32_t mp3_frame_size;
     uint32_t mp3_frame_num;

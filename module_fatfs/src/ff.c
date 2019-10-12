@@ -2603,7 +2603,6 @@ FRESULT f_sync (
   DWORD tim;
   BYTE *dir;
 
-
   res = validate(fp->fs, fp->id);    /* Check validity of the object */
   if (res == FR_OK) {
     if (fp->flag & FA__WRITTEN) {  /* Has the file been written? */

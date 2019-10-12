@@ -12,6 +12,8 @@
 
 #include "audio_tx.h"
 
+extern unsigned reboot_inc;
+
 static void debug_audio_devlist(eth_audio_dev_t audio_devlist[MAX_SENDCHAN_NUM], int num)
 {
     debug_printf("\ndebug_audio_devlist\n");
@@ -95,7 +97,8 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 	//g_t_val->tx_flag = 0;
 	//tx_flag = &g_t_val->tx_flag;
 	}//unsafe
-
+    timer systime;
+    unsigned time_tmp;
 	//-------------------------------------------------------------------------
 	//-------------------------------------------------------------------------
 	// main loop
@@ -266,6 +269,9 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
 		    */
             case i_ethaud_cfg[uint8_t a].audio_play_stateset(uint8_t state,uint8_t ch):
                 g_t_val->play_state[ch] = state;
+                break;
+
+            case systime when timerafter(time_tmp+100000000):> time_tmp:	//1hz process
                 break;
 #if 0
             case i_ethaud_cfg[unsigned a].send_text_en(uint8_t audio_txen[NUM_MEDIA_INPUTS],unsigned timestamp[NUM_MEDIA_INPUTS],

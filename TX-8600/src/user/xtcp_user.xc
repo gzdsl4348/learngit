@@ -31,6 +31,8 @@
 #include "string.h"
 #include "stdio.h"
 
+unsigned reboot_inc=0;
+
 void wifi_contorl_mode();
 
 on tile[1]: in port p_wifi_chk = XS1_PORT_4A; 
@@ -1075,6 +1077,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		// other process
 		//----------------------------------------------------------------------------- 	
         case systime when timerafter(time_tmp+10000000):> time_tmp:	//10hz process
+            reboot_inc++;
             //---------------------------------------------------------
             // 1HZ Process
             static uint8_t time_count=0;

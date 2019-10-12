@@ -476,6 +476,8 @@ static unsigned char write_datablock(int DataBlocks,
     unsigned int tDat;
     unsigned int curr_data,prev_data;
 
+    timer tim;
+    unsigned t1,t2,t3,t4;
 
     while(DataBlocks > 0) {
 
@@ -497,6 +499,7 @@ static unsigned char write_datablock(int DataBlocks,
         p_sddata  <: prev_data;
         p_sdclk   <: SDCLK_8CLOCKS;
 
+        tim :> t1;
         // Send bytes of data (512/4 int)
         while(DatWordCount < 128)
         {
@@ -531,6 +534,9 @@ static unsigned char write_datablock(int DataBlocks,
 
             DatWordCount ++;
         }
+        tim :> t2;
+        if(t2-t1 >50*100000)
+            text_debug("w1 %dms\n",(t2-t1)/100000);
 
         D3 = curr_data & 0x11111111;
         D3 |= D3 >> 3; D3 &= 0x03030303; D3 |= D3 >> 6; D3 |= D3 >> 12;
@@ -554,7 +560,8 @@ static unsigned char write_datablock(int DataBlocks,
         crc32(Crc1, 0, CRC16_POLY); // flush crc engine
         crc32(Crc2, 0, CRC16_POLY); // flush crc engine
         crc32(Crc3, 0, CRC16_POLY); // flush crc engine
-
+        
+        tim :> t3;
         for (packet_cnt = 0;packet_cnt<2;packet_cnt++)
         {
             for(i =0; i<8; i++)
@@ -566,6 +573,9 @@ static unsigned char write_datablock(int DataBlocks,
             p_sddata <: crc_packets[packet_cnt];
             p_sdclk <: SDCLK_8CLOCKS;
         }
+        tim :> t4;
+        if(t4-t3 >50*100000)
+            text_debug("w2 %dms\n",(t4-t3)/100000);
 
         // end data block
         p_sddata  <: 0xF;
@@ -581,6 +591,9 @@ static unsigned char write_datablock(int DataBlocks,
         
         //CRC token start detection
         i = gs_timeout_tick;
+        
+        tim :> t3;
+        
         do{
             p_sdclk <: 0; p_sdclk <: 1;p_sddata :> R;
             if(!i--) 
@@ -589,6 +602,10 @@ static unsigned char write_datablock(int DataBlocks,
                 return MD_ERROR; // busy timeout
             }            
         }while(R == 0xF);
+            
+        tim :> t4;
+        if(t4-t3 >50*100000)
+            text_debug("w3 %dms\n",(t4-t3)/100000);
 
         //CRC token
         for (i=0;i<4;i++){
@@ -622,14 +639,21 @@ static unsigned char write_datablock(int DataBlocks,
         
         // Wait for busy state clearing.
         i = gs_timeout_tick;
+
+        
+        tim :> t3;
         do {
             p_sdclk <: 0; p_sdclk <: 1; p_sddata :> Dat;
             if(!i--)
             {
-                debug_printf("busy timeout 2\n");
+                text_debug("busy timeout 2\n");
                 return MD_ERROR; // busy timeout
             }
         }while(!(Dat & 0x8));//0x1
+        
+            tim :> t4;
+            if(t4-t3 >50*100000)
+                text_debug("w4 %dms\n",(t4-t3)/100000);
 
         stop_clock(cb);
         setc(p_sddata,0x0);
@@ -919,6 +943,8 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
     start_clock(sdClkblk);
     start_clock (cb_sclk);
 
+    timer tim;
+    unsigned t1,t2,t3,t4,t5,t6;
 
     while(1){
             select {
@@ -974,27 +1000,49 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
             break;
             /*Write Sector(s)*/
             case i[int x].sd_write(const unsigned char *buff, unsigned long sector, unsigned int count)->unsigned int result:{
+                tim :> t1;
 
                 if (Stat & ST_NOINIT) result= MD_NOTRDY;
                 if (!count) result = MD_PARERR;
+                tim :> t3;
                 if (!wait_ready(500,sd_reg,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_NOTRDY;
-
+                tim :> t4;
+                if(t4-t3 >50*100000)
+                    text_debug("sd wait %dms\n",(t4-t3)/100000);
+                
                 /* Single Block Write */
                 if(count == 1)
                 {
+                    tim :> t3;
                     if(MD_OK == send_cmd(CMD24, sd_reg.CCS ? sector : 512 * sector, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
                     {
+                        tim :> t5;
                         result = write_datablock(count,(*buff, unsigned char[]),p_sdclk,p_sdcmd,p_sddata,sdClkblk);
+                        tim :> t6;
+                        if(t6-t5 >50*100000)
+                            text_debug("sd b write %dms\n",(t6-t5)/100000);
                     }
+                    tim :> t4;
+                    if(t4-t3 >50*100000)
+                        text_debug("sd bock write %dms\n",(t4-t3)/100000);
                 }
                 else /* Multiple Block Write */
                 {
+                    tim :> t3;
                     if(MD_OK == send_cmd(CMD25, sd_reg.CCS  ? sector : 512 * sector, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
                     {
                        result = write_datablock(count,(*buff, unsigned char[]),p_sdclk,p_sdcmd,p_sddata,sdClkblk);
                     }
                     if(MD_OK != send_cmd(CMD12, 0, R1B, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_ERROR;
+                    
+                    tim :> t4;
+                    if(t4-t3 >50*100000)
+                        text_debug("sd nb write %dms\n",(t4-t3)/100000);
                 }
+                
+                tim :> t2;
+                if(t2-t1 >50*100000)
+                    text_debug("sd w %dms\n",(t2-t1)/100000);
 
              }
              break;

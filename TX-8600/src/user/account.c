@@ -427,7 +427,8 @@ void cld_register_recive(){
     //xtcp_debug_printf("reg BE08 rec %d\n",g_sys_val.register_rec_s_tmp);
     // ×¢²á³É¹¦,ÅÐ¶Ï×¢²á×´Ì¬ Æ·ÅÆ
     if(g_sys_val.register_rec_s_tmp==0){
-        g_sys_val.register_code;
+        host_info.div_brand_f = g_sys_val.register_code[0];
+        host_info.div_have_register = 1;
     }
     
     //ÉêÇë×¢²á×´Ì¬

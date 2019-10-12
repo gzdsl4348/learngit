@@ -30,6 +30,7 @@ void music_decoder_server(server interface music_decoder_output_if if_mdo)
                     uint8_t inc;
                     
                     p_mp3_frame = (uint8_t *unsafe)get_mp3_frame(ch, l, n, s,t,inc);
+                    
                     if(p_mp3_frame)
                     {
                         frame_num = n;

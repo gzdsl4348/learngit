@@ -268,6 +268,7 @@ static unsigned char mp3_get_info(TCHAR *pname, MP3_Info *p_info)
             /************************************************************************/
 
         }
+        
         f_close(fmp3);
     }
     else res=0XFF;
@@ -347,6 +348,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     p_dev = &gt_mmdm.ch_dev[ch];
     if(p_dev->file_close_flag) 
     {
+    
         f_close(&p_dev->file);
         memset(&p_dev->file, 0, sizeof(FIL));
         p_dev->file_close_flag = 0;
@@ -541,7 +543,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
            (p_dev->file_buff_size[0]==0||p_dev->file_buff_size[1]==0))
         {
             //-------------------------------------------------------------------------------------------------------------------------------------
-            //WAV 文件选时
+            //文件选时
             if(p_dev->seconde_set_f){
                 p_dev->seconde_set_f=0;
                 DWORD select_index;
@@ -561,7 +563,7 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
             {
                 p_dev->file_over_flag = 1;
                 
-                //debug_printf("f_read over %d %d\n", ch, res);
+                text_debug("\n\nf_read over %d %d\n\n", ch,res);
                 
                 if(res == FR_NOT_READY) return;
             }
@@ -603,7 +605,6 @@ void music_file_handle(STREAMING_CHANEND(c_sdram), REFERENCE_PARAM(s_sdram_state
             }
         }
 
-        
         if(p_dev->file_over_flag == 1 &&
            p_dev->file_buff_size[0] == 0 &&
            p_dev->file_buff_size[1] == 0)
@@ -636,7 +637,7 @@ uint32_t get_mp3_frame(unsigned char ch, uint32_t *length, uint32_t *frame_num, 
 #endif
         return 0;
     }
-    //debug_printf("get_mp3_frame[%d] length:%d\n", ch, *length);
+    //text_debug("get_mp3_frame[%d] length:%d\n", ch, *length);
 
     *length     = gt_mmdm.ch_dev[ch].mp3_frame_size;
     *frame_num  = gt_mmdm.ch_dev[ch].mp3_frame_num;    
@@ -727,6 +728,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
    
     memset(&mp3decinfo, 0, sizeof(MP3DecInfo));
     memset(&fh, 0, sizeof(FrameHeader));
+    memset(&gt_mmdm,0,sizeof(music_decoder_mgr_t));
     mp3decinfo.FrameHeaderPS =(void *)&fh;
 
     s_sdram_state sdram_state;
@@ -878,7 +880,6 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                                  p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
                                  file_buff_left);
                     
-                text_debug("inc %d\n",p_dev->music_inc);
                     if(p_dev->file_over_flag)
                     {
                         p_dev->file_over_flag = 0;
@@ -896,9 +897,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                         p_dev->music_inc++;
                         set_file_buff_offset(p_dev, file_buff_left/2);
                     }
-                    
-                    text_debug("inc 2 %d\n",p_dev->music_inc);
-                    
+                                        
     			}
                 else//找到同步字符了
     			{
@@ -942,7 +941,6 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                                 p_dev->samplerate = mp3decinfo.samprate;
                             }
                             //更新时间
-                            
                             
                             // put mp3 frame buff
                             memcpy(p_dev->mp3_frame, readptr, p_dev->mp3_frame_size);

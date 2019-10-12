@@ -73,12 +73,16 @@ uint8_t file_contorl_init(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *
 
 #define CONTORL_FILESIZE 8*1024
 
+extern unsigned get_timer();
+
 void file_copy_process(){
     static uint8_t tim=0;
     tim++;
     if(tim<16) return; //32ms
     tim=0;
 
+    unsigned t1,t2;
+    
     uint8_t res;
     uint8_t *fbuf = NULL;
     uint16_t br = 0;
@@ -106,7 +110,11 @@ void file_copy_process(){
         //开始复制
         res=f_read(&file_contorl.src_file,fbuf,CONTORL_FILESIZE,(UINT*)&br);  //源头读出512字节
         if(res==0 && br!=0){
+            t1=get_timer();
             res=f_write(&file_contorl.des_file,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
+            t2=get_timer();
+            if(t2-t1 > 50*100000)
+                text_debug("r %d ms  wl %d\n",(t2-t1)/100000,bw);
             //
             file_contorl.cpdsize+=bw;
             curpct=(file_contorl.cpdsize*100)/file_contorl.totsize;
@@ -132,6 +140,7 @@ void file_copy_process(){
                 // 操作成功                
 
                 text_debug("\n\nbat succse %d %d %d %d \n\n",res,bw,br,file_contorl.bat_state);
+                
                 f_close(&file_contorl.src_file);
                 f_close(&file_contorl.des_file);
 
@@ -145,6 +154,7 @@ void file_copy_process(){
                 file_contorl.need_ack=1;
             }
             //
+            
             f_close(&file_contorl.src_file);
             f_close(&file_contorl.des_file);
         }
@@ -221,6 +231,7 @@ static uint8_t f_copy(uint8_t *psrc,uint8_t *pdst, uint8_t *pcurpct, uint8_t *pe
                     if(res||bw<br)break;
                 }
             }
+            
             f_close(fsrc);
             f_close(fdst);
         }
@@ -485,7 +496,6 @@ uint8_t mf_add_loginfo(char *file_name,unsigned len){
     //
     f_lseek(logfile,logfile->fptr+logfile->fsize);
     res = f_write(logfile,(const TCHAR*)file_name, len, &bw);
-    debug_printf("loginfo er %d \n",res);
     //
     f_close(logfile);
     myfree(logfile);

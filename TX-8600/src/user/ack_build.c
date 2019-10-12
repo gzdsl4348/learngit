@@ -348,7 +348,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
 
     memcpy(&xtcp_tx_buf[AC_LOGIN_SYS_MACHCODE_B],g_sys_val.maschine_code,10);
 
-    xtcp_tx_buf[AC_LOGIN_BRAND_B]=0;
+    xtcp_tx_buf[AC_LOGIN_BRAND_B]=host_info.div_brand_f;
 
     xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=0;
     if(g_sys_val.could_conn.id)

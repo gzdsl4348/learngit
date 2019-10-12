@@ -822,7 +822,7 @@
 #define AC_LOGIN_IPGATE_B                   (AC_LOGIN_IPMASK_B+4)      //4
 #define AC_LOGIN_RES_STATE_B                (AC_LOGIN_IPGATE_B+4)      //1
 #define AC_LOGIN_RES_DAY_B                  (AC_LOGIN_RES_STATE_B+1)   //2  // ×¢²áÈÕÆÚ
-#define AC_LOGIN_BRAND_B                    (AC_LOGIN_RES_DAY_B+2)     //1
+#define AC_LOGIN_BRAND_B                    (AC_LOGIN_RES_DAY_B+2)     //1  Æ·ÅÆ
 #define AC_LOGIN_CLDSTATE_B                 (AC_LOGIN_BRAND_B+1)     //1
 
 #define AC_LOGIN_DIV_TOL_B                  (AC_LOGIN_CLDSTATE_B+1)     //1

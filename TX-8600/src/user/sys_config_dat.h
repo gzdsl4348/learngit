@@ -185,8 +185,9 @@ typedef struct host_info_t{
     uint16_t regiser_days;              //注册天数
     xtcp_ipconfig_t ipconfig;           //ip 信息
     uint8_t div_brand[DIV_NAME_NUM];              //设备品牌
-    uint8_t mac_write_f;
+    uint8_t mac_write_f;         // 是否已烧录MAC
     uint8_t div_have_register;  //是否已被注册
+    uint8_t div_brand_f;
     uint8_t sys_dhcp_state; //WIFI的DHCP打开状态
     uint8_t log_daycnt;     //日志计数
     uint8_t log_filename[MAX_LOGDATE_NUM][64];//日志名称
