@@ -499,7 +499,6 @@ static unsigned char write_datablock(int DataBlocks,
         p_sddata  <: prev_data;
         p_sdclk   <: SDCLK_8CLOCKS;
 
-        tim :> t1;
         // Send bytes of data (512/4 int)
         while(DatWordCount < 128)
         {
@@ -534,9 +533,6 @@ static unsigned char write_datablock(int DataBlocks,
 
             DatWordCount ++;
         }
-        tim :> t2;
-        if(t2-t1 >50*100000)
-            text_debug("w1 %dms\n",(t2-t1)/100000);
 
         D3 = curr_data & 0x11111111;
         D3 |= D3 >> 3; D3 &= 0x03030303; D3 |= D3 >> 6; D3 |= D3 >> 12;
@@ -554,14 +550,12 @@ static unsigned char write_datablock(int DataBlocks,
         D0 |= D0 >> 3; D0 &= 0x03030303; D0 |= D0 >> 6; D0 |= D0 >> 12;
         crc8shr(Crc0, D0, CRC16_POLY);
         
-
         // write CRCs, end nibble and wait busy
         crc32(Crc0, 0, CRC16_POLY); // flush crc engine
         crc32(Crc1, 0, CRC16_POLY); // flush crc engine
         crc32(Crc2, 0, CRC16_POLY); // flush crc engine
         crc32(Crc3, 0, CRC16_POLY); // flush crc engine
         
-        tim :> t3;
         for (packet_cnt = 0;packet_cnt<2;packet_cnt++)
         {
             for(i =0; i<8; i++)
@@ -573,9 +567,6 @@ static unsigned char write_datablock(int DataBlocks,
             p_sddata <: crc_packets[packet_cnt];
             p_sdclk <: SDCLK_8CLOCKS;
         }
-        tim :> t4;
-        if(t4-t3 >50*100000)
-            text_debug("w2 %dms\n",(t4-t3)/100000);
 
         // end data block
         p_sddata  <: 0xF;
@@ -591,21 +582,18 @@ static unsigned char write_datablock(int DataBlocks,
         
         //CRC token start detection
         i = gs_timeout_tick;
-        
-        tim :> t3;
-        
+                
         do{
             p_sdclk <: 0; p_sdclk <: 1;p_sddata :> R;
+            //p_sdclk <: SDCLK_1CLOCKS; p_sddata :> R;
+
             if(!i--) 
             {
-                debug_printf("busy timeout 1\n");
+                text_debug("busy timeout 1\n");
                 return MD_ERROR; // busy timeout
             }            
         }while(R == 0xF);
             
-        tim :> t4;
-        if(t4-t3 >50*100000)
-            text_debug("w3 %dms\n",(t4-t3)/100000);
 
         //CRC token
         for (i=0;i<4;i++){
@@ -626,13 +614,13 @@ static unsigned char write_datablock(int DataBlocks,
             settw(p_sdclk,CLK_WIDTH);
             start_clock(cb);
             
-            debug_printf("write_datablock error crc_token 0x%x\n", crc_token);
+            text_debug("write_datablock error crc_token 0x%x\n", crc_token);
             
             return MD_ERROR;
         }
 
         // Clocks for Card Processing
-        for (i=0;i<8;i++)
+        for (i=0;i<24;i++)
         {
            p_sdclk <: 0; p_sdclk <: 1;
         }
@@ -669,6 +657,9 @@ static unsigned char write_datablock(int DataBlocks,
 
         DataBlocks--;
    }
+    // Clocks for Card Processing
+    p_sdclk <: SDCLK_8CLOCKS;
+    sync(p_sdclk);
 
    return MD_OK;
 }
@@ -907,6 +898,8 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
 //////////////////////////////////////////////////////////////////////////////////
 
 #pragma unsafe arrays
+
+
 [[distributable]]
   void sd_host_native(server interface sd_host_if i[num_clients],
                       static const size_t num_clients,
@@ -922,13 +915,21 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
     unsigned int CardDetect = 0;
     RESP Resp;
 
+    /*
+    set_clock_on(cb_sclk);
+    configure_clock_ref(cb_sclk, 4);
+    configure_port_clock_output(p_sdclk, cb_sclk);
+    start_clock (cb_sclk);
 
+    stop_clock(cb_sclk);
+    */
+    
     //p_sdcarddetect:> CardDetect;
     if ((CardDetect & 0x01) != 0) {
         debug_printf("Card Not Detected");
         Stat= ST_NODISK;
     }
-
+    
     if(!isnull(sdClkblk))
     {
         // Initialize the Clocks
@@ -940,8 +941,13 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
     configure_out_port(p_sdcmd, cb_sclk, 1);
     configure_out_port(p_sddata, cb_sclk, 0xF);
 
+    //configure_port_clock_output(p_sdclk, cb_sclk);
+
     start_clock(sdClkblk);
     start_clock (cb_sclk);
+
+    
+    //while(1);
 
     timer tim;
     unsigned t1,t2,t3,t4,t5,t6;
@@ -1043,6 +1049,8 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
                 tim :> t2;
                 if(t2-t1 >50*100000)
                     text_debug("sd w %dms\n",(t2-t1)/100000);
+
+                
 
              }
              break;

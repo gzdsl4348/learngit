@@ -71,16 +71,15 @@ uint8_t file_contorl_init(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *
     return res;
 }
 
-#define CONTORL_FILESIZE 8*1024
+#define CONTORL_FILESIZE 4*1024
 
 extern unsigned get_timer();
 
 void file_copy_process(){
-    static uint8_t tim=0;
+    static unsigned tim=0;
     tim++;
-    if(tim<16) return; //32ms
+    if(tim<50) return; //32ms
     tim=0;
-
     unsigned t1,t2;
     
     uint8_t res;
@@ -108,13 +107,38 @@ void file_copy_process(){
         
     if(file_contorl.bat_contorl_f){
         //开始复制
+        /*
+        static unsigned wb=0;
+        static uint8_t dl=0;
+        wb++;
+        if(dl){
+            if(wb<40){
+                myfree(fbuf);
+                return;
+            }
+            else{
+                wb=0;
+                dl=0;
+            }
+        }else{
+            if(wb>=1){
+                dl=1;
+                wb=0;
+                myfree(fbuf);
+                return;
+            }
+        }
+            */
         res=f_read(&file_contorl.src_file,fbuf,CONTORL_FILESIZE,(UINT*)&br);  //源头读出512字节
+        //res=0;
+        //br=CONTORL_FILESIZE;
         if(res==0 && br!=0){
             t1=get_timer();
             res=f_write(&file_contorl.des_file,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
+            //f_sync(&file_contorl.des_file); 
             t2=get_timer();
             if(t2-t1 > 50*100000)
-                text_debug("r %d ms  wl %d\n",(t2-t1)/100000,bw);
+                text_debug("w %d ms  wl %d\n\n",(t2-t1)/100000,bw);
             //
             file_contorl.cpdsize+=bw;
             curpct=(file_contorl.cpdsize*100)/file_contorl.totsize;

@@ -426,6 +426,7 @@ uint8_t div_online_tolist(){
     memcpy(div_info_p->div_info.version,&xtcp_rx_buf[ONLINE_VERSION_B],2);  //获取设备版本号
     memcpy(div_info_p->div_info.name,&xtcp_rx_buf[ONLINE_NAME_B],DIV_NAME_NUM); //获取设备名称
     memcpy(div_info_p->div_info.div_type,&xtcp_rx_buf[ONLINE_DIV_TYPE_B],DIV_TYPE_NUM); //获取设备类型
+
     //
     //fl_divlist_write(); //保存列表信息 设备状态随后改变
     //  

@@ -174,8 +174,22 @@ typedef struct
     char f_contorl_state;
 }file_server_notify_data_t;
 
-#ifndef __XC__
-
+#ifdef __XC__
+typedef struct file_contorl_s{
+    uint8_t f_srcname[2*128];
+    uint8_t f_desname[2*128];
+    FIL src_file;
+    FIL des_file;
+    uint8_t need_ack;
+    uint8_t bat_contorl_f;
+    uint8_t bat_state;
+    uint8_t bat_mode;
+    uint8_t *unsafe bat_progress;
+    uint8_t *unsafe bat_exit;
+    uint32_t totsize;
+    uint32_t cpdsize;
+}file_contorl_s;
+#else
 typedef struct file_contorl_s{
     uint8_t f_srcname[2*128];
     uint8_t f_desname[2*128];

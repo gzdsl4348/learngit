@@ -873,13 +873,14 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
     			{
                     //没找到帧同步字符
                     //TUDO:设置状态标志，可以找下一帧
+                    #if 0
                     text_debug("MP3FindSyncWord failed [%d]\n", ch);
                     text_debug("[%d] used:%d [%d %d] [%d %d] left:%d\n", 
                                  p_dev->mp3_frame_num, p_dev->file_buff_for_used,
                                  p_dev->file_buff_size[0], p_dev->file_buff_offset[0],
                                  p_dev->file_buff_size[1], p_dev->file_buff_offset[1],
                                  file_buff_left);
-                    
+                    #endif
                     if(p_dev->file_over_flag)
                     {
                         p_dev->file_over_flag = 0;

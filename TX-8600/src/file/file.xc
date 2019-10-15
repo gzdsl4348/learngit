@@ -18,6 +18,8 @@ extern uint8_t file_scaning_flag;
 extern uint8_t file_scaning_overf;
 extern uint8_t g_wav_mode;
 
+extern file_contorl_s file_contorl; 
+
 void scan_musictosec_process(); //2MS
 
 
@@ -227,7 +229,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             }
             case if_fs.fcopy_forced_stop() -> int res:
             {
-                if(fopr.event==FOE_FCOPY || fopr.event==FOE_FMOVE)
+                if(file_contorl.bat_contorl_f)
                 {
                     fcopy_forced_stop();
                     res = FOR_SUCCEED;                    
@@ -523,7 +525,7 @@ void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if
     while(1)
     {
         select{
-            case tmr when timerafter(timeout) :> void://2ms
+            case tmr when timerafter(timeout) :> void://1ms
             {
 
                 sdcard_hot_swap_check();

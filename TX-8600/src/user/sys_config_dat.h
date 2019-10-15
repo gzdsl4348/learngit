@@ -26,7 +26,7 @@ extern "C" {
 
 #define PRINT_CONNET_ACCOUNT 0 // 打印链接账号数
 
-#define REGITSER_NEWVESION_DISP 0 // 云服务器显示 试用 过期 激活 未激活模式
+#define REGITSER_NEWVESION_DISP 1 // 云服务器显示 试用 过期 激活 未激活模式
 
 #define DISABLE_COULDOFFLINE_MODE    0 // 关闭云离线停止工作模式
 

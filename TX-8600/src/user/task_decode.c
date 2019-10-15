@@ -2121,10 +2121,11 @@ void rttask_playlist_updata(){
         if(needsend){
             //---------------------------------------------------------------------------------------------------------------
             // 找播放源设备连接节点
-            div_node_t *div_tmp_p;
-            conn_list_t *div_conn_p;
+            div_node_t *div_tmp_p=null;
+            conn_list_t *div_conn_p=null;
             div_tmp_p = get_div_info_p(g_tmp_union.rttask_dtinfo.src_mas);
-            div_conn_p = get_conn_for_ip(div_tmp_p->div_info.ip);
+            if(div_tmp_p!=null)
+                div_conn_p = get_conn_for_ip(div_tmp_p->div_info.ip);
             //
             if(div_conn_p != null)
                 user_xtcp_send(div_conn_p->conn,0);
