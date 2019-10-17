@@ -158,10 +158,7 @@ static uint8_t tftp_upgrade_jude_header(uint8_t block[])
 void tftp_upgrade_reply_deal(client xtcp_if i_xtcp, client image_upgrade_if i_image)
 {
     int event, data;
-    debug_printf("get im in\n");
     i_image.get_image_upgrade_reply(event, data);
-    
-    debug_printf("get im out\n");
     switch(event)
     {
         case UPGRADE_END_REPLY:
@@ -210,13 +207,14 @@ void tftp_upload_reply_deal(client xtcp_if i_xtcp, char reply_type, char reply_d
         case FOU_REPLY_GET_DATA:
         {
             if(tftp_block_wait)
-            {
+            {   
+                // 延时控制回复
                 tftp_block_wait = 0;
                 g_sys_val.tftp_dat_ack = 1;
                 g_sys_val.tftp_dat_needack=1;
-                // 延时控制回复
-                debug_printf("ack reply\n");
-                tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
+                // 即时回复
+                //debug_printf("ack reply\n");
+                //tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
             }
             break;
         }
@@ -257,12 +255,10 @@ void tftp_ack_delay(client xtcp_if i_xtcp){
                     t_delay_us=4;
             }
             tftp_block_wait = 0;
-                
             tftp_send_ack(i_xtcp, TFTP_ACK_SUCCEED, 0);
         }
-
     }
-    }
+    }//unsafe
 }
 
 
@@ -749,6 +745,19 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[1] = 114;
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
+
+    /*
+    g_sys_val.could_ip[0] = 172;
+    g_sys_val.could_ip[1] = 16;
+    g_sys_val.could_ip[2] = 23;
+    g_sys_val.could_ip[3] = 1;
+
+    g_sys_val.dns_ip[0] = 172;
+    g_sys_val.dns_ip[1] = 114;
+    g_sys_val.dns_ip[2] = 114;
+    g_sys_val.dns_ip[3] = 114;
+    */
+
 	
     #if 0
     g_sys_val.could_ip[0] = 172;

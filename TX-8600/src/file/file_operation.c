@@ -5,8 +5,6 @@
 #include "ff.h"
 #include "mystring.h"
 #include "file.h"
-
-
 extern void printfstr(TCHAR *str);
 
 extern FATFS fatfs;
@@ -63,32 +61,35 @@ uint8_t file_contorl_init(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *
             res = 0xFF;
         }
     }
+    
     if(res){ // 打开失败 关闭
         file_contorl.bat_contorl_f = 0;
         f_close(&file_contorl.src_file);
         f_close(&file_contorl.des_file);
     }
+    
+    text_debug("file copy begin %d %d\n",res,file_contorl.need_ack);
     return res;
 }
 
-#define CONTORL_FILESIZE 4*1024
+#define CONTORL_FILESIZE 8*1024
 
 extern unsigned get_timer();
 
 void file_copy_process(){
-    static unsigned tim=0;
-    tim++;
-    if(tim<50) return; //32ms
-    tim=0;
+    //---------------------------------------------------------
+    //复制速度控制
+    static unsigned lasttimer=0;
+    unsigned tim_tmp=get_timer();
+    if(((tim_tmp-lasttimer)/100000)<25) // 控制每25ms 复制8K数据， 带宽320Kbyte
+        return;  
+    lasttimer=get_timer();    
+    //---------------------------------------------------------    
     unsigned t1,t2;
-    
     uint8_t res;
-    uint8_t *fbuf = NULL;
     uint16_t br = 0;
     uint16_t bw = 0;
     uint16_t curpct;
-    fbuf=(uint8_t*)mymalloc(CONTORL_FILESIZE);
-    if(fbuf==NULL) return;
     if(file_contorl.need_ack){
         if(g_fopr_mgr.item[0].result==FOR_IDLE){
             
@@ -101,11 +102,13 @@ void file_copy_process(){
             }
             file_contorl.need_ack=0;
         }
-        myfree(fbuf);
         return;
     }
         
     if(file_contorl.bat_contorl_f){
+        uint8_t *fbuf = NULL;
+        fbuf=(uint8_t*)mymalloc(CONTORL_FILESIZE);
+        if(fbuf==NULL) return;
         //开始复制
         /*
         static unsigned wb=0;
@@ -129,13 +132,10 @@ void file_copy_process(){
             }
         }
             */
-        res=f_read(&file_contorl.src_file,fbuf,CONTORL_FILESIZE,(UINT*)&br);  //源头读出512字节
-        //res=0;
-        //br=CONTORL_FILESIZE;
+        res=f_read(&file_contorl.src_file,fbuf,CONTORL_FILESIZE,(UINT*)&br);  //读文件
         if(res==0 && br!=0){
             t1=get_timer();
             res=f_write(&file_contorl.des_file,fbuf,(UINT)br,(UINT*)&bw); //写入目的文件
-            //f_sync(&file_contorl.des_file); 
             t2=get_timer();
             if(t2-t1 > 50*100000)
                 text_debug("w %d ms  wl %d\n\n",(t2-t1)/100000,bw);
@@ -143,8 +143,6 @@ void file_copy_process(){
             file_contorl.cpdsize+=bw;
             curpct=(file_contorl.cpdsize*100)/file_contorl.totsize;
             *file_contorl.bat_progress = curpct;//更新百分比
-            
-            //text_debug("\n\nbat pro %d\n\n",*file_contorl.bat_progress);
             //
             if(*file_contorl.bat_exit)
             {
@@ -154,7 +152,6 @@ void file_copy_process(){
         }
         // 复制完成
         if(res || bw<br || (br==0)){        
-            myfree(fbuf);
             text_debug("\n\nbat over %d %d %d \n\n",res,bw,br);
             file_contorl.bat_contorl_f=0;
             // 操作失败, 删除目标文件
@@ -162,7 +159,6 @@ void file_copy_process(){
                 mf_unlink(file_contorl.f_desname);
             }else{
                 // 操作成功                
-
                 text_debug("\n\nbat succse %d %d %d %d \n\n",res,bw,br,file_contorl.bat_state);
                 
                 f_close(&file_contorl.src_file);
@@ -182,8 +178,8 @@ void file_copy_process(){
             f_close(&file_contorl.src_file);
             f_close(&file_contorl.des_file);
         }
+        myfree(fbuf);
     }    
-    myfree(fbuf);
 }
 
 

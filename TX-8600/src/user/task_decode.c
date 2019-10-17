@@ -2487,6 +2487,16 @@ void rttask_host_contorl_recive(){
             //rttask_music_setmode(task_id,RANDOM_PLAY_M);
             break;
         }
+        case RTTASK_CMD_ONCEMODE:{
+            timetask_now.task_musicplay[ch].play_mode = ONCE_PLAY_M;
+            //rttask_music_setmode(task_id,RANDOM_PLAY_M);
+            break;
+        }
+        case RTTASK_CMD_ONCELOOP:{
+            timetask_now.task_musicplay[ch].play_mode = ONCE_LOOPPLAY_M;
+            //rttask_music_setmode(task_id,RANDOM_PLAY_M);
+            break;
+        }
         default:
             break;
     }

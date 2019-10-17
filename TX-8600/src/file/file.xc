@@ -62,11 +62,13 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             case if_fs.music_start(uint8_t ch, task_music_info_t music_info, unsigned f_offset) -> int res:
             {
                 res = FOR_SUCCEED;
+                // 修改为任何时候可播放音乐
+                /*
                 if(fopr.event != FOE_IDLE)
                 {
                     res = FILE_BUSY_DECODE;
                     break;
-                }
+                }*/
                 fopr.data.music.ch = ch;
                 fopr.data.music.foffset = f_offset;                
                 //------------------------------------------------------------------------------------------------------------
@@ -168,6 +170,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     res = FILE_BUSY_DECODE;
                     break;
                 }
+                text_debug("res %d\n",res);
 
                 memcpy(fopr.data.file.fsrc, fsrc, n1);
                 memcpy(fopr.data.file.fdes, fdes, n2);

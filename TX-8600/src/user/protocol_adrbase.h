@@ -1092,6 +1092,9 @@
 #define RTTASK_CMD_STEPMODE     0x07    //顺序播放
 #define RTTASK_CMD_LOOPMODE     0x09    //循环播放
 #define RTTASK_CMD_RANDOMMODE   0x14    //随机播放
+#define RTTASK_CMD_ONCEMODE     0x0A    //单曲播放
+#define RTTASK_CMD_ONCELOOP     0x08    //单曲循环
+
 
 
 //====================================================================================================

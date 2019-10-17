@@ -620,7 +620,7 @@ static unsigned char write_datablock(int DataBlocks,
         }
 
         // Clocks for Card Processing
-        for (i=0;i<24;i++)
+        for (i=0;i<8;i++)
         {
            p_sdclk <: 0; p_sdclk <: 1;
         }
@@ -1010,30 +1010,25 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
 
                 if (Stat & ST_NOINIT) result= MD_NOTRDY;
                 if (!count) result = MD_PARERR;
-                tim :> t3;
-                if (!wait_ready(500,sd_reg,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_NOTRDY;
-                tim :> t4;
-                if(t4-t3 >50*100000)
-                    text_debug("sd wait %dms\n",(t4-t3)/100000);
                 
-                /* Single Block Write */
+                if (!wait_ready(500,sd_reg,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_NOTRDY;
+                
+                /* Single Block Write *//* Multiple Block Write */
+
+                /*
                 if(count == 1)
                 {
-                    tim :> t3;
                     if(MD_OK == send_cmd(CMD24, sd_reg.CCS ? sector : 512 * sector, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
                     {
-                        tim :> t5;
                         result = write_datablock(count,(*buff, unsigned char[]),p_sdclk,p_sdcmd,p_sddata,sdClkblk);
-                        tim :> t6;
-                        if(t6-t5 >50*100000)
-                            text_debug("sd b write %dms\n",(t6-t5)/100000);
                     }
-                    tim :> t4;
-                    if(t4-t3 >50*100000)
-                        text_debug("sd bock write %dms\n",(t4-t3)/100000);
                 }
-                else /* Multiple Block Write */
+                else
+                */
                 {
+                    if(send_cmd(CMD55, sd_reg.CardRCA, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))result = MD_ERROR;
+                    if(send_cmd(CMD23, count, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_ERROR;
+                    
                     tim :> t3;
                     if(MD_OK == send_cmd(CMD25, sd_reg.CCS  ? sector : 512 * sector, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
                     {
@@ -1051,7 +1046,6 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
                     text_debug("sd w %dms\n",(t2-t1)/100000);
 
                 
-
              }
              break;
              /* Miscellaneous Functions */

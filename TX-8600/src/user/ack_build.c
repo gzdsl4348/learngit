@@ -1116,7 +1116,11 @@ uint16_t sysonline_chk_build(uint8_t state){
     xtcp_tx_buf[SYS_ONLINE_CHK_TIME_B+1] = g_sys_val.time_info.minute;
     xtcp_tx_buf[SYS_ONLINE_CHK_TIME_B+2] = g_sys_val.time_info.second;
 
-    xtcp_tx_buf[SYS_ONLINE_CHK_SD_B] = g_sys_val.sd_state;
+    uint8_t tmp = 0;
+    if(g_sys_val.could_conn.id)
+        tmp=1;
+
+    xtcp_tx_buf[SYS_ONLINE_CHK_SD_B] = (g_sys_val.sd_state&0x01) | ((tmp&0x01)<<1);
     //
     xtcp_tx_buf[SYS_ONLINE_CHK_DIVSTATE_B] = state;
     //
@@ -1693,6 +1697,12 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
             break;
         case RANDOM_PLAY_M:
             xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 5;
+            break;
+        case ONCE_PLAY_M:
+            xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 4;
+            break;
+        case ONCE_LOOPPLAY_M:
+            xtcp_tx_buf[RTTASK_INFO_PLAYMODE] = 1;
             break;
     }
     

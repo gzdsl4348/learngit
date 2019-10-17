@@ -183,6 +183,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                     if(can_put_data)
                     {
                         res = tftp_app_process_data_block(rxbuff+TFTP_MIN_PKT_SIZE, response_len - TFTP_MIN_PKT_SIZE);
+                        //text_debug("rec len %d\n",response_len - TFTP_MIN_PKT_SIZE);
                         if(res == SHORTLY_ACK_FAILED)
                         {
                             num_tx_bytes = tftp_make_error_pkt(tx_buffer, TFTP_ERROR_ACCESS_VIOLATION, "", signal_error);
@@ -318,7 +319,7 @@ void tftp_tmr_poll(client xtcp_if i_xtcp, int interval_ms)
     
     if(tftp_tmr_poll_flag)
     {
-        if(tick++ > TFTP_TIMEOUT_SECONDS*(1000/interval_ms))
+        if(tick++ > TFTP_TIMEOUT_SECONDS*(1000/interval_ms)) //TFTP_TIMEOUT_SECONDS 3√Î
         {
             tick = 0;
             xtcp_poll(i_xtcp);
