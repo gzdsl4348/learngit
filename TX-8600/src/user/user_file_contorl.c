@@ -122,7 +122,7 @@ void music_patchname_config_recive(){
     }
     //É¾³ýÎÄ¼þ¼Ð
     if(xtcp_rx_buf[MUS_PTHCON_CONFIG]==1){
-        task_music_stop_all();
+        //task_music_stop_all();
         if(user_filefolder_del(&xtcp_rx_buf[MUS_PTHCON_SRCNAME])==0)
             state = 1;
         xtcp_debug_printf("floder del\n");

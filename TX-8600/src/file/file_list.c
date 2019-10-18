@@ -512,6 +512,23 @@ static int scan_music_filelist(TCHAR *path, dir_info_t *dir_info, music_tbl_t *m
 
     return 0;
 }
+
+void rename_file_scan(uint8_t *src_path,uint8_t *des_path){
+    dir_tbl_t *dir_tbl_sdram = mymalloc(F_DIR_TBL_BYTE_SIZE);
+    if(dir_tbl_sdram==NULL)
+        return;
+    fl_read_flielist(0, (uint8_t*)dir_tbl_sdram, F_DIR_TBL_BYTE_SIZE);
+    for(uint8_t i=0;i<dir_tbl_sdram->num;i++){
+        if(wstrcmp(dir_tbl_sdram->m[i].name, (wchar*)src_path) == 0){
+            memcpy(dir_tbl_sdram->m[i].name,des_path,DIR_NAME_SIZE);
+            break;
+        }
+    }
+    fl_write_flielist(0, (uint8_t*)dir_tbl_sdram, F_DIR_TBL_BYTE_SIZE);
+    myfree(dir_tbl_sdram);
+}
+
+
 /*
 flash
 sector[0]:文件夹数(int)+文件夹列表(dir_info_t列表)
@@ -528,7 +545,7 @@ sector[30]
 //used ram:8*1024+2*2*1024+34 + 3684(mf_scan_files) < 16*1024 
 void sd_scan_music_file(uint8_t *specify_path)
 {
-
+    //文件扫描中不处理 文件操作与日志记录
     file_scaning_flag = 1;
 
     int i, j, res;
@@ -544,7 +561,7 @@ void sd_scan_music_file(uint8_t *specify_path)
     
     if(dir_tbl_sdram==NULL || dir_tbl==NULL || music_tbl==NULL || sector_record==NULL)
     {
-        debug_printf("sd_scan_music_file malloc failed\n");
+        text_debug("sd_scan_music_file malloc failed\n");
         goto FUN_END;
     }
 
@@ -570,7 +587,7 @@ void sd_scan_music_file(uint8_t *specify_path)
         goto FUN_END;
     }
     
-    debug_printf("p_fld_num 0x%x 0x%x\n\n", dir_tbl_sdram->num, dir_num);
+    text_debug("p_fld_num 0x%x 0x%x\n\n", dir_tbl_sdram->num, dir_num);
 
     dir_num = (F_DIR_MAX_NUM>dir_num) ? dir_num : F_DIR_MAX_NUM;
     dir_tbl->num = dir_num;
@@ -751,7 +768,7 @@ FUN_END:
     myfree(dir_tbl);
     myfree(music_tbl);
     myfree(sector_record);
-    
+    //文件扫描完成 可继续文件操作与日志记录
     file_scaning_flag = 0;
 }
 
@@ -771,6 +788,8 @@ static void find_path(TCHAR *dst, const TCHAR *src, int level)
 		if(*src!=0) src++;
     }while(level>0);
 }
+
+
 /*
 * 二层路径: 用于复制/移动1-2/删除文件/上传文件
 * 一层路径: 用于新建音乐文件夹(空文件夹)、删除音乐文件夹、重命名音乐文件夹
@@ -793,7 +812,7 @@ void update_music_filelist(uint8_t path[], uint8_t is_del)
 
     if(dir_tbl_sdram==NULL || music_tbl==NULL || dir_name==NULL || music_name==NULL)
     {
-        //text_debug("update_music_filelist malloc failed\n");
+        text_debug("update_music_filelist malloc failed\n");
         goto FUN_END;
     }
         

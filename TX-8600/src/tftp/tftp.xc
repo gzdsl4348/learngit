@@ -7,6 +7,7 @@
 #include "tftp.h"
 #include "tftp_app.h"
 #include "sys_log.h"
+#include "sys_log.h" 
 
 
 static enum
@@ -93,7 +94,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
         case XTCP_IFUP:
         {
 #if TFTP_DEBUG_PRINT
-            text_debug("TFTP: IP Up\n");
+            xtcp_debug_printf("TFTP: IP Up\n");
 #endif
             // When the network interface comes up, we are ready to accept a TFTP connection
             tftp_state = TFTP_WAITING_FOR_CONNECTION;
@@ -107,7 +108,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
             if (tftp_state == TFTP_WAITING_FOR_DATA || tftp_state == TFTP_SENDING_ACK)
             {
 #if TFTP_DEBUG_PRINT
-                text_debug("TFTP: IP Down\n");
+                xtcp_debug_printf("TFTP: IP Down\n");
 #endif
                 tftp_app_transfer_error();
             }
@@ -120,7 +121,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
         case XTCP_NEW_CONNECTION:
         {
 #if 1||TFTP_DEBUG_PRINT
-            text_debug("TFTP: New connection to listening port:%d tftp_state:%d\n", conn.local_port,tftp_state);
+            xtcp_debug_printf("TFTP: New connection to listening port:%d tftp_state:%d\n", conn.local_port,tftp_state);
 #endif
 
             if (tftp_state == TFTP_WAITING_FOR_CONNECTION && conn.local_port == TFTP_DEFAULT_PORT)
@@ -183,7 +184,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                     if(can_put_data)
                     {
                         res = tftp_app_process_data_block(rxbuff+TFTP_MIN_PKT_SIZE, response_len - TFTP_MIN_PKT_SIZE);
-                        //text_debug("rec len %d\n",response_len - TFTP_MIN_PKT_SIZE);
+                        //xtcp_debug_printf("rec len %d\n",response_len - TFTP_MIN_PKT_SIZE);
                         if(res == SHORTLY_ACK_FAILED)
                         {
                             num_tx_bytes = tftp_make_error_pkt(tx_buffer, TFTP_ERROR_ACCESS_VIOLATION, "", signal_error);
@@ -207,7 +208,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                 
                 if(num_tx_bytes > 0 && res!= DELAYED_ACK)
                 {
-                    //text_debug("tftp shortly send %d\n", num_tx_bytes);
+                    //xtcp_debug_printf("tftp shortly send %d\n", num_tx_bytes);
                     i_xtcp.send(conn, tx_buffer, num_tx_bytes);
                     tftp_state = TFTP_SENDING_ACK;
                 }
@@ -215,7 +216,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
                 if(num_tx_bytes <= 0)
                 {
 #if TFTP_DEBUG_PRINT
-                    text_debug("TFTP: Received an error\n");
+                    xtcp_debug_printf("TFTP: Received an error\n");
 #endif
                     tftp_app_transfer_error();
 
@@ -244,7 +245,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
             if (signal_error)
             {
 #if TFTP_DEBUG_PRINT
-                text_debug("TFTP: Transfer error\n");
+                xtcp_debug_printf("TFTP: Transfer error\n");
 #endif
                 tftp_app_transfer_error();
 
@@ -257,7 +258,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
             if (signal_complete)
             {
 #if TFTP_DEBUG_PRINT
-                text_debug("TFTP: Transfer complete\n");
+                xtcp_debug_printf("TFTP: Transfer complete\n");
 #endif
                 tftp_app_transfer_complete();
 
@@ -277,7 +278,7 @@ void tftp_handle_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned 
         case XTCP_CLOSED:
         {
 #if TFTP_DEBUG_PRINT
-            text_debug("TFTP: Closed connection %d\n", conn.id);
+            xtcp_debug_printf("TFTP: Closed connection %d\n", conn.id);
 #endif
             break;
         }
@@ -296,7 +297,7 @@ static void xtcp_poll(client xtcp_if i_xtcp)
     if (tftp_state == TFTP_WAITING_FOR_DATA && prev_block_num == block_num)
     {
 #if 1||TFTP_DEBUG_PRINT
-        text_debug("TFTP: Connection timed out\n");
+        xtcp_debug_printf("TFTP: Connection timed out\n");
 #endif
         tftp_close(i_xtcp);
 
@@ -335,7 +336,7 @@ void tftp_send_ack(client xtcp_if i_xtcp, unsigned char ack_code, unsigned char 
 {
     if(tftp_state == TFTP_WAITING_FOR_CONNECTION)
     {
-        text_debug("tftp_send_ack error\n");
+        xtcp_debug_printf("tftp_send_ack error\n");
         return;
     }
     if(ack_code == TFTP_ACK_SUCCEED)

@@ -7,6 +7,7 @@
 #include "tftp.h"
 //#include "tftp_app.h"
 #include <debug_print.h>
+#include "sys_log.h" 
 
 static unsigned short prev_block_num = 0;
 static int tftp_block_size = 0;
@@ -155,7 +156,7 @@ static int tftp_make_expand_ack_pkt(unsigned char tx_buf[], int write_mode, unsi
 #endif
 
 #if 1||TFTP_DEBUG_PRINT
-    debug_printf("TFTP: Gen EXPAND ACK %d\n", offset);
+    xtcp_debug_printf("TFTP: Gen EXPAND ACK %d\n", offset);
 #endif
 
     return 2+offset;
@@ -169,7 +170,7 @@ int tftp_make_ack_pkt(unsigned char tx_buf[], unsigned short block_num)
     pkt->block_number = hton16(block_num);
 
 #if TFTP_DEBUG_PRINT
-    debug_printf("TFTP: Gen ACK, block #%d\n", block_num);
+    //xtcp_debug_printf("TFTP: Gen ACK, block #%d\n", block_num);
 #endif
 
     return TFTP_MIN_PKT_SIZE;
@@ -184,7 +185,7 @@ int tftp_make_send_pkt(unsigned char tx_buf[], unsigned short block_num, int *co
     pkt->block_number = hton16(block_num);
 
 #if TFTP_DEBUG_PRINT
-    debug_printf("TFTP: Gen send, block #%d\n", block_num);
+    xtcp_debug_printf("TFTP: Gen send, block #%d\n", block_num);
 #endif
 
     return tftp_app_process_send_data_block(tx_buf+TFTP_MIN_PKT_SIZE, block_num, tftp_block_size, complete)+TFTP_MIN_PKT_SIZE;
@@ -210,7 +211,7 @@ int tftp_make_error_pkt(unsigned char tx_buf[], unsigned short code, const char 
     strcpy(pkt->error_msg, msg);
 
 #if TFTP_DEBUG_PRINT
-    debug_printf("TFTP: Gen ERROR, code %d\n", code);
+    xtcp_debug_printf("TFTP: Gen ERROR, code %d\n", code);
 #endif
 
     return (TFTP_MIN_PKT_SIZE + strlen(msg) + TFTP_NULL_BYTE);
@@ -330,7 +331,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
                 prev_block_num = block_num;
 
 #if TFTP_DEBUG_PRINT
-                debug_printf("TFTP: Rcvd data, block #%d\n", block_num);
+                //xtcp_debug_printf("TFTP: Rcvd data, block #%d\n", block_num);
 #endif
 
                 if ((block_num * tftp_block_size) >= TFTP_MAX_FILE_SIZE)
@@ -352,7 +353,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
             {
                 *can_put_data = 0;
 #if 1||TFTP_DEBUG_PRINT
-                debug_printf("TFTP: Rvcd invalid data, block #%d %d\n", block_num, (unsigned short)(prev_block_num + 1));
+                xtcp_debug_printf("TFTP: Rvcd invalid data, block #%d %d\n", block_num, (unsigned short)(prev_block_num + 1));
 #endif
 
             }
@@ -372,7 +373,7 @@ int tftp_process_packet(unsigned char *tx_buf, unsigned char *rx_buf, int num_by
             block_num = ntoh16(data_pkt->block_num);
             
 #if TFTP_DEBUG_PRINT
-            debug_printf("TFTP: Rcvd Ack, block #%d\n", block_num);
+            xtcp_debug_printf("TFTP: Rcvd Ack, block #%d\n", block_num);
 #endif
 
             *block_num_glob = block_num;

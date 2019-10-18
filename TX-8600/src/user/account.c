@@ -79,11 +79,11 @@ void account_login_recive(){
         //
         #else
         state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],1);
-        if(state!=2){
+        if(state!=2){ //ÕËºÅÎ´Âú
             state=0;
         }
-        else{
-            state=1;
+        else{      // ÕËºÅµÇÂ¼ÒÑÂú
+            state=3;  //
         }
         #endif
         //--------------------------------------------------------------------------------------------------------------

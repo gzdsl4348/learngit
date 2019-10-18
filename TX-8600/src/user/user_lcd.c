@@ -256,9 +256,15 @@ void user_disptask_refresh(){
             //有正在运行的任务
             g_sys_val.disp_furef=1;
             g_sys_val.disp_ch[g_sys_val.disp_num] = i; 
-        
-            user_rttask_musname_get(&g_sys_val.rttask_musinfo,i);
-            disp_taskname(g_sys_val.rttask_musinfo.music_name);
+            // 读取任务名称
+            if(timetask_now.task_musicplay[i].rttask_f){
+                fl_rttask_read(&g_tmp_union.rttask_dtinfo,timetask_now.task_musicplay[i].task_id);
+                disp_taskname(g_tmp_union.rttask_dtinfo.name);
+            }else{
+                fl_timertask_read(&g_tmp_union.task_allinfo_tmp,timetask_now.task_musicplay[i].task_id);
+                disp_taskname(g_tmp_union.task_allinfo_tmp.task_coninfo.task_name);
+            }
+            //user_rttask_musname_get(&g_sys_val.rttask_musinfo,i);
             g_sys_val.disp_task_id[g_sys_val.disp_num]=timetask_now.task_musicplay[i].task_id;
             //
             g_sys_val.disp_num++;
@@ -269,6 +275,7 @@ void user_disptask_refresh(){
     // 获取即将运行任务名称
     if(g_sys_val.disp_furef)
         return;
+    // 没有运行中任务 显示即将运行任务
     timetask_t *today_t_p = timetask_list.today_timetask_head;
     for(uint8_t i=0;i<1;i++){ //只显示一个即时任务
         if(today_t_p==null)

@@ -229,7 +229,7 @@ void mes_send_taskinfo_nopage(task_allinfo_tmp_t* task_all_info){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //备份发送数据
-    fl_timertask_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
+    //fl_timertask_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
     mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);

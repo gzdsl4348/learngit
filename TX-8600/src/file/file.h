@@ -70,9 +70,9 @@ typedef enum
 
 typedef struct
 {
-    uint8_t ch;
-    uint32_t foffset;
     uint8_t fname[128*2];
+    uint32_t foffset;
+    uint8_t ch;
 }f_opr_music_t;
 
 typedef struct
@@ -131,9 +131,18 @@ typedef struct
 {
     //int id;
     //char state;
+    union{
+        f_opr_music_t music;
+        f_opr_file_t file;
+    }data;
+    f_opr_upload_t upload;
+    
     char log_event;
     
     char event;
+    
+    char music_start_contorl; //
+    char music_start;
     char result;
     
     char f_contorl_event;
@@ -142,11 +151,7 @@ typedef struct
     
     int error_code;
     
-    union{
-        f_opr_music_t music;
-        f_opr_file_t file;
-        f_opr_upload_t upload;
-    }data;
+
 }f_opr_item_t;
 
 

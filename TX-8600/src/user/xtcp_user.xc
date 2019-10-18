@@ -818,8 +818,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                                 g_sys_val.play_error_inc[i]++;
                                 xtcp_debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
                             }
-                            if(data.event == 0)
-                                task_musicevent_change(i,data.event,0,0);
+                            //if(data.event == 0)
+                            task_musicevent_change(i,data.event,0,0);
                         }
                         xtcp_debug_printf("music_status[%d]:%d %d\n", i, 
                         data.music_status[i].status,g_sys_val.play_error_inc[i]);

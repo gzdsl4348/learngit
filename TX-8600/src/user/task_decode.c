@@ -260,7 +260,6 @@ void timer_taskmusic_check(){
             timetask_now.task_musicplay[i].time_inc++;
             if(timetask_now.task_musicplay[i].time_inc>=timetask_now.task_musicplay[i].dura_time){
                 task_music_config_stop(i);
-                user_disptask_refresh();
                 // 即时任务关闭
                 if(timetask_now.task_musicplay[i].rttask_f){
                     ; // 即时任务关闭不在这里处理，这里只停止音乐
@@ -270,6 +269,7 @@ void timer_taskmusic_check(){
                     // 任务信息更新
                 	g_sys_val.task_config_s = 2; //任务编辑
                 	g_sys_val.task_con_id = timetask_now.task_musicplay[i].task_id;
+                    fl_timertask_read(&g_tmp_union.task_allinfo_tmp,timetask_now.task_musicplay[i].task_id);
                     mes_send_taskinfo_nopage(&g_tmp_union.task_allinfo_tmp);
                 }
             }
@@ -278,6 +278,11 @@ void timer_taskmusic_check(){
 }
 //---------------------------------------------------------------------------------------------------------------
 // 配置发送目标与任务参数
+// @ch 播放通道
+// @id 任务id
+// @rttask_f   0 打铃任务     1 即时任务
+// @set_musicinc 0 从零开始播放 
+// @set_vol    0 初始化音量
 void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_musicinc,uint8_t set_vol){
     g_sys_val.play_error_inc[ch] = 0;
     // 置通道播放状态
@@ -323,10 +328,10 @@ void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_
                         g_tmp_union.rttask_dtinfo.div_tol,
                         g_tmp_union.rttask_dtinfo.prio,
                         timetask_now.task_musicplay[ch].task_vol);
-
+        user_disptask_refresh();
+        fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
         task_music_play(ch,tmp_inc,&g_tmp_union.rttask_dtinfo.music_info[timetask_now.task_musicplay[ch].music_inc]);
         
-        user_disptask_refresh();
     }
     // 定时任务
     else{
@@ -344,9 +349,9 @@ void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_
                         g_tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum,
                         g_tmp_union.task_allinfo_tmp.task_coninfo.task_prio,
                         g_tmp_union.task_allinfo_tmp.task_coninfo.task_vol);
-
-        task_music_play(ch,tmp_inc,&g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[timetask_now.task_musicplay[ch].music_inc]);
         user_disptask_refresh();
+        fl_timertask_read(&g_tmp_union.task_allinfo_tmp,id);
+        task_music_play(ch,tmp_inc,&g_tmp_union.task_allinfo_tmp.task_musiclist.music_info[timetask_now.task_musicplay[ch].music_inc]);
     }
 }
 

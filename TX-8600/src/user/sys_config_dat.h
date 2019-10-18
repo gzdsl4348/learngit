@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x25)
+#define VERSION_L    (0x27)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (26)
+#define VERSION_TEN_L    (27)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -60,7 +60,7 @@ extern "C" {
 
 #define MAX_ACCOUNT_CONNET (20) //同时支持30个控制机
 
-#define MAX_ENTER_ACCOUNT   20  //最大同时登录账号
+#define MAX_ENTER_ACCOUNT   11  //最大同时登录账号
 
 #define MAX_MESSAGE_SEND   (MAX_ENTER_ACCOUNT) //同时支持30个控制机
 
@@ -346,7 +346,7 @@ typedef struct task_musicplay_t{
     uint8_t sulo_id;    //方案id
     uint32_t time_inc;  //播放时间
     uint32_t dura_time; //持续时间
-    uint8_t rttask_f;
+    uint8_t rttask_f;   // 0 打铃任务  1 即时任务
     uint8_t task_vol;   //任务音量
     uint16_t music_tolsec;  //曲目总时间
     uint16_t music_sec;     //曲目当前时间

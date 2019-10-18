@@ -1122,7 +1122,7 @@ uint16_t sysonline_chk_build(uint8_t state){
 
     xtcp_tx_buf[SYS_ONLINE_CHK_SD_B] = (g_sys_val.sd_state&0x01) | ((tmp&0x01)<<1);
     //
-    xtcp_tx_buf[SYS_ONLINE_CHK_DIVSTATE_B] = state;
+    xtcp_tx_buf[SYS_ONLINE_CHK_DIVSTATE_B] = (state);
     //
     uint16_t data_base = SYS_ONLINE_CHK_TASKID_B;
     uint16_t tol_task = 0;

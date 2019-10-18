@@ -19,6 +19,7 @@ static int file_upload_start(uint8_t *fname);
 
 extern void scan_musictosec_init();
 extern void scan_musictosec_clear();
+extern void rename_file_scan(uint8_t *src_path,uint8_t *des_path);
 
 FATFS fatfs;
 
@@ -121,7 +122,7 @@ void fopr_handle()
     f_opr_item_t *pitem = &g_fopr_mgr.item[0];
     f_opr_music_t *p_fopr_music = &pitem->data.music;
     f_opr_file_t *p_fopr_file = &pitem->data.file;
-    f_opr_upload_t *p_for_upload = &pitem->data.upload;
+    f_opr_upload_t *p_for_upload = &pitem->upload;
 
     switch(pitem->log_event){
         case FOR_LOGMK:{
@@ -141,92 +142,101 @@ void fopr_handle()
     if(pitem->result != FOR_IDLE)
         return;
 
-    switch(pitem->event)
-    {
-        case FOE_IDLE:
-            return;
-        case FOE_MUSIC_START:
+    
+    if(pitem->music_start_contorl == FOE_MUSIC_START){
+        pitem->music_start_contorl = 0;
+        error = music_decode_start(p_fopr_music->ch, p_fopr_music->fname, p_fopr_music->foffset);
+        
+    }
+    else{
+        switch(pitem->event)
         {
-            error = music_decode_start(p_fopr_music->ch, p_fopr_music->fname, p_fopr_music->foffset);
-            break;
-        }
-        case FOE_FMKDIR:
-        {
-            error = mf_mkdir(p_fopr_file->fsrc);
-            update_music_filelist(p_fopr_file->fsrc, 0);
-            break;
-        }
-        case FOE_FDELETE:
-        {
-            error = mf_unlink(p_fopr_file->fsrc);
-            update_music_filelist(p_fopr_file->fsrc, 1);
-            pitem->f_contorl_event = F_DLE_SUCCEED;
-            break;
-        }
-        case FOE_FRENAME:
-        {
-            //debug_printf("\n\n rename %d\n\n",error);
-            error = mf_rename(p_fopr_file->fsrc, p_fopr_file->fdes);
-            update_music_filelist(p_fopr_file->fdes, 0);
-            pitem->f_contorl_event = F_RENAME_SUCCEED;
-            break;
-        }
-        case FOE_FCOPY:
-        {    
-            error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FCOPY);
-
-            #if 0
-            error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
-            if(error != 0)// 操作失败, 删除目标文件
+            case FOE_IDLE:
+                return;
+            case FOE_MUSIC_START:
             {
-                mf_unlink(p_fopr_file->fdes);
+                error = music_decode_start(p_fopr_music->ch, p_fopr_music->fname, p_fopr_music->foffset);
+                break;
             }
-            update_music_filelist(p_fopr_file->fdes, 0);
-            #endif
-            break;
-        }        
-        case FOE_FMOVE:
-        {
-            error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FMOVE);
-            #if 0
-            error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
-            if(error != 0)// 操作失败, 删除目标文件
+            case FOE_FMKDIR:
             {
-                mf_unlink(p_fopr_file->fdes);
-                update_music_filelist(p_fopr_file->fdes, 1);
+                error = mf_mkdir(p_fopr_file->fsrc);
+                update_music_filelist(p_fopr_file->fsrc, 0);
+                break;
             }
-            else        // 操作成功, 删除源文件
+            case FOE_FDELETE:
             {
                 error = mf_unlink(p_fopr_file->fsrc);
-                update_music_filelist(p_fopr_file->fdes, 0);
                 update_music_filelist(p_fopr_file->fsrc, 1);
+                pitem->f_contorl_event = F_DLE_SUCCEED;
+                break;
             }
-            #endif
-            break;
-        }  
-        case FOE_FUPLOAD:
-        {
-            if(p_for_upload->state == FOU_STATE_START)
+            case FOE_FRENAME:
             {
-                error = file_upload_start(p_for_upload->fname);
-
-                //debug_printf("file_upload_start %s %d\n", p_for_upload->fname, error);
-                if(error == 0)
-                {
-                    p_for_upload->state = FOU_STATE_PUT_DATA;
-                    p_for_upload->reply_data = FOU_REPLY_SUCCEED;
-                }
-                else
-                {
-                    p_for_upload->state = FOU_STATE_END;
-                    p_for_upload->reply_data = FOU_REPLY_FAILED;
-                }
-                p_for_upload->reply_type = FOU_REPLY_START;
-                return;
+                //debug_printf("\n\n rename %d\n\n",error);
+                error = mf_rename(p_fopr_file->fsrc, p_fopr_file->fdes);
+                //update_music_filelist(p_fopr_file->fdes, 0);
+                
+                rename_file_scan(p_fopr_file->fsrc,p_fopr_file->fdes);
+                pitem->f_contorl_event = F_RENAME_SUCCEED;
+                break;
             }
-            break;
-        }         
+            case FOE_FCOPY:
+            {    
+                error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FCOPY);
 
+                #if 0
+                error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
+                if(error != 0)// 操作失败, 删除目标文件
+                {
+                    mf_unlink(p_fopr_file->fdes);
+                }
+                update_music_filelist(p_fopr_file->fdes, 0);
+                #endif
+                break;
+            }        
+            case FOE_FMOVE:
+            {
+                error = file_contorl_init(p_fopr_file->fsrc,p_fopr_file->fdes,&g_fcopy_pct,&g_fcopy_exit,pitem->f_copy_mode,FOE_FMOVE);
+                #if 0
+                error = mf_copy(p_fopr_file->fsrc, p_fopr_file->fdes, &g_fcopy_pct, &g_fcopy_exit, 0, 0, pitem->f_copy_mode);
+                if(error != 0)// 操作失败, 删除目标文件
+                {
+                    mf_unlink(p_fopr_file->fdes);
+                    update_music_filelist(p_fopr_file->fdes, 1);
+                }
+                else        // 操作成功, 删除源文件
+                {
+                    error = mf_unlink(p_fopr_file->fsrc);
+                    update_music_filelist(p_fopr_file->fdes, 0);
+                    update_music_filelist(p_fopr_file->fsrc, 1);
+                }
+                #endif
+                break;
+            }  
+            case FOE_FUPLOAD:
+            {
+                if(p_for_upload->state == FOU_STATE_START)
+                {
+                    error = file_upload_start(p_for_upload->fname);
+
+                    text_debug("file_upload_start %s %d\n", p_for_upload->fname, error);
+                    if(error == 0)
+                    {
+                        p_for_upload->state = FOU_STATE_PUT_DATA;
+                        p_for_upload->reply_data = FOU_REPLY_SUCCEED;
+                    }
+                    else
+                    {
+                        p_for_upload->state = FOU_STATE_END;
+                        p_for_upload->reply_data = FOU_REPLY_FAILED;
+                    }
+                    p_for_upload->reply_type = FOU_REPLY_START;
+                    return;
+                }
+                break;
+            }         
+        }
     }
 
     if(error != FR_OK)
@@ -244,7 +254,7 @@ void fopr_handle()
 kfifo_t upload_fifo;
 static uint8_t upload_buff_switch = 0;
 
-static f_opr_upload_t *gp_for_upload = &g_fopr_mgr.item[0].data.upload;
+static f_opr_upload_t *gp_for_upload = &g_fopr_mgr.item[0].upload;
 
 static FIL *pf_upload = NULL;
 

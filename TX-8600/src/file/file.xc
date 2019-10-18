@@ -48,7 +48,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
     char need2action = 0;
     
     f_opr_item_t &fopr = g_fopr_mgr.item[0];
-    f_opr_upload_t &fupload = g_fopr_mgr.item[0].data.upload;
+    f_opr_upload_t &fupload = g_fopr_mgr.item[0].upload;
         
     music_decoder_status_t decoder_status[MUSIC_CHANNEL_NUM];
     memset(&decoder_status, 0, sizeof(decoder_status));
@@ -63,15 +63,17 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             {
                 res = FOR_SUCCEED;
                 // 修改为任何时候可播放音乐
-                /*
-                if(fopr.event != FOE_IDLE)
+                if(fopr.result != FOR_IDLE)
                 {
                     res = FILE_BUSY_DECODE;
                     break;
-                }*/
+                }
+                
                 fopr.data.music.ch = ch;
                 fopr.data.music.foffset = f_offset;                
                 //------------------------------------------------------------------------------------------------------------
+                
+                text_debug("ms state %d\n",fupload.state);
                 uint8_t i,j;
                 // 合成路径名
                 for(i=0;i<(PATCH_NAME_NUM/2);i++){
@@ -90,11 +92,15 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 ((uint16_t *)fopr.data.music.fname)[i] = 0x00;
                 //------------------------------------------------------------------------------------------------------------
                 
-                fopr.event = FOE_MUSIC_START;
-                
+                //fopr.event = FOE_MUSIC_START;
+                fopr.music_start = FOE_MUSIC_START;
+                fopr.music_start_contorl = FOE_MUSIC_START;
                 decoder_status[ch].status = MUSIC_DECODER_START;
                 
-                need2action = 1;
+                //need2action = 1;
+                
+                c_faction <: (char)1;
+                text_debug("ms state %d\n",fupload.state);
                 break;
             }      
             case if_fs.music_stop(uint8_t ch) -> int res:
@@ -342,7 +348,12 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             case if_fs.get_notify(file_server_notify_data_t &data):
             {
                 //file_server_notify_data_t data;
-                data.event = fopr.event;
+                if(fopr.music_start == FOE_MUSIC_START){
+                    data.event = FOE_MUSIC_START;
+                }
+                else{
+                    data.event = fopr.event;
+                }
                 data.result = fopr.result;
                 data.error_code = fopr.error_code;
                 data.sdcard_status = get_sdcard_status();
@@ -356,7 +367,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 }
 
                 // tftp传输文件, 返回文件下载的回复信息
-                if(fopr.event == FOE_FUPLOAD)
+                if((fopr.event == FOE_FUPLOAD))
                 {
                     data.uplaod_reply_type = fupload.reply_type;
                     data.uplaod_reply_data = fupload.reply_data;
@@ -364,7 +375,6 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     //结束
                     if(fupload.state == FOU_STATE_END)
                     {
-                        debug_printf("FOE_FUPLOAD -> FOE_IDLE\n");
                         fopr.event = FOE_IDLE;
                     }
 
@@ -380,6 +390,10 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                     fopr.result = FOR_IDLE;
                     fopr.f_contorl_event = F_CONTORL_IDLE;
                 }
+                
+                text_debug("FOE_FUPLOAD %d\n",fupload.state);
+                
+                fopr.music_start = 0;
                 fopr.error_code = 0;//ADD:20181023
 
                 sdcard_status = get_sdcard_status();
@@ -392,12 +406,14 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 // after music_file_handle()
                 if(update_music_decoder_status(decoder_status))
                 {
+                    text_debug("music ev\n");
                     if_fs.notify2user();
                 }
 
                 // after fopr_handle()
                 if(fopr.result != FOR_IDLE)
                 {
+                    text_debug("fil ev %d\n",fopr.result);
                     if_fs.notify2user();
                 }
 
@@ -405,6 +421,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
                 if(fopr.event == FOE_FUPLOAD &&
                    fupload.reply_type != FOU_REPLY_IDLE)
                 {
+                    text_debug("up ev\n");
                     if_fs.notify2user();
                 }
 
