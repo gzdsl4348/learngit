@@ -25,6 +25,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {TASK_CHECK_CMD,task_check_recive},
                              {TASK_DTINFO_CK_CMD,task_dtinfo_check_recive},
                              {SOLUTION_CONFIG_CMD,solution_config_recive},
+                             {RTTASK_HOST_CONTORL_CMD,rttask_host_contorl_recive},
                              //{TASK_CONFIG_CMD,task_config_recive},
                              {TASK_DIINFO_CONFIG_CMD,task_dtinfo_config_recive},
                              {TASK_PLAYTEXT_CMD,task_playtext_recive},
@@ -76,7 +77,7 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
 							 //{TEXT_TXPAGE_GET_CMD,text_get_txpage_recive}, //C001
 							 {ETH_CONTOL_DEBUG_CMD,eth_debug_contorl_recive},
                              {MUSIC_B807_BATRECHK_CMD,music_batrechk_recive},
-                             {ETH_WAV_OPEN_CMD,wav_modeset_recive},
+                             //{ETH_WAV_OPEN_CMD,wav_modeset_recive},
                              {SDCARD_SIZECHK_B809_CMD,sdcard_sizechk_recive},
                              {DIVLIST_IPCHK_CMD,divlist_ipchk_recive},
                              #if ENABLE_AUD_TRAINSMIT
@@ -85,8 +86,8 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {RTTASK_MUSICLIST_CHKCMD,rttask_musiclist_chk_recive},
                              {RTTASK_MUSICLIST_SETCMD,rttask_musiclist_set_recive},
                              //{SYSSET_IPSET_CMD,sysset_ipset_recive}
-                             {RTTASK_HOST_CONTORL_CMD,rttask_host_contorl_recive},
-                             
+                             {C004_OFFLINEDIV_MODE_CMD,offlinediv_mode_recive},
+                             {BE0F_TEXTCOMMOND_RECIVE_CMD,div_textsend_recive},
                             };
 	
 // 多包列表发送函数
@@ -130,8 +131,8 @@ host_info_t host_info_tmp = {
                          {0x42,0x4C,0x45,0x00,0x00,0x00},//mac
                          {0x9A,0x5B,0xF6,0x65,0x68,0x56,0x3B,0x4E,0x3A,0x67,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00}, //NAME
                          {0x31,0x00,0x32,0x00,0x33,0x00,0x34,0x00,0x35,0x00,0x36,0x00,00,00},  //sn  123456 
-                         {VERSION_H,VERSION_L}, //version
-                         {0x54,0x00,0x58,0x00,0x2D,0x00,0x38,0x00,0x36,0x00,0x30,0x00,0x30,0x00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00}, //TX-8600
+                         {VERSION_H,VERSION_L}, //version 
+                         {0xAE,0x5F,0x8B,0x57,0x3B,0x4E,0x3A,0x67,0x00,0x00,0x00,0x00,0x00,0x00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00}, //微型主机 5F AE 57 8B 4E 3B 67 3A 
                          0x00,    //AUX_TYPE
                          0x00,    //host mode
                          0x00,    //slient en

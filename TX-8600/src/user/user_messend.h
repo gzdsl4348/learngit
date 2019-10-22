@@ -38,7 +38,7 @@ void mes_send_taskinfo_nopage(task_allinfo_tmp_t* task_all_info);
 void mes_send_rttaskinfo(uint16_t id,uint8_t contorl,uint8_t page_state);
 
 // 方案更新通知
-void mes_send_suloinfo(uint16_t id);
+void mes_send_suloinfo(uint16_t id,uint8_t state);
 
 // 发送超时
 void mes_send_overtime();

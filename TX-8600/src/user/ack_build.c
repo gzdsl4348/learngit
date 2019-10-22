@@ -350,9 +350,9 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
 
     xtcp_tx_buf[AC_LOGIN_BRAND_B]=host_info.div_brand_f;
 
-    xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=0;
-    if(g_sys_val.could_conn.id)
-        xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=1;
+    xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=1;
+    if(g_sys_val.could_conn.id==0 && host_info.offline_day==0)
+        xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=0;
     //
     uint16_t mac_date_base = AC_LOGIN_DIV_MAC_B;
 
@@ -1116,9 +1116,9 @@ uint16_t sysonline_chk_build(uint8_t state){
     xtcp_tx_buf[SYS_ONLINE_CHK_TIME_B+1] = g_sys_val.time_info.minute;
     xtcp_tx_buf[SYS_ONLINE_CHK_TIME_B+2] = g_sys_val.time_info.second;
 
-    uint8_t tmp = 0;
-    if(g_sys_val.could_conn.id)
-        tmp=1;
+    uint8_t tmp = 1;
+    if(g_sys_val.could_conn.id==0 && host_info.offline_day==0)
+        tmp=0;
 
     xtcp_tx_buf[SYS_ONLINE_CHK_SD_B] = (g_sys_val.sd_state&0x01) | ((tmp&0x01)<<1);
     //
@@ -1716,5 +1716,11 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
     }
 
     return build_endpage_decode(RTTASK_INFO_DATLEN,RTTASK_INFOSEND_CMD,rttask_info_list[list_num].could_id);
+}
+
+uint16_t divtext_send_build(){
+    xtcp_tx_buf[TEXTDIV_SEND_STATE] = 0;
+    memcpy(&xtcp_tx_buf[TEXTDIV_SEND_MAC],&xtcp_rx_buf[TEXTDIV_REC_DIVMAC],6);
+    return build_endpage_decode(TEXTDIV_SEND_MAC_DATLEN,BE0E_DIV_TEXTCOMMOND_CMD,&xtcp_rx_buf[POL_ID_BASE]);
 }
 

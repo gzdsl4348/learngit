@@ -161,7 +161,7 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
             g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1] = p_music_info->music_name[j*2];
             if(g_sys_val.disinfo2buf[ch_tmp][data_base+j*2+1]==0 && g_sys_val.disinfo2buf[ch_tmp][data_base+j*2]==0)
                 goto music_dispend;
-            if(j>16)
+            if(j>14)
                 break;
         }   
         data_base+=(12*2);

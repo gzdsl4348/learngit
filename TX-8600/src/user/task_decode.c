@@ -902,7 +902,7 @@ solution_config_end:
     user_sending_len = solution_config_build(id,state,xtcp_rx_buf[SOLU_CFGACK_CONFIG]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     if(state==0){
-        mes_send_suloinfo(id);
+        mes_send_suloinfo(id,0);
         taskview_page_messend();
     }
     create_todaytask_list(g_sys_val.time_info);
@@ -1223,7 +1223,7 @@ void task_dtinfo_config_recive(){
                 log_timetask_config(config_state);
                 mes_send_taskinfo(&g_sys_val.tmp_union.task_allinfo_tmp);           
                 if(g_sys_val.task_delete_s || g_sys_val.task_creat_s)
-                    mes_send_suloinfo(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn);
+                    mes_send_suloinfo(g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.solution_sn,1);
             }
             //--------------------------------------------------------------------------------
             xtcp_debug_printf("task dtinfo config over\n");
@@ -1375,7 +1375,7 @@ void task_bat_config_recive(){
     mes_send_listinfo(TIMETASKERROR_INFO_REFRESH,0);
     taskview_page_messend();
     
-    mes_send_suloinfo(solu_id);
+    mes_send_suloinfo(solu_id,1);
 
     // 日志记录
     log_timetask_config(5);
@@ -2114,7 +2114,7 @@ void rttask_playlist_updata_init(uint8_t ip[],div_node_t *div_info_p){
     g_sys_val.rttask_updat_f = 1;
     g_sys_val.rttask_div_p = div_info_p;
     memcpy(g_sys_val.rttask_up_ip,ip,4);
-    xtcp_debug_printf("div ip change %d %d %d %d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
+    //xtcp_debug_printf("div ip change %d %d %d %d\n",div_info_p->div_info.ip[0],div_info_p->div_info.ip[1],div_info_p->div_info.ip[2],div_info_p->div_info.ip[3]);
 }
 
 void rttask_playlist_updata(){
@@ -2134,14 +2134,14 @@ void rttask_playlist_updata(){
             //
             if(div_conn_p != null)
                 user_xtcp_send(div_conn_p->conn,0);
-            xtcp_debug_printf("send rttask list updat\n");
+            //xtcp_debug_printf("send rttask list updat\n");
             g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
             return;
         }
         g_sys_val.rttask_updat_p = g_sys_val.rttask_updat_p->run_next_p;
     }
     g_sys_val.rttask_updat_f = 0;
-    xtcp_debug_printf("rttask list updat end\n");
+    //xtcp_debug_printf("rttask list updat end\n");
 }
 
 
@@ -2254,7 +2254,7 @@ void rttask_musiclist_chk_recive(){
         user_sending_len = rttask_muslist_chk_build(list_num);
 	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 	}
-    xtcp_debug_printf("muc task\n");
+    //xtcp_debug_printf("muc task\n");
 }
 
 //----------------------------------------------
@@ -2277,7 +2277,7 @@ void rttask_musiclist_set_recive(){
         g_tmp_union.rttask_dtinfo.music_tol = 0;
     }
     // 
-    xtcp_debug_printf("get music tol %d %d\n",xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL],task_id);
+    //xtcp_debug_printf("get music tol %d %d\n",xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL],task_id);
     // 获得曲目
     uint16_t dat_base=RTTASK_MUCLISTSET_DATBASE;
     for(i=0;i<xtcp_rx_buf[RTTASK_MUCLISTSET_MUSTOL];i++){
@@ -2398,7 +2398,7 @@ void rttask_host_contorl_recive(){
                 timetask_now.task_musicplay[ch].music_inc -=timetask_now.task_musicplay[ch].music_tol;
             }
             //
-            xtcp_debug_printf("set last %d\n",timetask_now.task_musicplay[ch].music_inc);
+            //xtcp_debug_printf("set last %d\n",timetask_now.task_musicplay[ch].music_inc);
             task_musicevent_change(ch,0,1,1);  
             if(timetask_now.task_musicplay[ch].music_tol){
                 user_playstate_set(1,ch);

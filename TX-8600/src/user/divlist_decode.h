@@ -58,6 +58,12 @@ void divfound_over_timeinc();
 //
 void divsrc_sending_decode(uint8_t list_num);
 
+// ÔÆµÇÂ¼ÀëÏßÄ£Ê½ C004
+void offlinediv_mode_recive();
+
+// ÖÕ¶Ë²âÊÔÖ¸Áî BE0F
+void div_textsend_recive();
+
 
 #if defined(__cplusplus) || defined(__XC__)
 }

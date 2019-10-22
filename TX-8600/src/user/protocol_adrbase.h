@@ -189,6 +189,14 @@
 // 寻呼指令
 #define APP_AUDTRAINSMIT_UDP_CMD        0xBE09
 #define BE0E_AUDTRAINSMIT_DIVLIST_CMD   0xBE0B
+
+// 控制面板测试指令
+#define BE0E_DIV_TEXTCOMMOND_CMD        0xBE0E
+#define BE0F_TEXTCOMMOND_RECIVE_CMD     0xBE0F
+
+// 后台离线模式
+#define C004_OFFLINEDIV_MODE_CMD        0xC004
+
 //---------------------------------------------------------------------
 // 云包头
 #define CLH_TYPE_BASE           0                                   // 4 云包头类型
@@ -1095,8 +1103,6 @@
 #define RTTASK_CMD_ONCEMODE     0x0A    //单曲播放
 #define RTTASK_CMD_ONCELOOP     0x08    //单曲循环
 
-
-
 //====================================================================================================
 // 主机即时任务回报  B406
 //====================================================================================================
@@ -1121,6 +1127,25 @@
 
 
 #define RTTASK_INFO_DATLEN                    (RTTASK_INFO_NAMEDAT+MUSIC_NAME_NUM)
+
+//====================================================================================================
+// 设备测试指令
+//====================================================================================================
+#define TEXTDIV_REC_DIVMAC                    (POL_DAT_BASE)    //6
+#define TEXTDIV_REC_DATLEN                    (TEXTDIV_REC_DIVMAC+6)    
+
+
+#define TEXTDIV_SEND_STATE                    (POL_DAT_BASE)    //1
+#define TEXTDIV_SEND_MAC                      (TEXTDIV_SEND_STATE+1)    //6
+
+#define TEXTDIV_SEND_MAC_DATLEN               (TEXTDIV_SEND_MAC+6)    //6
+
+
+//====================================================================================================
+// 云登录离线模式
+//====================================================================================================
+#define COULD_OFFLINEMODE_MAC                 (POL_DAT_BASE)    //6
+#define COULD_OFFLINEMODE_DAY                 (COULD_OFFLINEMODE_MAC+6)
 
 
 #endif //__PROTOCOL_ADRBASE_H

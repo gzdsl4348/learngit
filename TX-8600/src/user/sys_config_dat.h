@@ -190,6 +190,7 @@ typedef struct host_info_t{
     uint8_t div_brand_f;
     uint8_t sys_dhcp_state; //WIFI的DHCP打开状态
     uint8_t log_daycnt;     //日志计数
+    unsigned offline_day;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];//日志名称
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
     //

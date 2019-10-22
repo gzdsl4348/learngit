@@ -365,7 +365,7 @@ void div_heart_recive(){
         if(div_info_p->div_info.div_state==0){
             div_info_p->div_info.div_onlineok = 0;
             tmp=1;
-            xtcp_debug_printf("divchk offline\n");
+            //xtcp_debug_printf("divchk offline\n");
         }
         need_send = 1;
     }
@@ -630,19 +630,17 @@ void divresearch_hostset_recive(){
     if(xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]>=MAX_DIV_LIST){
         return;
     }
-    xtcp_debug_printf("tol %d\n",xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]);
-    xtcp_debug_printf("%d %d %d %d\n",xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+1],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+2],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+3]);
+    //xtcp_debug_printf("tol %d\n",xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B]);
+    //xtcp_debug_printf("%d %d %d %d\n",xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+1],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+2],xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B+3]);
     for(uint8_t i=0;i<xtcp_rx_buf[SYSSET_HOSTIP_DIVTOL_B];i++){
-        xtcp_debug_printf("div mac %x %x %x %x %x %x\n",xtcp_rx_buf[addr_base],xtcp_rx_buf[addr_base+1],xtcp_rx_buf[addr_base+2],
-                                                  xtcp_rx_buf[addr_base+3],xtcp_rx_buf[addr_base+4],xtcp_rx_buf[addr_base+5]);
+        //xtcp_debug_printf("div mac %x %x %x %x %x %x\n",xtcp_rx_buf[addr_base],xtcp_rx_buf[addr_base+1],xtcp_rx_buf[addr_base+2],
+        //                                          xtcp_rx_buf[addr_base+3],xtcp_rx_buf[addr_base+4],xtcp_rx_buf[addr_base+5]);
         // 同步主机
         user_sending_len = sync_hostip_build(&xtcp_rx_buf[addr_base],&xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);    
-        delay_microseconds(300);
         // 同步动态IP
         user_sending_len = sync_ipinfo_build(&xtcp_rx_buf[addr_base]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);   
-        delay_microseconds(300);
         addr_base  += 6;
     }
     user_sending_len = onebyte_ack_build(1,SYSSET_DIV_HOSTSET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
@@ -654,6 +652,39 @@ void divlist_ipchk_recive(){
     user_sending_len = divlist_ipchk_ack_build();
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
+
+//=====================================================================================================
+// 云登录离线模式 C004
+//=====================================================================================================
+void offlinediv_mode_recive(){
+    // 判断主机MAC
+    if(charncmp(&xtcp_rx_buf[COULD_OFFLINEMODE_MAC],host_info.mac,6)){
+        //配置离线日期
+        host_info.offline_day = xtcp_rx_buf[COULD_OFFLINEMODE_DAY]+(xtcp_rx_buf[COULD_OFFLINEMODE_DAY]<<8);
+    } 
+}
+
+//=====================================================================================================
+// 终端测试指令 BE0F
+//=====================================================================================================
+void div_textsend_recive(){
+    // 同步主机IP
+    div_node_t *div_tmp_p=null;
+    conn_list_t *conn_tmp=null;
+    //
+    div_tmp_p = get_div_info_p(&xtcp_rx_buf[TEXTDIV_REC_DIVMAC]);
+    if(div_tmp_p == null){
+        return;
+    }
+    conn_tmp = get_conn_for_ip(div_tmp_p->div_info.ip);
+    if(conn_tmp == null){
+        return;
+    }
+    user_sending_len = divtext_send_build();
+    user_xtcp_send(conn_tmp->conn,0);   
+
+}
+
 
 
 

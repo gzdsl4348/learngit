@@ -261,10 +261,17 @@ void mes_send_rttaskinfo(uint16_t id,uint8_t contorl,uint8_t page_state){
 }
 
 // 方案更新通知
-void mes_send_suloinfo(uint16_t id){
+// @id  方案id
+// @state 是否强制置为编辑方案更新  0 正常编辑方案， 1 强制为编辑方案
+//      
+void mes_send_suloinfo(uint16_t id,uint8_t state){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
     //
+    if(state){
+        xtcp_rx_buf[SOLU_CFG_SOLU_CONTORL] = 2; //编辑任务
+        xtcp_rx_buf[SOLU_CFG_SOLU_CONFIGBIT] = 0xFF; // 提示编辑任务信息
+    }
     mes_send_list.len[mes_send_list.wrptr] = sulo_upgrade_build(id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
 	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);

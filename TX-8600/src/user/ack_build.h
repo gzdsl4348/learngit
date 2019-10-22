@@ -169,6 +169,8 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch);
 
 uint16_t sync_ipinfo_build(uint8_t mac[]);
 
+uint16_t divtext_send_build();
+
 #if defined(__cplusplus) || defined(__XC__)
 }
 #endif

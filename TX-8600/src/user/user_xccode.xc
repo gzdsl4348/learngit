@@ -424,7 +424,7 @@ void backup_system_chk(uint8_t *state,uint8_t *bar){
         i_user_flash->get_write_backup2flash_progress(complete,total,writed);
         *state = complete;
         *bar = (writed*100)/total;
-        xtcp_debug_printf("abck bar[%d] wri[%d] com[%d]\n", *bar, writed, complete);
+        //xtcp_debug_printf("abck bar[%d] wri[%d] com[%d]\n", *bar, writed, complete);
         #else
         xtcp_debug_printf("backup bar %d\n",*bar);
         if((*bar)>=100){

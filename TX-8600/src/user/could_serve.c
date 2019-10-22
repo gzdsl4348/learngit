@@ -41,7 +41,7 @@ void could_heart_send_timer(){
             g_sys_val.could_send_cnt++;
             if(g_sys_val.could_send_cnt>2){    //20√Î÷ÿ¡¨
                 g_sys_val.could_conn.id=0;
-                xtcp_debug_printf("could send time over\n");
+                //xtcp_debug_printf("could send time over\n");
                 user_xtcp_close(g_sys_val.could_conn);
                 //user_xtcp_unlisten(g_sys_val.colud_port);
                 g_sys_val.colud_connect_f=0;
@@ -76,7 +76,7 @@ void dns_domain_recive_decode(){
     if(xtcp_rx_buf[44]!=4)
         return;
     memcpy(g_sys_val.could_ip,&xtcp_rx_buf[45],4);
-    xtcp_debug_printf("\nrec dns could ip %d %d %d %d \n\n",g_sys_val.could_ip[0],g_sys_val.could_ip[1],g_sys_val.could_ip[2],g_sys_val.could_ip[3]);
+    //xtcp_debug_printf("\nrec dns could ip %d %d %d %d \n\n",g_sys_val.could_ip[0],g_sys_val.could_ip[1],g_sys_val.could_ip[2],g_sys_val.could_ip[3]);
     g_sys_val.dns_resend_cnt =0;
 }
 

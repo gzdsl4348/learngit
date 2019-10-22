@@ -871,13 +871,19 @@ void divboot_registerday_decode(){
     unsigned day_boot,day_sys,tmp;
     day_boot = host_info.online_date_info.year*365+host_info.online_date_info.month*30+host_info.online_date_info.date;
     day_sys = g_sys_val.date_info.year*365+g_sys_val.date_info.month*30+g_sys_val.date_info.date;
-    tmp = day_sys>day_boot;
+    tmp = day_sys-day_boot;
     if(tmp){
         if(host_info.regiser_days>tmp){
             host_info.regiser_days -=tmp;
         }
         else{
             host_info.regiser_days=0;
+        }
+        if(host_info.offline_day>tmp){
+            host_info.offline_day -=tmp;
+        }
+        else{
+            host_info.offline_day=0;
         }
     }
 }
