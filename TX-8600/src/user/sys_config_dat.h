@@ -193,6 +193,7 @@ typedef struct host_info_t{
     unsigned offline_day;
     uint8_t log_filename[MAX_LOGDATE_NUM][64];//日志名称
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
+    uint8_t reset_data_f;
     //
     
     date_info_t online_date_info;          // 记录日期

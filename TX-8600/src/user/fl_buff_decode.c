@@ -89,7 +89,7 @@ void fl_hostinfo_init(){
         sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
     }
     // 保存初始化信息
-	init_string = 0x5AA57349;
+	init_string = FLASH_INIT_F;
 	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
    //
     sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
@@ -101,6 +101,8 @@ void fl_hostinfo_init(){
     if(host_info.mac_write_f==0xAB){
         memcpy(&host_info_tmp,&host_info,sizeof(host_info_t));
     }
+    if(host_info.reset_data_f!=1)
+        host_info.reset_data_f=0;
     // 或得账号信息数据
     memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
     // 烧录两页数据

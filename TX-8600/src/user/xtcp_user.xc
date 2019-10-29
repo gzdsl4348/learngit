@@ -63,6 +63,7 @@ extern uint8_t gateway_mac[];
 //
 //audio eth info
 audio_ethinfo_t t_audio_ethinfo;
+
 //------------------------------------------------------
 //client point
 client interface xtcp_if   * unsafe i_user_xtcp = NULL;
@@ -673,6 +674,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     //------------------------------------------------------------------------
     // init fun     
     while(if_fl_manage.is_flash_init_complete())delay_milliseconds(50);
+    watchdog_clear();
 	init_funlist_len();     //系统函数列表初始化
     user_fldat_init();      //初始化flash
 	sys_info_init();	    //系统信息 列表 获取及初始化
@@ -680,6 +682,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     maschine_code_init();   //生成机器码
     divboot_registerday_decode(); //离线注册日期判断
     if_fs.setwav_mode(host_info.wav_mode);  // 设置wav模式
+    watchdog_clear();
 	//----------------------------------------------------------------------
 	// Config xtcp ethernet info
 	//----------------------------------------------------------------------
@@ -795,8 +798,16 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     xtcp_tx_buf = all_tx_buf+CLH_HEADEND_BASE;
     // 初始化rx指针
     xtcp_rx_buf = all_rx_buf;
-
-    host_info.wav_mode=1; 
+    // 强制开启wav模式
+    host_info.wav_mode=1;
+    // 复位状态中，重启系统，烧录flash
+    if(host_info.reset_data_f!=1){
+        host_info.reset_data_f=0;
+        g_sys_val.reboot_f=1;
+        g_sys_val.reboot_inc=4;
+        reset_data_disp(0);
+        fl_hostinfo_write();
+    }
 
     //====================================================================================================
 	//main loop process 
@@ -1086,6 +1097,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		// other process
 		//----------------------------------------------------------------------------- 	
         case systime when timerafter(time_tmp+10000000):> time_tmp:	//10hz process
+            watchdog_clear();
             reboot_inc++;
             //---------------------------------------------------------
             // 1HZ Process
@@ -1132,8 +1144,15 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 // 系统重启
                 if(g_sys_val.reboot_f){
                     g_sys_val.reboot_inc++;
-                    if(g_sys_val.reboot_inc>3){
-                        while(!(if_fl_manage.is_flash_write_complete()));    
+                    if(g_sys_val.reboot_inc>3){                
+                        static uint16_t second_tmp;
+                        while(!(if_fl_manage.is_flash_write_complete())){
+                            if(second_tmp<99)
+                                second_tmp++;
+                            watchdog_clear();
+                            reset_data_disp(second_tmp);
+                            delay_milliseconds(1150);
+                        }
                         device_reboot();
                     }
                 }
@@ -1210,6 +1229,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
                 user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
                 user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
+                //
+                host_info.reset_data_f=1;
+                fl_hostinfo_write();    //烧写主机信息
                 //--------------------------------------------------------------
                 delay_milliseconds(3000);
                 while(!(if_fl_manage.is_flash_write_complete()));    

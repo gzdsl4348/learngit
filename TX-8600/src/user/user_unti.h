@@ -32,6 +32,10 @@ uint8_t ip_cmp(uint8_t *a, uint8_t *b);
 
 uint8_t charncmp(uint8_t *c1,uint8_t *c2,unsigned len);
 
+void watchdog_process();
+
+void watchdog_clear();
+
 #define sn_cmp(a,b) (charncmp(a,b,SYS_PASSWORD_NUM))  
 
 #define NEED_FL_HOSTINFO    0x01

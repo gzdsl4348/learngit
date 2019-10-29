@@ -465,6 +465,8 @@ PT_THREAD(handle_dhcp(void))
         s.ticks = MAX_TICKS32;
     }
 
+    s.state = STATE_OFFER_RECEIVED;//191026添加，修正Renew服务器无响应的问题
+
     // Renew
     do
     {

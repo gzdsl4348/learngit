@@ -189,6 +189,8 @@ uip_linkup(void)
 	#endif
 	#endif
 	#if UIP_USE_DHCP
+        xtcp_ipaddr_t   ipaddr_tmp = {0,0,0,0};
+        uip_sethostaddr(ipaddr_tmp);
   		dhcpc_start();
 	#endif
 	} //else uip_static_ip

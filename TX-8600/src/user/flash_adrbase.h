@@ -6,7 +6,7 @@
 
 //-------------------------------------------------------------------------
 // USER FLASH  DATA BASE ADDRESS
-#define FLASH_INIT_F        0x5AA57349
+#define FLASH_INIT_F        0x5AA50001
 
 #define FLASH_ADR_BASE		0
 #define FLASH_ADR_INIT      (FLASH_ADR_BASE)    //4

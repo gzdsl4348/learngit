@@ -245,10 +245,11 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
                     }
 #endif                    
                     g_t_val->aux_timestamp[i] = timestamp[i];
-                    g_t_val->audio_txen[i] = audio_txen[i];
-                    
-                    if(g_t_val->audio_txen[i])
-                        g_t_val->play_state[i] = 1;
+                    if(g_t_val->audio_txen[i] != audio_txen[i]){
+                        g_t_val->audio_txen[i] = audio_txen[i];
+                        if(g_t_val->audio_txen[i])
+                            g_t_val->play_state[i] = 1;
+                    }
                 }
 				break;
 			case i_ethaud_cfg[uint8_t a].set_audio_txvol(uint8_t audio_val[NUM_MEDIA_INPUTS]):

@@ -1,6 +1,6 @@
 #include "user_unti.h"
 #include "debug_print.h"
-
+#include "reboot.h"
 
 //-----------------------------------------------------------------------------------------------------
 // 系统全局变量
@@ -29,5 +29,17 @@ uint8_t charncmp(uint8_t *c1,uint8_t *c2,unsigned len){
     }
     return 1;   //字符相等
 }
+uint8_t g_sys_watchdog_cnt=0;
+void watchdog_process(){
+    g_sys_watchdog_cnt++;
+    if(g_sys_watchdog_cnt>50){
+        device_reboot();  
+    }
+}
+
+void watchdog_clear(){
+    g_sys_watchdog_cnt=0;
+}
+
 
 

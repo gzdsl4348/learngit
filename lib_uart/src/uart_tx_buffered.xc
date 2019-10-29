@@ -8,6 +8,8 @@
 //#include <xscope.h>
 //#include "xassert.h"
 #include "debug_print.h"
+#include "reboot.h"
+#include "user_unti.h"
 
 #ifndef UART_TX_DISABLE_DYNAMIC_CONFIG
 #define UART_TX_DISABLE_DYNAMIC_CONFIG 0
@@ -191,8 +193,16 @@ void uart_tx_buffered(server interface uart_tx_buffered_if i,
 
   p_smi_mdc <: 1;
 
+  timer systime;
+  unsigned time_tmp;
+  systime:>time_tmp;
+
   while (1) {
     select {
+    // 设备看门狗
+    case systime when timerafter(time_tmp+10000000):> time_tmp: //10hz process
+        watchdog_process();
+        break;    
     case (state != WAITING_FOR_DATA) => tmr when timerafter(t) :> void:
       switch (state) {
       case OUTPUTTING_START_BIT:

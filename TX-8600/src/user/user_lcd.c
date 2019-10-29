@@ -591,3 +591,22 @@ void wifi_open_disp(){
     send_buff(DISP_DHCPS_ID);
 }
 
+void reset_data_disp(uint8_t second){
+    char resetchar[]={0x4E,0x3B,0x67,0x3A,0x6B,0x63,0x57,0x28,0x60,0x62,0x59,0x0D,0x65,0x70,0x63,0x6E,0x00,0x20}; // 18 len ,0x00,0x25}; //正在复位主机数据 
+    memcpy(&disp_buff[DAT_DISP_BASE],resetchar,18);
+    disp_len = DAT_DISP_BASE+18;
+    disp_buff[disp_len]=0;
+    disp_buff[disp_len+1]=0x30+(second/10);
+    disp_buff[disp_len+2]=0;
+    disp_buff[disp_len+3]=0x30+(second%10);
+    disp_buff[disp_len+4]=0;
+    disp_buff[disp_len+5]=0x25;
+    disp_len+=6;
+    send_buff(DISP_TASKINFO1_ID);
+    disp_buff[DAT_DISP_BASE]=0x00;
+    disp_buff[DAT_DISP_BASE+1]=0x00;
+    disp_len = DAT_DISP_BASE+2;
+    send_buff(DISP_TASKINFO2_ID);
+}
+
+
