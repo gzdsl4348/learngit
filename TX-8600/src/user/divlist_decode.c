@@ -19,7 +19,7 @@ uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]);
 // 分区列表发送
 //--------------------------------------------------------------------------
 void arealist_request_rec(){
-    uint8_t list_num = list_sending_init(AREA_GETREQUEST_CMD,AREA_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    uint8_t list_num = list_sending_init(AREA_GETREQUEST_CMD,AREA_LIST_SENDING,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT)
         return;
     //
@@ -43,7 +43,7 @@ void arealist_sending_decode(uint8_t list_num){
 void area_config_recive(){
     div_node_t *div_tmp_p = div_list.div_head_p;
     //
-    uint16_t rx_sn;
+    uint16_t rx_sn=0;
     uint8_t i;
     uint8_t ack_state=1;
     uint8_t div_fail_cnt=0;
@@ -51,14 +51,13 @@ void area_config_recive(){
     //---------------------------------------------------------------------------------------------------
     // 重名判断
     if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]!=1){
-        
         for(uint8_t i=0;i<MAX_AREA_NUM;i++){
-            if((area_info[i].area_sn != 0xFFFF) && charncmp(area_info[i].area_name,&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM)){
+            if((area_info[i].area_sn != 0xFFFF) && charncmp(area_info[i].area_name,(uint8_t *)&xtcp_rx_buf[AREASET_AREA_NAME_B],DIV_NAME_NUM)){
                 if(xtcp_rx_buf[AREASET_CONFIG_BYE_B]==0){
                     ack_state = 2;
                     goto area_config_decode_end;
                 }
-                if(area_info[i].area_sn!=tmp_area_id){
+                if((area_info[i].area_sn)!=tmp_area_id){
                     ack_state = 2;
                     goto area_config_decode_end;                    
                 }
@@ -101,7 +100,7 @@ void area_config_recive(){
     fl_area_write();    // 烧写保存分区信息
     //---------------------------------------------------------------------------------------------------------
     //设备列表配置
-    while(div_tmp_p != null){    //设备列表轮询
+    while((int)div_tmp_p != null){    //设备列表轮询
         uint16_t mac_adr;
         uint8_t state,i;
         uint16_t area_contorl;
@@ -109,7 +108,7 @@ void area_config_recive(){
         state=0;
         for(i=0;i<xtcp_rx_buf[AREASET_DIV_TOL_B];i++){  // 配置mac地址轮询
             // 设置分区设备
-            if(mac_cmp(div_tmp_p->div_info.mac,&xtcp_rx_buf[mac_adr])){
+            if(mac_cmp(div_tmp_p->div_info.mac,(uint8_t *)&xtcp_rx_buf[mac_adr])){
                 area_contorl =  (xtcp_rx_buf[mac_adr+6])+(xtcp_rx_buf[mac_adr+7]<<8);
                 state = 1;
                 break;
@@ -173,7 +172,7 @@ void div_extra_info_recive(){
 // 设备列表发送列表管理
 //---------------------------------------------------------------------------
 void divlist_request_recive(){
-    uint8_t list_num = list_sending_init(DIVLIST_REQUEST_CMD,DIV_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    uint8_t list_num = list_sending_init(DIVLIST_REQUEST_CMD,DIV_LIST_SENDING,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num==LIST_SEND_INIT)
         return;
     //
@@ -197,7 +196,7 @@ void div_sending_decode(uint8_t list_num){
 void div_info_set_recive()
 {
     div_node_t *div_tmp_p;
-    if(mac_cmp(&xtcp_rx_buf[DIVSET_MAC_B],host_info.mac)){
+    if(mac_cmp((uint8_t *)&xtcp_rx_buf[DIVSET_MAC_B],host_info.mac)){
         // 加快信息刷新
         g_sys_val.could_heart_timcnt = 8;
         
@@ -209,7 +208,7 @@ void div_info_set_recive()
         //-----------------------------------------------------------------
          //SET IP INFO
         if((xtcp_rx_buf[DIVSET_SETBITMASK_B]>>1)&01){ //SET IP INFO
-            if(charncmp(host_info.ipconfig.ipaddr,&xtcp_rx_buf[DIVSET_IP_B],4)==0){
+            if(charncmp(host_info.ipconfig.ipaddr,(uint8_t *)&xtcp_rx_buf[DIVSET_IP_B],4)==0){
                 g_sys_val.reboot_f = 1;
             }
             host_info.dhcp_en = xtcp_rx_buf[DIVSET_DHCPEN_B];
@@ -220,14 +219,14 @@ void div_info_set_recive()
             g_sys_val.gateway_standy=0;
             //=================================================================================================
             // 同步主机IP
-            div_node_t *node_tmp=null;
-            conn_list_t *conn_tmp=null;
+            div_node_t *node_tmp=(div_node_t *)null;
+            conn_list_t *conn_tmp=(conn_list_t *)null;
             //
             node_tmp = div_list.div_head_p;
             
-            while(node_tmp != null){   
+            while((int)node_tmp != null){   
                 conn_tmp = get_conn_for_ip(node_tmp->div_info.ip);
-                if(conn_tmp==null){
+                if((int)conn_tmp==null){
                     if(user_xtcp_connect_udp(8805,node_tmp->div_info.ip,&g_tmp_union.conn_tmp)==0){
                         user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
                         user_xtcp_send(g_tmp_union.conn_tmp,0);
@@ -282,8 +281,8 @@ void div_info_set_recive()
     }
     else if((xtcp_rx_buf[DIVSET_SETBITMASK_B]>>6)&01){ //SET DELETE DIV
         //删除设备
-        div_tmp_p = get_div_info_p(&xtcp_rx_buf[DIVSET_MAC_B]);
-        if(div_tmp_p != null){
+        div_tmp_p = get_div_info_p((uint8_t *)&xtcp_rx_buf[DIVSET_MAC_B]);
+        if((int)div_tmp_p != null){
             if(div_tmp_p->div_info.div_state==OFFLINE){
                 log_div_del(div_tmp_p);
                 delete_div_node(div_tmp_p->div_info.mac);
@@ -293,7 +292,7 @@ void div_info_set_recive()
             }
         }
     }
-    user_sending_len = onebyte_ack_build(xtcp_rx_buf[DIVSET_SETBITMASK_B],DIV_INFO_SET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    user_sending_len = onebyte_ack_build(xtcp_rx_buf[DIVSET_SETBITMASK_B],DIV_INFO_SET_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -303,11 +302,11 @@ void div_info_set_recive()
 void div_heart_recive(){
     //----------------------------------------------------------------------
     div_node_t *div_info_p;
-    div_info_p = get_div_info_p(&xtcp_rx_buf[POL_DAT_BASE]); //查找列表设备
+    div_info_p = get_div_info_p((uint8_t *)&xtcp_rx_buf[POL_DAT_BASE]); //查找列表设备
     uint8_t need_send=0;
     uint8_t state = DIVLIS_INFO_REFRESH;
     //-----------------------------------------------------------------------
-    if(div_info_p == null)
+    if((int)div_info_p == null)
         return;
     div_info_p->over_time =0;
     //设备IP是否改变
@@ -326,7 +325,7 @@ void div_heart_recive(){
         div_info_p->div_info.vol = xtcp_rx_buf[HEART_VOL_B];              //获取设备默认音量
         need_send = 1;
     }
-    if(charncmp(div_info_p->div_info.name,&xtcp_rx_buf[HEART_NAME_B],DIV_NAME_NUM)==0){
+    if(charncmp(div_info_p->div_info.name,(uint8_t *)&xtcp_rx_buf[HEART_NAME_B],DIV_NAME_NUM)==0){
         //xtcp_debug_printf("nc\n");
         memcpy(div_info_p->div_info.name,&xtcp_rx_buf[HEART_NAME_B],DIV_NAME_NUM);  //获取设备名称
         need_send = 1;
@@ -394,10 +393,10 @@ void div_heart_recive(){
 uint8_t div_online_tolist(){
     //------------------------------------------------------------------------
     div_node_t *div_info_p;
-    div_info_p = get_div_info_p(&xtcp_rx_buf[ONLINE_MAC_B]); //查找列表设备
+    div_info_p = get_div_info_p((uint8_t *)&xtcp_rx_buf[ONLINE_MAC_B]); //查找列表设备
     //------------------------------------------------------------------------
     // 创建设备节点
-    if(div_info_p==null)    //列表里没有设备 
+    if((int)div_info_p==null)    //列表里没有设备 
     {
         //xtcp_debug_printf("crea new %x,%x,%x,%x,%x,%x\n",xtcp_rx_buf[ONLINE_MAC_B],xtcp_rx_buf[ONLINE_MAC_B+1],xtcp_rx_buf[ONLINE_MAC_B+2],
         //                                            xtcp_rx_buf[ONLINE_MAC_B+3],xtcp_rx_buf[ONLINE_MAC_B+4],xtcp_rx_buf[ONLINE_MAC_B+5]);
@@ -464,7 +463,7 @@ void div_online_recive()
 uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
     //即时任务状态异常
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
-    while(tmp_p!=null){
+    while((int)tmp_p!=null){
         //比较MAC
         fl_rttask_read(&g_tmp_union.rttask_dtinfo,tmp_p->rttask_id);
         if(charncmp(g_tmp_union.rttask_dtinfo.src_mas,mac,6)){
@@ -483,7 +482,7 @@ uint16_t rttask_run_state_set(uint8_t state,uint8_t mac[]){
 #define DIV_OVERTIME 6
 void div_heart_overtime_close(){
     div_node_t *div_node_tmp = div_list.div_head_p;
-    if(div_node_tmp != null){
+    if((int)div_node_tmp != null){
         for(uint8_t i=0;i<MAX_DIV_LIST;i++){    
             div_node_tmp->over_time++;
             if((div_node_tmp->div_info.div_state != OFFLINE)&&(div_node_tmp->over_time>DIV_OVERTIME)){
@@ -491,7 +490,6 @@ void div_heart_overtime_close(){
                 //连接超时,设备离线
                 div_node_tmp->div_info.div_state = OFFLINE;
                 div_node_tmp->div_info.div_onlineok = OFFLINE;
-                uint8_t state = DIVLIS_INFO_REFRESH;
                 // 更新日志
                 log_divoffline(div_node_tmp);
                 //----------------------------------------------------------------------------------
@@ -513,7 +511,7 @@ void div_heart_overtime_close(){
                 xtcp_debug_printf("div_offline\n");
                 //-------------------------------------------------------
             }
-            if(div_node_tmp->next_p==null){
+            if((int)div_node_tmp->next_p==null){
                 break;
             }
             div_node_tmp = div_node_tmp->next_p;
@@ -533,7 +531,7 @@ void div_ip_mac_check_recive(){
 // 搜索设备
 //=====================================================================================================
 void research_lan_div(){
-    user_sending_len = onebyte_ack_build(0,LAN_DIVRESEARCH_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    user_sending_len = onebyte_ack_build(0,LAN_DIVRESEARCH_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(g_sys_val.broadcast_conn,0);
 }
 
@@ -618,7 +616,7 @@ void divfound_over_timeinc(){
 // 列表连发处理
 //---------------------------------------------
 void divsrc_sending_decode(uint8_t list_num){
-    user_sending_len = divsrc_list_build(AREA_GETREQUEST_CMD);
+    user_sending_len = divsrc_list_build(list_num);
     user_xtcp_send(t_list_connsend[list_num].conn,t_list_connsend[list_num].could_s);
 }
 
@@ -636,14 +634,14 @@ void divresearch_hostset_recive(){
         //xtcp_debug_printf("div mac %x %x %x %x %x %x\n",xtcp_rx_buf[addr_base],xtcp_rx_buf[addr_base+1],xtcp_rx_buf[addr_base+2],
         //                                          xtcp_rx_buf[addr_base+3],xtcp_rx_buf[addr_base+4],xtcp_rx_buf[addr_base+5]);
         // 同步主机
-        user_sending_len = sync_hostip_build(&xtcp_rx_buf[addr_base],&xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B]);
+        user_sending_len = sync_hostip_build((uint8_t *)&xtcp_rx_buf[addr_base],(uint8_t *)&xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);    
         // 同步动态IP
-        user_sending_len = sync_ipinfo_build(&xtcp_rx_buf[addr_base]);
+        user_sending_len = sync_ipinfo_build((uint8_t *)&xtcp_rx_buf[addr_base]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);   
         addr_base  += 6;
     }
-    user_sending_len = onebyte_ack_build(1,SYSSET_DIV_HOSTSET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    user_sending_len = onebyte_ack_build(1,SYSSET_DIV_HOSTSET_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -658,7 +656,7 @@ void divlist_ipchk_recive(){
 //=====================================================================================================
 void offlinediv_mode_recive(){
     // 判断主机MAC
-    if(charncmp(&xtcp_rx_buf[COULD_OFFLINEMODE_MAC],host_info.mac,6)){
+    if(charncmp((uint8_t *)&xtcp_rx_buf[COULD_OFFLINEMODE_MAC],host_info.mac,6)){
         //配置离线日期
         host_info.offline_day = xtcp_rx_buf[COULD_OFFLINEMODE_DAY]+(xtcp_rx_buf[COULD_OFFLINEMODE_DAY]<<8);
     } 
@@ -669,15 +667,15 @@ void offlinediv_mode_recive(){
 //=====================================================================================================
 void div_textsend_recive(){
     // 同步主机IP
-    div_node_t *div_tmp_p=null;
-    conn_list_t *conn_tmp=null;
+    div_node_t *div_tmp_p=(div_node_t *)null;
+    conn_list_t *conn_tmp=(conn_list_t *)null;
     //
-    div_tmp_p = get_div_info_p(&xtcp_rx_buf[TEXTDIV_REC_DIVMAC]);
-    if(div_tmp_p == null){
+    div_tmp_p = get_div_info_p((uint8_t *)&xtcp_rx_buf[TEXTDIV_REC_DIVMAC]);
+    if((int)div_tmp_p == null){
         return;
     }
     conn_tmp = get_conn_for_ip(div_tmp_p->div_info.ip);
-    if(conn_tmp == null){
+    if((int)conn_tmp == null){
         return;
     }
     user_sending_len = divtext_send_build();

@@ -37,7 +37,7 @@ void conn_decoder(){
     for(uint16_t i=0;i<fun_list_len;i++){
         if(((uint16_t *)xtcp_rx_buf)[POL_COM_BASE/2]==rec_fun_lis[i].cmd){
             conn_list_tmp = get_conn_info_p(conn.id);
-            if(conn_list_tmp!=null){
+            if((int)conn_list_tmp!=null){
                 if(ip_cmp(conn_list_tmp->conn.remote_addr,conn.remote_addr)){
                     conn_list_tmp->over_time=0;
                 }
@@ -190,12 +190,12 @@ void tcp_xtcp_recive_decode(uint16_t data_len){
             ip_tmp[3] = g_sys_val.tcp_buff_tmp[CLH_DESIP_BASE+3];
             conn_list_tmp = get_conn_for_ip(ip_tmp);
             //
-            if(conn_list_tmp!=null){
+            if((int)conn_list_tmp!=null){
                 user_sending_len = data_len - CLH_HEADEND_BASE;
                 memcpy(xtcp_tx_buf,&g_sys_val.tcp_buff_tmp[CLH_HEADEND_BASE],user_sending_len);
                 //重校验
                 uint16_t sum;
-                sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(user_sending_len-6));
+                sum = chksum_8bit(0,(uint8_t *)&xtcp_tx_buf[POL_LEN_BASE],(user_sending_len-6));
                 xtcp_tx_buf[user_sending_len-4] = sum;
                 xtcp_tx_buf[user_sending_len-3] = sum>>8;
                 //
@@ -470,6 +470,8 @@ void broadcast_for_minute(){
 //------------------------------------------------------------------------
 //每15秒检测IP冲突
 void ipconflict_for_15s(){
+    if(g_sys_val.host_ipget_mode)
+        return;
     g_sys_val.ipchk_timecnt++;
     if(g_sys_val.ipchk_timecnt>10){
         if(g_sys_val.ipchk_ipconflict_f==2)
@@ -491,7 +493,7 @@ void conn_overtime_close(){
     conn_list_tmp = conn_list_head;   
     conn_list_t *conn_next_p = conn_list_head;
     uint8_t conn_cnt=0;
-    while(conn_list_tmp!=null){
+    while((int)conn_list_tmp!=null){
         conn_list_tmp->over_time++;
         conn_next_p = conn_list_tmp->next_p;
         //-------------------------------------------------------
@@ -527,8 +529,6 @@ void conn_overtime_close(){
         }
     }
   }  
-  static uint8_t secodn=0;
-   secodn++;
   #if PRINT_CONNET_ACCOUNT
   xtcp_debug_printf("connect num %d %d\n",conn_cnt,secodn);
   #endif
@@ -568,19 +568,19 @@ void xtcp_buff_fifo_get(uint8_t tx_rx_f,uint8_t *buff,xtcp_fifo_t *kf,uint8_t cl
 }
 
 void xtcp_tx_fifo_put(){
-    xtcp_buff_fifo_put(1,all_tx_buf,&g_sys_val.tx_buff_fifo);
+    xtcp_buff_fifo_put(1,(uint8_t *)all_tx_buf,&g_sys_val.tx_buff_fifo);
 }
 
 void xtcp_rx_fifo_put(){
-    xtcp_buff_fifo_put(0,all_rx_buf,&g_sys_val.rx_buff_fifo);
+    xtcp_buff_fifo_put(0,(uint8_t *)all_rx_buf,&g_sys_val.rx_buff_fifo);
 }
 
 void xtcp_tx_fifo_get(){
-    xtcp_buff_fifo_get(1,all_tx_buf,&g_sys_val.tx_buff_fifo,0);
+    xtcp_buff_fifo_get(1,(uint8_t *)all_tx_buf,&g_sys_val.tx_buff_fifo,0);
 }
 
 void xtcp_rx_fifo_get(){
-    xtcp_buff_fifo_get(0,all_tx_buf,&g_sys_val.tx_buff_fifo,1);
+    xtcp_buff_fifo_get(0,(uint8_t *)all_tx_buf,&g_sys_val.tx_buff_fifo,1);
 }
 
 uint8_t xtcp_check_fifobuff(xtcp_fifo_t *kf){
@@ -592,7 +592,7 @@ uint8_t xtcp_check_fifobuff(xtcp_fifo_t *kf){
 
 void xtcp_fifobuff_throw(xtcp_fifo_t *kf){
     unsigned len = MIN(1, kf->in_index-kf->out_index);
-    unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
+    //unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
     kf->out_index+=len;
 }
 

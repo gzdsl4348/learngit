@@ -585,10 +585,24 @@ void dhcp_getin_clear(){
 }
 
 void wifi_open_disp(){
-    char wifiopen[]={0x00,0x57,0x00,0x49,0x00,0x46,0x00,0x49,0x5D,0xF2,0x62,0x53,0x5F,0x00}; //14  
+    //wifi ÒÑ´ò¿ª
+    char wifiopen[]={0x00,0x57,0x00,0x49,0x00,0x46,0x00,0x49,0x5D,0xF2,0x62,0x53,0x5F,0x00};//14
+                     
     memcpy(&disp_buff[DAT_DISP_BASE],wifiopen,14);
+    //itoa_forutf16(host_info.mac[4],&disp_buff[DAT_DISP_BASE+30],16,2);
     disp_len = DAT_DISP_BASE+14;
     send_buff(DISP_DHCPS_ID);
+    
+    char hilinkname[]={0x00,0x48,0x00,0x49,0x00,0x2D,0x00,0x4C,0x00,0x49,0x00,0x4E,0x00,0x4B,0x00,0x5F};//16
+    memcpy(&disp_buff[DAT_DISP_BASE],hilinkname,16);
+    itoa_forutf16(host_info.mac[4],&disp_buff[DAT_DISP_BASE+16],16,2);   
+    itoa_forutf16(host_info.mac[5],&disp_buff[DAT_DISP_BASE+20],16,2);  
+    log_reverse_array(&disp_buff[DAT_DISP_BASE+16], 2);
+    log_reverse_array(&disp_buff[DAT_DISP_BASE+18], 2);
+    log_reverse_array(&disp_buff[DAT_DISP_BASE+20], 2);
+    log_reverse_array(&disp_buff[DAT_DISP_BASE+22], 2);
+    disp_len = DAT_DISP_BASE+24;
+    send_buff(DISP_IPCONFILCT_ID);
 }
 
 void reset_data_disp(uint8_t second){

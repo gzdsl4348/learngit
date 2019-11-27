@@ -4,6 +4,8 @@
 #include "fl_buff_decode.h"
 #include "sys_log.h"
 
+extern uint8_t disp_buff[];
+
 void dhcp_dis(){
     char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x30,0x0D,0x0A}; 
     user_lan_uart0_tx(disdhcp,12,0);
@@ -73,6 +75,28 @@ void wifi_ipset(uint8_t ip[],uint8_t mode){
     user_lan_uart0_tx(ip_tmp,ip_adrbase,0);
 }
 
+void wifi_nameset(){
+    char name[]={0x61,0x74,0x2B,0x41,0x50,0x53,0x73,0x69,0x64,0x3D,0x48,0x49,0x2D,0x4C,0x49,0x4E,0x4B,0x5F}; //18
+    //
+    memcpy(disp_buff,name,18);
+    log_itoa(host_info.mac[4],&disp_buff[18],16,2);
+    log_itoa(host_info.mac[5],&disp_buff[20],16,2);
+    
+    disp_buff[22]=0x0D;
+    disp_buff[24]=0x0A;
+    
+    xtcp_debug_printf("set name \n");
+    for(uint8_t i=0;i<25;i++){
+        xtcp_debug_printf("%c",disp_buff[i]);
+    }
+    xtcp_debug_printf("\n");
+    for(uint8_t i=0;i<25;i++){
+        xtcp_debug_printf("%x",disp_buff[i]);
+    }
+    xtcp_debug_printf("\nset over \n");
+    user_lan_uart0_tx(disp_buff,24,0);
+}
+
 void wifi_contorl_mode(){
     if(g_sys_val.wifi_contorl_state==0){
         return;
@@ -93,7 +117,7 @@ void wifi_contorl_mode(){
             if(g_sys_val.wifi_timer>5){ // 等0.5秒 进入AT模式 
                 g_sys_val.wifi_timer=0;
                 // 进入DCHP控制模式
-                g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
+                g_sys_val.wifi_contorl_state = WIFI_AT_SETNAME;
                 g_sys_val.wifi_io_tmp |= D_IO_WIFI_CONTORL;
                 wifi_ioset(g_sys_val.wifi_io_tmp);
                 //xtcp_debug_printf("at ouit\n");
@@ -107,16 +131,17 @@ void wifi_contorl_mode(){
                     dhcp_dis();
                     dhcp_disp_dis();
                     g_sys_val.sys_dhcp_state_tmp=0;  
-                    //xtcp_debug_printf("dhcp dis\n");
+                    xtcp_debug_printf("dhcp dis\n");
                 }
                 else{
                     // 配置DHCP
                     dhcp_en();
                     g_sys_val.sys_dhcp_state_tmp=1;  
-                    //xtcp_debug_printf("dhcp en\n");
+                    xtcp_debug_printf("dhcp en\n");
                 }
                 // 进入配置wifi模式
                 g_sys_val.wifi_contorl_state = WIFI_LANIP_SET;
+                wifi_save();
             }
             break;
         case WIFI_LANIP_SET:
@@ -132,7 +157,16 @@ void wifi_contorl_mode(){
                 }   
                 wifi_ipset(ip_tmp,0);
                 //xtcp_debug_printf("set lanip %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
-                g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;
+                g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;                
+                wifi_save();
+            }
+            break;
+        case WIFI_AT_SETNAME:
+            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置AP名称
+                g_sys_val.wifi_timer = 0;
+                g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
+                wifi_nameset();
+                wifi_save();
             }
             break;
         case WIFI_AT_SAVE:

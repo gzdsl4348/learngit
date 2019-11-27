@@ -113,6 +113,7 @@ void text(client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx){
 }
 */
 
+
 /*----------------------------------------------------------------------------------------------------
 */
 //=============================================================================================================
@@ -129,7 +130,7 @@ int main()
     streaming chan c_tx_hp;
     streaming chan c_rx_hp;
     
-    fl_manage_if if_fl_manage[2];
+    fl_manage_if if_fl_manage[1];
     
   	chan c_faction;
     file_server_if if_fs;
@@ -171,7 +172,7 @@ int main()
                                  sdram_cb,
                                  2, 128, 16, 8, 12, 2, 64, 4096, 4); //Uses IS42S16400D 64Mb part supplied on SDRAM slice
         //6KB
-        on tile[0]:user_flash_manage(if_fl_manage,2,c_sdram[SDRAM_USER]);
+        on tile[0]:user_flash_manage(if_fl_manage,1,c_sdram[SDRAM_USER]);
         //----------------------------------------------------------------------------------
         // 165KB
         on tile[0]:{

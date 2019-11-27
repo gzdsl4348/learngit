@@ -1649,6 +1649,11 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
 
     xtcp_tx_buf[RTTASK_INFO_TASKID] = rttask_info_list[list_num].task_id;
     xtcp_tx_buf[RTTASK_INFO_TASKID+1] = rttask_info_list[list_num].task_id>>8;
+    
+    xtcp_debug_printf("\n\n info send id %d\n\n",rttask_info_list[list_num].task_id);
+
+    
+    xtcp_debug_printf("\n\n info send mac %x %x %x %x %x %x \n\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
 
     xtcp_tx_buf[RTTASK_INFO_USERID] = rttask_info_list[list_num].user_id;
     xtcp_tx_buf[RTTASK_INFO_USERID+1] = rttask_info_list[list_num].user_id>>8;

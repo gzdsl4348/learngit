@@ -28,7 +28,7 @@ void mac_factory_write(client xtcp_if i_xtcp,
 #endif
 
 
-int mac_factory_init(client xtcp_if i_xtcp,uint8_t mac[]);
+int mac_factory_init(client xtcp_if i_xtcp);
 
 void mac_fatctory_xtcp_event(client xtcp_if i_xtcp, xtcp_connection_t &conn, unsigned char rx_buffer[], unsigned int data_len);
 

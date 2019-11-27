@@ -430,7 +430,6 @@ void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static cons
                     break;
             } //switch
             break;
-
         }       
 	}
 }

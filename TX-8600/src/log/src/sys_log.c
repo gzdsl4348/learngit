@@ -20,7 +20,7 @@
 char g_user_debug_buf[DEBUG_PRINTF_BUFSIZE];
 
 // 反转数组排列
-static void reverse_array(char buf[], unsigned size)
+void log_reverse_array(char buf[], unsigned size)
 {
   int begin = 0;
   int end = size - 1;
@@ -32,7 +32,7 @@ static void reverse_array(char buf[], unsigned size)
   }
 }
 // 字符转换
-static int itoa(unsigned n, char *buf, unsigned base, int fill)
+int log_itoa(unsigned n, char *buf, unsigned base, int fill)
 {
   static const char digits[] = "0123456789ABCDEF";
   unsigned i = 0;
@@ -52,7 +52,7 @@ static int itoa(unsigned n, char *buf, unsigned base, int fill)
     buf[i] = '0';
     i++;
   }
-  reverse_array(buf, i);
+  log_reverse_array(buf, i);
   return i;
 }
 // utf16字符转换
@@ -86,7 +86,7 @@ int itoa_forutf16(unsigned n, char *buf, unsigned base, int fill)
     i++;
     //
     }
-  reverse_array(buf, i);
+  log_reverse_array(buf, i);
   return i;
 }
 
@@ -134,16 +134,16 @@ void xtcp_debug_printf(char * fmt, ...)
           *p++ = '-';
           intArg = -intArg;
         }
-        p += itoa(intArg, p, 10, width);
+        p += log_itoa(intArg, p, 10, width);
         break;
       case 'u':
         uintArg = va_arg(args, int);
-        p += itoa(uintArg, p, 10, width);
+        p += log_itoa(uintArg, p, 10, width);
         break;
       case 'p':
       case 'x':
         uintArg = va_arg(args, int);
-        p += itoa(uintArg, p, 16, width);
+        p += log_itoa(uintArg, p, 16, width);
         break;
       case 'c':
         intArg = va_arg(args, int);

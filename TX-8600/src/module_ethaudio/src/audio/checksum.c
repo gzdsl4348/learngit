@@ -19,6 +19,11 @@ uint16_t chksum_16bit(uint16_t sum, uint8_t *byte_data, uint16_t lengthInBytes) 
 	return ~s;
 }
 
+
+//@sum : checksum初始值
+//@*byte_data 输入数组数据
+//@lengthInBytes 数据长度
+// 例 checksum = chksum_8bit(0,data,len);
 uint16_t chksum_8bit(uint16_t sum, uint8_t *byte_data, uint16_t lengthInBytes) {
     uint16_t i=0;;
     unsigned s = sum;

@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x27)
+#define VERSION_L    (0x28)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (27)
+#define VERSION_TEN_L    (28)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -55,6 +55,7 @@ extern "C" {
 
 #define  PC_CONFIG_TOOL_PORT  5121
 #define LISTEN_BROADCAST_LPPORT 4094
+
 // 最大UDP连接数
 #define MAX_UDP_CONNET	160
 

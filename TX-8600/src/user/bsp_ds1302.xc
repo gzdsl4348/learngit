@@ -16,7 +16,6 @@ on tile[1]: port ds1302_IO = XS1_PORT_1J;
 
 #define one_us 100 //100MHZ /100
 
-
 static uint8_t tmp;
 void ds1302_get_date(){
 	//

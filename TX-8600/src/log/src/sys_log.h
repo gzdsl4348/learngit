@@ -40,9 +40,17 @@ typedef struct log_info_t{
 #ifdef __XC__ 
 log_info_t *unsafe log_info_chang(char * fmt, ...);
 int itoa_forutf16(unsigned n, char *unsafe buf, unsigned base, int fill);
+// ×Ö·û×ª»»
+int log_itoa(unsigned n, char *unsafe buf, unsigned base, int fill);
+
+void log_reverse_array(char buf[], unsigned size);
 #else
 log_info_t* log_info_chang(char * fmt, ...);
 int itoa_forutf16(unsigned n, char *buf, unsigned base, int fill);
+// ×Ö·û×ª»»
+int log_itoa(unsigned n, char * buf, unsigned base, int fill);
+
+void log_reverse_array(char buf[], unsigned size);
 #endif
 
 //=======================================================================

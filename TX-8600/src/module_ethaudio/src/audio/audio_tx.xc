@@ -85,7 +85,7 @@ void audio_tx(  client music_decoder_output_if if_mdo,
 							if((g_t_val->sample_rate[ch]==48000 || g_t_val->sample_rate[ch]==44100 || g_t_val->sample_rate[ch]==16000 
                                 ||g_t_val->sample_rate[ch]==88200 ||g_t_val->sample_rate[ch]==96000 || g_t_val->sample_rate[ch]==31000)==0){
 								//if(ch==0)
-									debug_printf("sample error ch%d\n",ch);
+									//debug_printf("sample error ch%d\n",ch);
 								sample_error_f[ch]++;
 								continue;
 							}

@@ -2,6 +2,7 @@
 #include "factory_mac_packbiu.h"
 #include "debug_print.h"
 #include "string.h"
+#include "sys_config_dat.h"
 
 #ifndef INIT_VAL
 #define INIT_VAL -1
@@ -17,11 +18,11 @@ static uint16_t divce_id=0;
 static char mac_factory_flag = 0;
 static mac_facinfo_t  t_mac_facinfo;
 
-int mac_factory_init(client xtcp_if i_xtcp, uint8_t mac[])
+int mac_factory_init(client xtcp_if i_xtcp)
 {
 	unsafe{
-	if ( (((uint32_t *)mac)[0]!=0x00454C42) ||
-		  (((uint16_t *)mac)[2]!=0x00))
+	if ( (((uint32_t *)host_info.mac)[0]!=0x00454C42) ||
+		  (((uint16_t *)host_info.mac)[2]!=0x00))
 		return 0;	//MAC Not ture
 
 	xtcp_ipconfig_t ipconfig=
@@ -33,8 +34,9 @@ int mac_factory_init(client xtcp_if i_xtcp, uint8_t mac[])
     //------------------------------------------------
 	// Set ip :192.168.168.168
 	// Set mac:42 4C 45 00 00 00
-	i_xtcp.xtcp_init(ipconfig,mac);
-    memcpy(t_mac_facinfo.mac,mac,6);
+	i_xtcp.xtcp_init(ipconfig,host_info.mac);
+    memcpy(t_mac_facinfo.mac,host_info.mac,6);
+    memcpy(&host_info.ipconfig,&ipconfig,12);
     mac_factory_flag = 1;
    }
     return 1;

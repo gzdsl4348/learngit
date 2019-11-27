@@ -15,16 +15,15 @@
 #include "user_file_contorl.h"
 #include "could_serve.h"
 #include "sys_log.h"
-
 #include "debug_print.h"
 
 //------------------------------------------------------------------------------
 // 日期计时线程
 //------------------------------------------------------------------------------
 void timer_process(){
-	uint8_t tmp;
     static uint8_t get_f=3;
     g_sys_val.time_info.second++;
+    
     if(g_sys_val.time_info.second>(60-1)){
         g_sys_val.time_info.second=0;
         g_sys_val.time_info.minute++;	
@@ -40,12 +39,14 @@ void timer_process(){
             if(g_sys_val.time_info.hour>(24-1)){
                 get_f=0;
                 g_sys_val.time_info.hour=0;
-                // 更新每日任务
+                delay_milliseconds(1);
+                // 同步ds1302时间
+                ds1302_get_date();
+                g_sys_val.today_date = g_sys_val.date_info;
+                // 更新每日任务                
                 create_todaytask_list(g_sys_val.time_info);
                 // 判断时间播放任务
                 task_check_and_play();
-                // 同步ds1302时间
-                ds1302_get_date();
                 // 判断方案日期
                 for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
                     if((solution_list.solu_info[i].en==1)&&(solution_list.solu_info[i].state!=0xFF))
@@ -53,8 +54,6 @@ void timer_process(){
                 }
                 fl_solution_write();
                 //
-                g_sys_val.today_date = g_sys_val.date_info;
-                //                
                 host_info.online_date_info = g_sys_val.date_info; 
                 // 离线日期判断
                 if(host_info.offline_day!=0){

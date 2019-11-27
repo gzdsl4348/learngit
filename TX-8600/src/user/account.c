@@ -37,9 +37,9 @@ void account_login_recive(){
     //    return; //fail
     //}
     // 解密登录名
-    filename_decoder(&xtcp_rx_buf[A_LOGIN_NAME_B],DIV_NAME_NUM);
+    filename_decoder((uint8_t *)&xtcp_rx_buf[A_LOGIN_NAME_B],DIV_NAME_NUM);
     // 解密密码
-    filename_decoder(&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
+    filename_decoder((uint8_t *)&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
     //------------------------------------------------------------------------------------------------------------------------
     // 解析
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
@@ -58,13 +58,13 @@ void account_login_recive(){
         }
         #endif
         // 判断用户名
-        if(!charncmp(&xtcp_rx_buf[A_LOGIN_NAME_B],g_tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
+        if(!charncmp((uint8_t *)&xtcp_rx_buf[A_LOGIN_NAME_B],g_tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
             continue;
         }
         // 判断密码
-        if(!sn_cmp(&xtcp_rx_buf[A_LOGIN_SN_B],g_tmp_union.account_all_info.account_info.sn)){
-            filename_decoder(&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
-            user_sending_len = account_login_ack_build(02,0,null,ACCOUNT_LOGIN_CMD);
+        if(!sn_cmp((uint8_t *)&xtcp_rx_buf[A_LOGIN_SN_B],g_tmp_union.account_all_info.account_info.sn)){
+            filename_decoder((uint8_t *)&xtcp_rx_buf[A_LOGIN_SN_B],SYS_PASSWORD_NUM);
+            user_sending_len = account_login_ack_build(02,0,(uint8_t *)null,ACCOUNT_LOGIN_CMD);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
             //xtcp_debug_printf("sn error\n");
             return; //fail
@@ -74,11 +74,11 @@ void account_login_recive(){
         // 添加进消息队列
         uint8_t state;
         #if ALL_ACCOUNT_ENTER
-        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],1);
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],1);
         state=0;
         //
         #else
-        state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],1);
+        state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],1);
         if(state!=2){ //账号未满
             state=0;
         }
@@ -96,7 +96,7 @@ void account_login_recive(){
         account_info[i].time_info = g_sys_val.time_info;
         account_info[i].date_info = g_sys_val.date_info;
         //
-        user_sending_len = account_login_ack_build(state,i,&g_tmp_union.account_all_info.mac_list,ACCOUNT_LOGIN_CMD);
+        user_sending_len = account_login_ack_build(state,i,(uint8_t *)&g_tmp_union.account_all_info.mac_list,ACCOUNT_LOGIN_CMD);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         // 保存登录信息
         g_tmp_union.account_all_info.account_info = account_info[i];
@@ -107,7 +107,7 @@ void account_login_recive(){
         log_account_login();
         return; //success
     }
-    user_sending_len = account_login_ack_build(1,0,null,ACCOUNT_LOGIN_CMD);   //账户不存在
+    user_sending_len = account_login_ack_build(1,0,(uint8_t *)null,ACCOUNT_LOGIN_CMD);   //账户不存在
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     //xtcp_debug_printf("login no\n");
     return; //fail
@@ -118,7 +118,7 @@ void account_login_recive(){
 //================================================================================
 void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
     //
-    uint8_t list_num = list_sending_init(ACCOUNT_USER_LIST_CMD,AC_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    uint8_t list_num = list_sending_init(ACCOUNT_USER_LIST_CMD,AC_LIST_SENDING,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     if(list_num == LIST_SEND_INIT){
         return;
     }
@@ -131,7 +131,7 @@ void account_list_send(uint8_t id[],uint8_t could_f,uint8_t could_cmd){
 
 
 void account_userlist_recive(){
-    account_list_send(&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE],0);
+    account_list_send((uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE],0);
 	if(g_sys_val.list_sending_f==0){
 		g_sys_val.list_sending_f = 1;
 	    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
@@ -177,9 +177,9 @@ void account_config_recive(){
     dat_base = A_CONFIG_AC_DIV_MAC_B;
     //---------------------------------------------------------------------------------
     // 解密登录名
-    filename_decoder(&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM);
+    filename_decoder((uint8_t *)&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM);
     // 解密密码
-    filename_decoder(&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
+    filename_decoder((uint8_t *)&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
     //-----------------------------------------------------
     // 获取编辑ID
     if((xtcp_rx_buf[A_CONFIG_ACNUM_B] < MAX_ACCOUNT_NUM)&&(xtcp_rx_buf[A_CONFIG_CONTORL_B]!=0)){
@@ -190,7 +190,7 @@ void account_config_recive(){
         for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
             //xtcp_debug_printf("id %d %d\n",account_info[i].id,id);
             if((account_info[i].id!=0xFF)&&((account_info[i].id!=id)||(xtcp_rx_buf[A_CONFIG_CONTORL_B]==0))){
-                if(charncmp(account_info[i].name,&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM)){
+                if(charncmp(account_info[i].name,(uint8_t *)&xtcp_rx_buf[A_CONFIG_NAME_B],DIV_NAME_NUM)){
                     // 账号重复
                     state = 2;
                     goto fail_account_config;
@@ -206,7 +206,7 @@ void account_config_recive(){
                 xtcp_debug_printf("\n");
                 #endif
                 if((xtcp_rx_buf[A_CONFIG_PHONE_NUM_B]!=0 || xtcp_rx_buf[A_CONFIG_PHONE_NUM_B+1]!=0)&&
-                    charncmp(account_info[i].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM)
+                    charncmp(account_info[i].phone_num,(uint8_t *)&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM)
                   ){
                     //xtcp_debug_printf("ac phone same\n");
                     // 手机号重复
@@ -347,8 +347,6 @@ void account_sys_register_recive(){
         //
         //xtcp_debug_printf("BE02 rec %d regday %d \n",host_info.regiser_state,host_info.regiser_days);
         //------------------------------------------------------------------------------------------------------------------------------------
-        #if REGITSER_NEWVESION_DISP
-        //------------------------------------------------------------------------------------------------------------------------------------
         // 未注册
         if(host_info.regiser_state==0){
             host_info.regiser_state = 0;
@@ -366,32 +364,13 @@ void account_sys_register_recive(){
             host_info.regiser_state = 1;
         }
         // 试用过期 未激活
-        else if(host_info.regiser_state=3 && ((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
+        else if(host_info.regiser_state==3 && ((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
             host_info.regiser_state = 0;
         }
         // 试用中
         else{
             host_info.regiser_state = 3;
         }        
-        //-------------------------------------------------------------------------------------------------------------------------------------------
-        #else
-        //-------------------------------------------------------------------------------------------------------------------------------------------
-        // 未注册
-        if((host_info.regiser_state==0)&&(host_info.regiser_days == 0)){
-            host_info.regiser_state = 0;
-        }
-        // 无限期注册
-        else if(host_info.regiser_state==1){
-            host_info.regiser_state = 2;
-        }
-        // 有限期注册
-        else if((host_info.regiser_state==2 || host_info.regiser_state==3)&&((host_info.regiser_days==0)||(host_info.regiser_days >365*100))){
-            host_info.regiser_state = 0; // 过期，当未注册
-        }
-        else{
-            host_info.regiser_state = 1; // 未过期
-        }
-        #endif
         //----------------------------------------------------------------------------------
         // 需更新注册信息
         if(g_sys_val.register_need_send){
@@ -465,7 +444,7 @@ void app_register_request(){
     if(g_sys_val.could_conn.id==0){
         g_sys_val.register_rec_s_tmp=3;
         user_sending_len = cld_appregsied_request_build();   
-        user_xtcp_send(conn,&xtcp_rx_buf[POL_ID_BASE]);
+        user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     else{
         cld_register_request();
@@ -478,7 +457,7 @@ void app_register_request(){
 void account_list_updat(){
     if(g_sys_val.could_conn.id==0)
         return;
-    account_list_send(&xtcp_rx_buf[POL_ID_BASE],1,1);
+    account_list_send((uint8_t *)&xtcp_rx_buf[POL_ID_BASE],1,1);
 	if(g_sys_val.list_sending_f==0){
 		g_sys_val.list_sending_f = 1;
 	    user_could_send(1);  
@@ -502,7 +481,7 @@ void cld_account_login_recive(){
         return;
     //判断登录
     for(uint8_t i=0;i<MAX_ACCOUNT_NUM;i++){
-        if(charncmp(&xtcp_rx_buf[POL_DAT_BASE+1],account_info[i].phone_num,DIV_NAME_NUM) && account_info[i].id!=0xFF){
+        if(charncmp((uint8_t *)&xtcp_rx_buf[POL_DAT_BASE+1],account_info[i].phone_num,DIV_NAME_NUM) && account_info[i].id!=0xFF){
             //读取账户详细信息
             fl_account_read(&g_tmp_union.account_all_info,account_info[i].id);
             account_info[i].login_state = 1; // account login
@@ -514,14 +493,14 @@ void cld_account_login_recive(){
             //名字特殊处理            
             memcpy(&xtcp_rx_buf[AC_LOGIN_NAME_B],account_info[i].name,DIV_NAME_NUM);
             //--------------------------------------------------------------------
-            user_sending_len = account_login_ack_build(0,i,&g_tmp_union.account_all_info.mac_list,CLD_CLOULDLOGIN_CMD);
+            user_sending_len = account_login_ack_build(0,i,(uint8_t *)&g_tmp_union.account_all_info.mac_list,CLD_CLOULDLOGIN_CMD);
             user_could_send(0);
             log_account_couldlogin(i);
             return;
         }
     }   
     // 云登录信息推送
-    user_sending_len = account_login_ack_build(1,0,null,CLD_REGISTER_INFO_CMD); 
+    user_sending_len = account_login_ack_build(1,0,(uint8_t *)null,CLD_REGISTER_INFO_CMD); 
     //xtcp_debug_printf("could len %d\n",user_sending_len);
     user_could_send(0);    
 }
@@ -532,7 +511,7 @@ void cld_account_login_recive(){
 //================================================================================
 uint8_t sysonline_recive(){
     uint8_t state=0;
-    state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],0);
+    state = mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],0);
     if(state!=1){
         state=0;
     }
@@ -561,12 +540,12 @@ void mic_userlist_chk_recive(){
         //获得用户详细信息
         fl_account_read(&g_tmp_union.account_all_info,i);
         // 判断用户
-        if(!charncmp(&xtcp_rx_buf[A_LOGIN_NAME_B],g_tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
+        if(!charncmp((uint8_t *)&xtcp_rx_buf[A_LOGIN_NAME_B],g_tmp_union.account_all_info.account_info.name,DIV_NAME_NUM)){
             continue;
         }
         
         // 判断密码
-        if(!sn_cmp(&xtcp_rx_buf[A_LOGIN_SN_B],g_tmp_union.account_all_info.account_info.sn)){
+        if(!sn_cmp((uint8_t *)&xtcp_rx_buf[A_LOGIN_SN_B],g_tmp_union.account_all_info.account_info.sn)){
             user_sending_len = mic_userlist_ack_build(0,&g_tmp_union.account_all_info);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
             return; //fail
@@ -578,7 +557,7 @@ void mic_userlist_chk_recive(){
         user_sending_len = mic_userlist_ack_build(state,&g_tmp_union.account_all_info);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         // 加入消息队列
-        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],&xtcp_rx_buf[POL_ID_BASE],2);
+        mes_list_add(conn,xtcp_rx_buf[POL_COULD_S_BASE],(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],2);
     }
 }
 
@@ -589,7 +568,7 @@ void mic_userlist_chk_recive(){
 void time_sync_deocde(uint8_t could_s){
     if((xtcp_rx_buf[USER_TIMSYNC_DAY_B]==0) ||(xtcp_rx_buf[USER_TIMSYNC_MONTH_B]==0)||(xtcp_rx_buf[USER_TIMSYNC_WEEK_B]==0)){
         if(could_s==0){
-            user_sending_len = onebyte_ack_build(0,USER_TIMER_SYNC_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+            user_sending_len = onebyte_ack_build(0,USER_TIMER_SYNC_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         }    
         return;
@@ -610,7 +589,7 @@ void time_sync_deocde(uint8_t could_s){
     ds1302_time_set();
     //
     if(could_s==0){
-        user_sending_len = onebyte_ack_build(1,USER_TIMER_SYNC_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        user_sending_len = onebyte_ack_build(1,USER_TIMER_SYNC_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     //判断方案是否有效日期内
@@ -708,7 +687,7 @@ void mic_time1hz_close(){
 // 主机在线搜索   B906
 //===============================================================================
 void user_host_search_recive(){
-    user_sending_len = onebyte_ack_build(1,HOST_SEARCH_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    user_sending_len = onebyte_ack_build(1,HOST_SEARCH_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -718,12 +697,12 @@ void user_host_search_recive(){
 void tmp_ipset_recive(){
     if(xtcp_rx_buf[TMP_IPSET_STATE])
         return;
-    if(mac_cmp(&xtcp_rx_buf[TMP_IPSET_MAC],host_info.mac)){
+    if(mac_cmp((uint8_t *)&xtcp_rx_buf[TMP_IPSET_MAC],host_info.mac)){
         memcpy(g_tmp_union.ipconfig.ipaddr,&xtcp_rx_buf[TMP_IPSET_IP],4);
         memcpy(g_tmp_union.ipconfig.netmask,&xtcp_rx_buf[TMP_IPSET_MASK],4);
         memcpy(g_tmp_union.ipconfig.gateway,&xtcp_rx_buf[TMP_IPSET_GATE],4);
         //
-        user_sending_len = onebyte_ack_build(1,TMP_IPSET_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        user_sending_len = onebyte_ack_build(1,TMP_IPSET_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(g_sys_val.broadcast_conn,0);
         //
         user_xtcp_ipconfig(g_tmp_union.ipconfig);
@@ -776,20 +755,16 @@ void account_login_overtime(){
 // 恢复操作繁忙查询
 //===============================================================================
 void backup_busy_chk(){
+    uint8_t state=0;
     // 繁忙
     if(g_sys_val.tftp_busy_f){
-        user_sending_len = onebyte_ack_build(2,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
-        user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        state=2;
     }
     else if(g_sys_val.backup_busy_f){
-        user_sending_len = onebyte_ack_build(1,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
-        user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+        state=1;
     }
-    // 空闲
-    else{
-        user_sending_len = onebyte_ack_build(0,BACKUP_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
-        user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);    
-    }
+    user_sending_len = onebyte_ack_build(0,BACKUP_BUSY_CHK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);  
 }
 
 //===============================================================================

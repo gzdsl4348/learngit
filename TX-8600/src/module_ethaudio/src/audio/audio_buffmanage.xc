@@ -13,10 +13,10 @@
 #include "audio_tx.h"
 
 extern unsigned reboot_inc;
-
+/*
 static void debug_audio_devlist(eth_audio_dev_t audio_devlist[MAX_SENDCHAN_NUM], int num)
 {
-    debug_printf("\ndebug_audio_devlist\n");
+    //debug_printf("\ndebug_audio_devlist\n");
     for(int i=0; i<num; i++) {
         if(audio_devlist[i].channel_num == 0) continue;
         debug_printf("[%d] IP:%d.%d.%d.%d  num:%d  media_list:", 
@@ -25,7 +25,7 @@ static void debug_audio_devlist(eth_audio_dev_t audio_devlist[MAX_SENDCHAN_NUM],
             debug_printf("[%d|%d]", audio_devlist[i].media_list[j].channel, audio_devlist[i].media_list[j].priority);
         debug_printf("\n\n");
     }
-}
+}*/
 static void inset_media_list(media_info_t media_list[NUM_MEDIA_INPUTS], uint8_t &channel_num, media_info_t info)
 {
     uint8_t i, j;

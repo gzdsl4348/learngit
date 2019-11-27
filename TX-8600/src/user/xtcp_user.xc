@@ -84,9 +84,20 @@ extern host_info_t host_info;
 //-------------------------------------------------------------------------------------------------------
 void mac_writeflash(uint8_t macadr[6]){
     unsafe{
+    char name[]={0x91,0x4E,0xAD,0X64,0xAE,0x5F,0x8B,0x57,0x3B,0x4E,0x3A,0x67,0x2D,0x00};
     int init_string = 0;
     memcpy(host_info.mac,macadr,6);
+    // 第一次烧写MAC复位设备名称
+    if(host_info.mac_write_f!=0xAB){
+        memset(host_info.name,0x00,DIV_NAME_NUM);
+        memcpy(host_info.name,name,12);
+        //
+        itoa_forutf16(host_info.mac[4],&host_info.name[11],16,2);
+        host_info.name[14]=0x2D;
+        itoa_forutf16(host_info.mac[5],&host_info.name[15],16,2);
+    }
     host_info.mac_write_f = 0xAB;
+
 	// Get Host info
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
 	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
@@ -616,6 +627,8 @@ void value_init_0(){
     memset(&g_sys_val,0,sizeof(g_sys_val_t));
 }
 
+char div_type[]={0x54,0x00,0x58,0x00,0x2D,0x00,0x38,0x00,0x36,0x00,0x30,0x00,0x30,0x00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00};
+
 //=======================================================================================================
 /*
 //--------------------------------------------------------------------------------
@@ -694,7 +707,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
         //xtcp_debug_printf("mac %x,%x,%x,%x,%x,%x\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
         memcpy(&ipconfig,&host_info.ipconfig,12);
     }
-    if(mac_factory_init(i_xtcp,host_info.mac)==0){
+    if(mac_factory_init(i_xtcp)==0){
         #if 0
         ipconfig.ipaddr[0] = 172;
         ipconfig.ipaddr[1] = 16;
@@ -749,19 +762,33 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
 
-    /*
-    g_sys_val.could_ip[0] = 172;
-    g_sys_val.could_ip[1] = 16;
-    g_sys_val.could_ip[2] = 23;
-    g_sys_val.could_ip[3] = 1;
+    #if 0
+    g_sys_val.could_ip[0] = 47;
+    g_sys_val.could_ip[1] = 106;
+    g_sys_val.could_ip[2] = 247;
+    g_sys_val.could_ip[3] = 75;
 
     g_sys_val.dns_ip[0] = 172;
     g_sys_val.dns_ip[1] = 114;
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
-    */
+    #endif
 
-	
+
+#if 0
+    g_sys_val.could_ip[0] = 47;
+    g_sys_val.could_ip[1] = 106;
+    g_sys_val.could_ip[2] = 223;
+    g_sys_val.could_ip[3] = 218;
+
+    g_sys_val.dns_ip[0] = 172;
+    g_sys_val.dns_ip[1] = 114;
+    g_sys_val.dns_ip[2] = 114;
+    g_sys_val.dns_ip[3] = 114;
+#endif
+
+
+    
     #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
@@ -800,15 +827,16 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     xtcp_rx_buf = all_rx_buf;
     // 强制开启wav模式
     host_info.wav_mode=1;
+    // 型号固定
+    memcpy(host_info.div_type,div_type,DIV_NAME_NUM);
     // 复位状态中，重启系统，烧录flash
-    if(host_info.reset_data_f!=1){
+    if(host_info.reset_data_f==1){
         host_info.reset_data_f=0;
         g_sys_val.reboot_f=1;
         g_sys_val.reboot_inc=4;
         reset_data_disp(0);
         fl_hostinfo_write();
     }
-
     //====================================================================================================
 	//main loop process 
 	//====================================================================================================
@@ -827,13 +855,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         if((data.music_status[i].status != MUSIC_DECODER_START)&&(data.music_status[i].status != MUSIC_DECODER_STOP)){
                             if((data.music_status[i].status==MUSIC_DECODER_ERROR1)||(data.music_status[i].status==MUSIC_DECODER_ERROR2)){
                                 g_sys_val.play_error_inc[i]++;
-                                xtcp_debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
+                                //xtcp_debug_printf("error inc %d\n", g_sys_val.play_error_inc[i]); 
                             }
                             //if(data.event == 0)
                             task_musicevent_change(i,data.event,0,0);
                         }
-                        xtcp_debug_printf("music_status[%d]:%d %d\n", i, 
-                        data.music_status[i].status,g_sys_val.play_error_inc[i]);
+                        //xtcp_debug_printf("music_status[%d]:%d %d\n", i, data.music_status[i].status,g_sys_val.play_error_inc[i]);
                     }
                 }
                 // 上传事件处理判断
@@ -844,11 +871,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 }
                 else
                 {
-                    xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result, 
-                    data.error_code,data.scan_file_over);
+                    //xtcp_debug_printf("sdcard_status:%d event:%d result:%d error_code:%d scan over %d\n", data.sdcard_status, data.event, data.result,data.error_code,data.scan_file_over);
                     if(data.error_code==4){
                         g_sys_val.play_error_inc[last_ch]++;
-                        xtcp_debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
+                        //xtcp_debug_printf("change er music %d\n",g_sys_val.play_error_inc[last_ch]);
                         task_musicevent_change(last_ch,data.event,0,0);
                     }
                     if(data.music_status[last_ch].status == MUSIC_DECODER_START){
@@ -880,9 +906,9 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
             }
             case i_image.image_upgrade_ready():
             {
-                debug_printf("im up in\n");
+                //debug_printf("im up in\n");
                 tftp_upgrade_reply_deal(i_xtcp, i_image);
-                debug_printf("im out in\n");
+                //debug_printf("im out in\n");
                 break;
             }     
             case tftptime when timerafter(time_tftp+50000):> time_tftp: //500us
@@ -922,7 +948,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         g_sys_val.reset_ethtim=0;
                         //audio_moudle_set();
                         // 正在IP配置模式
-                        if(g_sys_val.host_ipget_mode){
+                        if(g_sys_val.host_ipget_mode){                    
+                            g_sys_val.ipchk_timecnt=0;
                             // 判断是否获取到DHCP
                             if(i_xtcp.get_autoip_flag()==0){
                                 //xtcp_debug_printf("\n\n get dhcp \n\n");
@@ -1235,6 +1262,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                 //--------------------------------------------------------------
                 delay_milliseconds(3000);
                 while(!(if_fl_manage.is_flash_write_complete()));    
+                //xtcp_debug_printf("reboot\n");
                 device_reboot();      
             } 
             // wifi按键长按
@@ -1273,6 +1301,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     wifi_ioset(0);
                     user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,2);
                     dhcp_disp_none();
+                    ip_conflict_disp(0);
                     g_sys_val.key_wait_release=KEY_WIFI_RELEASE;
                     //xtcp_debug_printf("key wifi off\n");
                 }

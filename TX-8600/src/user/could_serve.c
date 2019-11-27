@@ -10,10 +10,9 @@
 #include "sys_log.h"
 #include "user_log.h"
 
-#define CLD_HEART_TIME_CNT  10 //10ÃëÐÄÌø
+#define CLD_HEART_TIME_CNT  5 //5ÃëÐÄÌø
 
 void could_heart_send_timer(){
-    static uint8_t heeart_timer_cnt=0;
     #if COULD_TCP_EN
     g_sys_val.could_heart_timcnt++;
     if(g_sys_val.could_heart_timcnt>CLD_HEART_TIME_CNT){

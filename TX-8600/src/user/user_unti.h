@@ -195,7 +195,8 @@ typedef struct g_sys_val_t{
     #define WIFI_AT_COM_DHCP    03
     #define WIFI_LANIP_SET      04
     #define WIFI_AT_SAVE        05
-    #define WIFI_AT_APPLY       06
+    #define WIFI_AT_SETNAME     06
+    #define WIFI_AT_APPLY       07
     //
     uint8_t wifi_io_tmp;
     #define D_IO_WIFI_POWER     01
@@ -277,7 +278,7 @@ typedef struct g_sys_val_t{
     uint8_t con_id_tmp[6];
     // 即时任务列表更新
     rttask_info_t *rttask_updat_p;
-    uint8_t *rttask_updat_f;
+    uint8_t rttask_updat_f;
     div_node_t *rttask_div_p;
     uint8_t rttask_up_ip[4];
     // 广播端口接收处理
