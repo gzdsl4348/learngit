@@ -58,7 +58,6 @@ void timer_process(){
                 // 离线日期判断
                 if(host_info.offline_day!=0){
                     host_info.offline_day--;
-                    
                 }
                 // 注册日期判断
                 if(host_info.regiser_days!=0){

@@ -84,7 +84,7 @@ void wifi_nameset(){
     
     disp_buff[22]=0x0D;
     disp_buff[24]=0x0A;
-    
+    /*
     xtcp_debug_printf("set name \n");
     for(uint8_t i=0;i<25;i++){
         xtcp_debug_printf("%c",disp_buff[i]);
@@ -94,6 +94,7 @@ void wifi_nameset(){
         xtcp_debug_printf("%x",disp_buff[i]);
     }
     xtcp_debug_printf("\nset over \n");
+    */
     user_lan_uart0_tx(disp_buff,24,0);
 }
 

@@ -1890,6 +1890,7 @@ void rttask_contorl_recive(){
                                 goto host_rttask_build_end;
                             }  
                             //初始化 运行任务状态
+                            fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);  
                             rttask_lsit.run_end_p->user_id = user_id;
                             rttask_lsit.run_end_p->dura_time = g_tmp_union.rttask_dtinfo.dura_time;
                             rttask_lsit.run_end_p->over_time = 0;
@@ -1897,6 +1898,8 @@ void rttask_contorl_recive(){
                             // 
                             g_sys_val.play_rttask_f[i] = 1;                            
                             g_sys_val.music_task_id[i] = id;
+                            
+                            xtcp_debug_printf("\n\n rt id%d,t %d",id,rttask_lsit.run_end_p->dura_time);
                             // 播放音乐
                             task_music_config_play(i,g_sys_val.music_task_id[i],g_sys_val.play_rttask_f[i],0,0);
                             user_disptask_refresh();   
@@ -2145,14 +2148,15 @@ void timer_rttask_run_process(){
     rttask_info_t *tmp_p = rttask_lsit.run_head_p;
     div_node_t *div_tmp_p;
     conn_list_t *div_conn_p;
+    //xtcp_debug_printf("task time id%d t%d,\n");
 
     while((int)tmp_p!=null){
-        //xtcp_debug_printf("tim %d\n",tmp_p->dura_time);
+        xtcp_debug_printf("task id%d tim %d\n",tmp_p->rttask_id,tmp_p->dura_time);
         if(tmp_p->dura_time!=0xFFFFFFFF){
             // 任务异常 计时暂停
             if(tmp_p->run_state!=2)
                 tmp_p->over_time++;
-            //xtcp_debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
+            xtcp_debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
             if(tmp_p->over_time>=tmp_p->dura_time){ 
                 fl_rttask_read(&g_tmp_union.rttask_dtinfo,tmp_p->rttask_id);
                 // 日志记录
@@ -2181,6 +2185,7 @@ void timer_rttask_run_process(){
                 close_rttask_musicplay(tmp_p->rttask_id);
                 // 停止运行任务
                 delete_rttask_run_node(tmp_p->rttask_id);
+                xtcp_debug_printf("close id %d\n");
                 
                 // 信息更新
                 mes_send_rttaskinfo(g_tmp_union.rttask_dtinfo.rttask_id,2,0);
