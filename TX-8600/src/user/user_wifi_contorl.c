@@ -3,30 +3,36 @@
 #include "debug_print.h"
 #include "fl_buff_decode.h"
 #include "sys_log.h"
+#include "flash_user.h"
 
 extern uint8_t disp_buff[];
 
 void dhcp_dis(){
-    char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x30,0x0D,0x0A}; 
-    user_lan_uart0_tx(disdhcp,12,0);
+    //char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x30,0x0D,0x0A}; 
+    //user_lan_uart0_tx(disdhcp,12,0);
+    user_wifi_send(D_WIFI_DHCP_DIS);
 }
 
 void dhcp_en(){
-    char endhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D,0x0A}; 
-    user_lan_uart0_tx(endhcp,12,0);
+    //char endhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D,0x0A}; 
+    //user_lan_uart0_tx(endhcp,12,0);
+    user_wifi_send(D_WIFI_DHCP_EN);
 }
 
 void wifi_save(){
-    char wifisave[]={0x61,0x74,0x2B,0x53,0x61,0x76,0x65,0x3D,0x31,0x0D,0x0A}; 
-    user_lan_uart0_tx(wifisave,11,0);
+    //char wifisave[]={0x61,0x74,0x2B,0x53,0x61,0x76,0x65,0x3D,0x31,0x0D,0x0A}; 
+    //user_lan_uart0_tx(wifisave,11,0);
+    user_wifi_send(D_WIFI_SAVE);
 }
 
 void wifi_apply(){
-    char wifiapply[]={0x61,0x74,0x2B,0x41,0x70,0x70,0x6C,0x79,0x3D,0x31,0x0D,0x0A}; //12
-    user_lan_uart0_tx(wifiapply,12,0);
+    //char wifiapply[]={0x61,0x74,0x2B,0x41,0x70,0x70,0x6C,0x79,0x3D,0x31,0x0D,0x0A}; //12
+    //user_lan_uart0_tx(wifiapply,12,0);
+    user_wifi_send(D_WIFI_APPLY);
 }
 
 
+/*
 // mode=0:设置ip     mode=1:设置掩码
 void wifi_ipset(uint8_t ip[],uint8_t mode){
     uint8_t ip_tmp[32];
@@ -67,13 +73,10 @@ void wifi_ipset(uint8_t ip[],uint8_t mode){
     ip_tmp[ip_adrbase] = 0x0D;
     ip_tmp[ip_adrbase+1] = 0x0A;
     ip_adrbase+=2;
-    /*
-    for(uint8_t i=0;i<ip_adrbase;i++){
-        xtcp_debug_printf("%x ",ip_tmp[i]);
-    }
-    */
+
     user_lan_uart0_tx(ip_tmp,ip_adrbase,0);
 }
+*/
 
 void wifi_nameset(){
     char name[]={0x61,0x74,0x2B,0x41,0x50,0x53,0x73,0x69,0x64,0x3D,0x48,0x49,0x2D,0x4C,0x49,0x4E,0x4B,0x5F}; //18
@@ -99,14 +102,21 @@ void wifi_nameset(){
 }
 
 void wifi_contorl_mode(){
+    static uint8_t wait_12sec=0;
     if(g_sys_val.wifi_contorl_state==0){
         return;
     }
     g_sys_val.wifi_timer++;
+    if(g_sys_val.wifi_timer<5){ // 等0.5秒 进入AT模式 
+        return;
+    }    
+    g_sys_val.wifi_timer=0;
+    //
     switch(g_sys_val.wifi_contorl_state){
         case WIFI_WAIT_POWERON:
-            if(g_sys_val.wifi_timer>120){ // 等10秒wifi开启
-                g_sys_val.wifi_timer=0;
+            wait_12sec++;
+            if(wait_12sec>24){ // 等10秒wifi开启
+                wait_12sec=0;
                 // 进入AT模式
                 g_sys_val.wifi_contorl_state = WIFI_AT_ENTER;
                 g_sys_val.wifi_io_tmp ^= D_IO_WIFI_CONTORL;
@@ -115,84 +125,68 @@ void wifi_contorl_mode(){
             }
             break;
         case WIFI_AT_ENTER:
-            if(g_sys_val.wifi_timer>5){ // 等0.5秒 进入AT模式 
-                g_sys_val.wifi_timer=0;
-                // 进入DCHP控制模式
-                g_sys_val.wifi_contorl_state = WIFI_AT_SETNAME;
-                g_sys_val.wifi_io_tmp |= D_IO_WIFI_CONTORL;
-                wifi_ioset(g_sys_val.wifi_io_tmp);
-                //xtcp_debug_printf("at ouit\n");
-            }
+            // 进入DCHP控制模式
+            g_sys_val.wifi_contorl_state = WIFI_AT_SETNAME;
+            g_sys_val.wifi_io_tmp |= D_IO_WIFI_CONTORL;
+            wifi_ioset(g_sys_val.wifi_io_tmp);
+            //xtcp_debug_printf("at ouit\n");
             break;
         case WIFI_AT_COM_DHCP:
-            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置DHCP 
-                g_sys_val.wifi_timer=0;
-                if(g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE){
-                    // 配置DHCP
-                    dhcp_dis();
-                    dhcp_disp_dis();
-                    g_sys_val.sys_dhcp_state_tmp=0;  
-                    xtcp_debug_printf("dhcp dis\n");
-                }
-                else{
-                    // 配置DHCP
-                    dhcp_en();
-                    g_sys_val.sys_dhcp_state_tmp=1;  
-                    xtcp_debug_printf("dhcp en\n");
-                }
-                // 进入配置wifi模式
-                g_sys_val.wifi_contorl_state = WIFI_LANIP_SET;
-                wifi_save();
+            if(g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE){
+                // 配置DHCP
+                dhcp_dis();
+                dhcp_disp_dis();
+                g_sys_val.sys_dhcp_state_tmp=0;  
+                //xtcp_debug_printf("dhcp dis\n");
             }
+            else{
+                // 配置DHCP
+                dhcp_en();
+                g_sys_val.sys_dhcp_state_tmp=1;  
+                //xtcp_debug_printf("dhcp en\n");
+            }
+            // 进入配置wifi模式
+            g_sys_val.wifi_contorl_state = WIFI_LANIP_SET;
+            wifi_save();
             break;
         case WIFI_LANIP_SET:
-            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置IP
-                uint8_t ip_tmp[4];
-                g_sys_val.wifi_timer = 0;
-                memcpy(ip_tmp,host_info.ipconfig.ipaddr,4);
-                if(g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE){
-                    ip_tmp[2]++;
-                }
-                else{
-                    ip_tmp[3]++;
-                }   
-                wifi_ipset(ip_tmp,0);
-                //xtcp_debug_printf("set lanip %d,%d,%d,%d\n",ip_tmp[0],ip_tmp[1],ip_tmp[2],ip_tmp[3]);
-                g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;                
-                wifi_save();
+            {
+            uint8_t ip_tmp[4];
+            memcpy(ip_tmp,host_info.ipconfig.ipaddr,4);
+            if(g_sys_val.wifi_mode==WIFI_DHCPDIS_MODE){
+                ip_tmp[2]++;
+            }
+            else{
+                ip_tmp[3]++;
+            }   
+            user_wifi_ipset(ip_tmp);
+            g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;               
             }
             break;
         case WIFI_AT_SETNAME:
-            if(g_sys_val.wifi_timer>5){ // 等0.5秒 配置AP名称
-                g_sys_val.wifi_timer = 0;
-                g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
-                wifi_nameset();
-                wifi_save();
-            }
+            g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
+            wifi_nameset();
+            wifi_save();
             break;
         case WIFI_AT_SAVE:
-            if(g_sys_val.wifi_timer>5){ // 等0.5秒 保存设置
-                g_sys_val.wifi_timer = 0;
-                wifi_save();
-                if(host_info.sys_dhcp_state != g_sys_val.sys_dhcp_state_tmp){
-                    host_info.sys_dhcp_state = g_sys_val.sys_dhcp_state_tmp;
-                    g_sys_val.wifi_contorl_state = WIFI_AT_APPLY;
-                    // flash info   
-                    fl_hostinfo_write();    //烧写主机信息
-                }
-                else{
-                    g_sys_val.wifi_contorl_state=0;
-                }
-                xtcp_debug_printf("wifi save\n");
+            g_sys_val.wifi_timer = 0;
+            wifi_save();
+            if(host_info.sys_dhcp_state != g_sys_val.sys_dhcp_state_tmp){
+                host_info.sys_dhcp_state = g_sys_val.sys_dhcp_state_tmp;
+                g_sys_val.wifi_contorl_state = WIFI_AT_APPLY;
+                // flash info   
+                fl_hostinfo_write();    //烧写主机信息
             }
+            else{
+                g_sys_val.wifi_contorl_state=0;
+            }
+            //xtcp_debug_printf("wifi save\n");
             break;
         case WIFI_AT_APPLY:
-            if(g_sys_val.wifi_timer>5){
-                g_sys_val.wifi_timer = 0;
-                wifi_apply();
-                //xtcp_debug_printf("wifi apply\n");
-                g_sys_val.wifi_contorl_state = 0;
-            }
+            g_sys_val.wifi_timer = 0;
+            wifi_apply();
+            //xtcp_debug_printf("wifi apply\n");
+            g_sys_val.wifi_contorl_state = 0;
             break;
     }
 }

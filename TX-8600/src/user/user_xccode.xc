@@ -637,4 +637,15 @@ void user_rttask_musname_put(task_music_info_t *music_info,uint8_t ch){
     }
 }
 
+void user_wifi_send(uint8_t mode){
+    unsafe{
+        i_user_flash->wifi_uartsend(mode);
+    }
+}
+
+void user_wifi_ipset(uint8_t ip[]){
+    unsafe{
+        i_user_flash->wifi_uart_setip(ip);
+    }
+}
 

@@ -13,12 +13,18 @@
 #include "sdram.h"
 #include "sdram_def.h"
 
-
 #define UPGRADE_END_REPLY   1
 #define UPGRADE_BUFF_SIZE   2
 
 #define BACKUP_DATA_START_SECTOR SOLUSION_DAT_SECTOR
 
+enum WIFI_TYPE_E{ 
+    D_WIFI_DHCP_EN=0x00,
+    D_WIFI_DHCP_DIS,
+    D_WIFI_SAVE,
+    D_WIFI_APPLY,
+};
+    
 #ifdef __XC__
 
 typedef interface image_upgrade_if
@@ -84,6 +90,10 @@ typedef interface fl_manage_if{
     void rttask_nameinfo_get(task_music_info_t &music_info,uint8_t ch);
     
     void rttask_nameinfo_put(task_music_info_t music_info,uint8_t ch);
+
+    void wifi_uartsend(uint8_t mode);
+
+    void wifi_uart_setip(uint8_t ip[]);
 }fl_manage_if;
 
 //

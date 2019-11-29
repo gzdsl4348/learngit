@@ -32,7 +32,28 @@ extern void c_read_flash_bytes(uint32_t flash_addr, uint32_t buff_addr, int br);
 extern void c_read_flash_secoter(uint32_t secoter, uint32_t buff_addr, int br);
 extern void c_write_flash_secoter(uint32_t secoter, uint32_t buff_addr, int bw);
 
-void fl_manage_uart_tx(uint8_t data);
+void fl_manage_uart_tx(uint8_t data) {
+    int t;
+    p_uart0_tx <: 0 @ t; //send start bit and timestamp (grab port timer value)
+    t += FL_TX_CLK;
+#pragma loop unroll(8)
+    for(int i = 0; i < 8; i++) {
+        p_uart0_tx @ t <: >> data; //timed output with post right shift
+        t += FL_TX_CLK;
+    }
+    p_uart0_tx @ t <: 1; //send stop bit
+    t += FL_TX_CLK;
+    p_uart0_tx @ t <: 1; //wait until end of stop bit
+}
+
+static uint8_t wifi_datlen=0;
+static uint8_t uart_dattmp[64];
+
+void send_uart_wifibuf(){
+    for(uint8_t i=0;i<wifi_datlen;i++){
+        fl_manage_uart_tx(uart_dattmp[i]);
+    }
+}
 
 //
 //==========================================================================================
@@ -430,23 +451,75 @@ void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static cons
                     break;
             } //switch
             break;
-        }       
+        case if_fl_manage[unsigned a].wifi_uartsend(uint8_t mode):
+            switch(mode){
+                case D_WIFI_DHCP_EN:        
+                    static char disdhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x31,0x0D,0x0A};
+                    wifi_datlen = 12;
+                    memcpy(uart_dattmp,disdhcp,wifi_datlen);
+                    break;
+                case D_WIFI_DHCP_DIS:
+                    static char endhcp[]={0x61,0x74,0x2B,0x44,0x68,0x63,0x70,0x64,0x3D,0x30,0x0D,0x0A}; 
+                    wifi_datlen = 12;                
+                    memcpy(uart_dattmp,endhcp,wifi_datlen);
+                    break;
+                case D_WIFI_SAVE:
+                    static char wifisave[]={0x61,0x74,0x2B,0x53,0x61,0x76,0x65,0x3D,0x31,0x0D,0x0A}; 
+                    wifi_datlen = 11;                     
+                    memcpy(uart_dattmp,wifisave,wifi_datlen);
+                    break;
+                case D_WIFI_APPLY:
+                    static char wifiapply[]={0x61,0x74,0x2B,0x41,0x70,0x70,0x6C,0x79,0x3D,0x31,0x0D,0x0A}; //12
+                    wifi_datlen = 12;                     
+                    memcpy(uart_dattmp,wifiapply,wifi_datlen);
+                    break;
+            }            
+            send_uart_wifibuf();
+            break;
+            
+        case if_fl_manage[unsigned a].wifi_uart_setip(uint8_t ip[]):
+                #define IPSET_LEN 9
+                char wifi_ipset[]={0x61,0x74,0x2B,0x4C,0x41,0x4E,0x49,0x70,0x3D}; 
+                //#define MASKSET_LEN 13
+                //char wifi_maskset[]={0x61,0x74,0x2B,0x4C,0x41,0x4E,0x49,0x70,0x4D,0x61,0x73,0x6B,0x3D};
+                //
+                uint8_t ip_adrbase;
+ 
+                memcpy(&uart_dattmp[0],wifi_ipset,IPSET_LEN);
+                ip_adrbase = IPSET_LEN;
+                
+                uint8_t tmp_f;
+                for(uint8_t i=0;i<4;i++){
+                    tmp_f=0;
+                    if(ip[i]/100 != 0){
+                        uart_dattmp[ip_adrbase] = ip[i]/100+0x30;
+                        ip_adrbase++;
+                        tmp_f = 1;
+                    }
+                    if(((ip[i]%100)/10!=0)||tmp_f){
+                        uart_dattmp[ip_adrbase] = (ip[i]%100)/10+0x30;
+                        ip_adrbase++;
+                    } 
+                    uart_dattmp[ip_adrbase] = ip[i]%10 + 0x30;
+                    ip_adrbase++;
+                    if(i!=3){
+                        uart_dattmp[ip_adrbase] = 0x2E;
+                        ip_adrbase++;
+                    }
+                }
+                //Ôö¼Ó½áÊø·û
+                uart_dattmp[ip_adrbase] = 0x0D;
+                uart_dattmp[ip_adrbase+1] = 0x0A;
+                ip_adrbase+=2;
+                
+                wifi_datlen = ip_adrbase;
+                send_uart_wifibuf();
+             break;
+        }//select       
 	}
 }
 
 
-void fl_manage_uart_tx(uint8_t data) {
-    int t;
-    p_uart0_tx <: 0 @ t; //send start bit and timestamp (grab port timer value)
-    t += FL_TX_CLK;
-#pragma loop unroll(8)
-    for(int i = 0; i < 8; i++) {
-        p_uart0_tx @ t <: >> data; //timed output with post right shift
-        t += FL_TX_CLK;
-    }
-    p_uart0_tx @ t <: 1; //send stop bit
-    t += FL_TX_CLK;
-    p_uart0_tx @ t <: 1; //wait until end of stop bit
-}
+
 
 

@@ -131,6 +131,7 @@ void user_rttask_musname_get(task_music_info_t *music_info,uint8_t ch);
 
 void user_rttask_musname_put(task_music_info_t *music_info,uint8_t ch);
 
+void user_wifi_send(uint8_t mode);
 
 #endif //__USER_XCCODE_H_
 
