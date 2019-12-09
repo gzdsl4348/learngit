@@ -7,7 +7,7 @@
 #include <print.h>
 #include <string.h>
 #include <ctype.h> 
-#undef text_debug 
+#undef text_debug2 
 static void reverse_array(char buf[], unsigned size)
 {
   int begin = 0;
@@ -50,7 +50,7 @@ static int itoa(unsigned n, char *buf, unsigned base, int fill)
 #define DEBUG_PRINTF_BUFSIZE 1000
 #endif
 
-void text_debug(char * fmt, ...)
+void text_debug2(char * fmt, ...)
 {
   char width = 0;
   char * marker;

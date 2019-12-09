@@ -122,7 +122,7 @@ uint16_t acinfo_upgrade_build(uint16_t id);
 uint16_t sulo_upgrade_build(uint8_t id);
 
 // 备份控制 协议  B90A
-uint16_t backup_contorl_build(uint8_t state,uint8_t *data);
+uint16_t backup_contorl_build(uint8_t state);
 
 // 备份消息推送 协议  B90B
 uint16_t backup_updata_build(uint8_t state,uint8_t bar);

@@ -351,6 +351,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     xtcp_tx_buf[AC_LOGIN_BRAND_B]=host_info.div_brand_f;
 
     xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=1;
+    //host_info.offline_day=0;
     if(g_sys_val.could_conn.id==0 && host_info.offline_day==0)
         xtcp_tx_buf[AC_LOGIN_CLDSTATE_B]=0;
     //
@@ -1101,7 +1102,7 @@ uint16_t file_progress_build(uint8_t state,uint8_t progress,uint8_t id[],uint8_t
 }
 
 //==========================================================================================
-// 系统状态在线查询回复
+// 系统状态在线查询回复 B905
 //==========================================================================================
 uint16_t sysonline_chk_build(uint8_t state){
     xtcp_tx_buf[SYS_ONLINE_CHK_DATA_B] = g_sys_val.date_info.year;
@@ -1322,7 +1323,7 @@ uint16_t sync_ipinfo_build(uint8_t mac[]){
 //==========================================================================================
 // 备份控制 协议  B90A
 //==========================================================================================
-uint16_t backup_contorl_build(uint8_t state,uint8_t *data){
+uint16_t backup_contorl_build(uint8_t state){
     xtcp_tx_buf[POL_DAT_BASE] = state;
     //memcpy(&xtcp_tx_buf[POL_DAT_BASE+1],data,64);
     memset(&xtcp_tx_buf[POL_DAT_BASE+1],00,64);
@@ -1339,7 +1340,7 @@ uint16_t backup_updata_build(uint8_t state,uint8_t bar){
 }
 
 //==========================================================================================
-// 搜索设备列表 协议  BF09
+// 搜索设备列表 协议  BF0C
 //==========================================================================================
 uint16_t divsrc_list_build(uint8_t list_num){
     uint8_t i;
@@ -1650,10 +1651,8 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
     xtcp_tx_buf[RTTASK_INFO_TASKID] = rttask_info_list[list_num].task_id;
     xtcp_tx_buf[RTTASK_INFO_TASKID+1] = rttask_info_list[list_num].task_id>>8;
     
-    xtcp_debug_printf("\n\n info send id %d\n\n",rttask_info_list[list_num].task_id);
-
-    
-    xtcp_debug_printf("\n\n info send mac %x %x %x %x %x %x \n\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
+    //xtcp_debug_printf("\n\n info send id %d\n\n",rttask_info_list[list_num].task_id);
+    //xtcp_debug_printf("\n\n info send mac %x %x %x %x %x %x \n\n",host_info.mac[0],host_info.mac[1],host_info.mac[2],host_info.mac[3],host_info.mac[4],host_info.mac[5]);
 
     xtcp_tx_buf[RTTASK_INFO_USERID] = rttask_info_list[list_num].user_id;
     xtcp_tx_buf[RTTASK_INFO_USERID+1] = rttask_info_list[list_num].user_id>>8;

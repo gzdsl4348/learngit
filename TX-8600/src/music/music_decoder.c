@@ -233,7 +233,11 @@ static unsigned char mp3_get_info(TCHAR *pname, MP3_Info *p_info)
                             if(fxing->flags[3]&0X01)//存在总frame字段
                             {
                                 totframes=((unsigned int)fxing->frames[0]<<24)|((unsigned int)fxing->frames[1]<<16)|((u16)fxing->frames[2]<<8)|fxing->frames[3];//得到总帧数
-                                p_info->totsec=totframes*samples_per_frame/frame_info.samprate;//得到文件总长度
+                                if(frame_info.samprate==0){
+                                    p_info->totsec=0;
+                                }else{
+                                    p_info->totsec=totframes*samples_per_frame/frame_info.samprate;//得到文件总长度
+                                }
                             }
                             else    //不存在总frames字段
                             {

@@ -284,6 +284,7 @@ void timer_taskmusic_check(){
 // @set_musicinc 0 从零开始播放 
 // @set_vol    0 初始化音量
 void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_musicinc,uint8_t set_vol){
+    if(g_sys_val.sd_state) return;
     g_sys_val.play_error_inc[ch] = 0;
     // 置通道播放状态
     timetask_now.ch_state[ch]=ch;
@@ -1855,7 +1856,7 @@ void rttask_contorl_recive(){
     // 控制主机音源
     if(charncmp(g_tmp_union.rttask_dtinfo.src_mas,host_info.mac,6)){
         // 启动即时任务
-        if(xtcp_rx_buf[RTTASK_PLAY_CONTORL]){
+        if(xtcp_rx_buf[RTTASK_PLAY_CONTORL] && g_sys_val.sd_state==0){
             // 关闭运行中的即时任务 
             close_running_rttask((uint8_t *)&xtcp_rx_buf[POL_MAC_BASE],id);
             // 关闭音乐播放
@@ -1960,7 +1961,7 @@ void rttask_contorl_recive(){
     else{
         new_conn = div_conn_p->conn;
     }
-    xtcp_debug_printf("des_ip %d,%d,%d,%d\n",div_tmp_p->div_info.ip[0],div_tmp_p->div_info.ip[1],div_tmp_p->div_info.ip[2],div_tmp_p->div_info.ip[3]);
+    //xtcp_debug_printf("des_ip %d,%d,%d,%d\n",div_tmp_p->div_info.ip[0],div_tmp_p->div_info.ip[1],div_tmp_p->div_info.ip[2],div_tmp_p->div_info.ip[3]);
     //---------------------------------------------------------------------------------------------------------------
     for(uint8_t i=0;i<MAX_RTTASK_CONTORL_NUM;i++){
         // 向播放音源设备申请播放即时任务
@@ -2151,12 +2152,12 @@ void timer_rttask_run_process(){
     //xtcp_debug_printf("task time id%d t%d,\n");
 
     while((int)tmp_p!=null){
-        xtcp_debug_printf("task id%d tim %d\n",tmp_p->rttask_id,tmp_p->dura_time);
+        //xtcp_debug_printf("task id%d tim %d\n",tmp_p->rttask_id,tmp_p->dura_time);
         if(tmp_p->dura_time!=0xFFFFFFFF){
             // 任务异常 计时暂停
             if(tmp_p->run_state!=2)
                 tmp_p->over_time++;
-            xtcp_debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
+            //xtcp_debug_printf("task time id%d t%d,\n",tmp_p->rttask_id,tmp_p->over_time);
             if(tmp_p->over_time>=tmp_p->dura_time){ 
                 fl_rttask_read(&g_tmp_union.rttask_dtinfo,tmp_p->rttask_id);
                 // 日志记录
@@ -2185,7 +2186,7 @@ void timer_rttask_run_process(){
                 close_rttask_musicplay(tmp_p->rttask_id);
                 // 停止运行任务
                 delete_rttask_run_node(tmp_p->rttask_id);
-                xtcp_debug_printf("close id %d\n");
+                //xtcp_debug_printf("close id %d\n");
                 
                 // 信息更新
                 mes_send_rttaskinfo(g_tmp_union.rttask_dtinfo.rttask_id,2,0);
@@ -2445,7 +2446,7 @@ void rttask_host_contorl_recive(){
         }
         case RTTASK_CMD_INFORETURN:{
             // 加入消息更新队列
-            xtcp_debug_printf("\n\n info add  \n\n");
+            //xtcp_debug_printf("\n\n info add  \n\n");
             uint8_t list_num;
             for(list_num=0;list_num<MAX_SEND_RTTASKINFO_NUM;list_num++){
                 //找是否有相同连接
@@ -2466,7 +2467,7 @@ void rttask_host_contorl_recive(){
             find_rtinfo_connect:
             // 马上返回信息
             
-            xtcp_debug_printf("\n\n info %d \n\n",list_num);
+            //xtcp_debug_printf("\n\n info %d \n\n",list_num);
             rttask_info_list[list_num].task_id = task_id;
             rttask_info_list[list_num].user_id = user_id;
             rttask_info_list[list_num].could_f = xtcp_rx_buf[POL_COULD_S_BASE];
@@ -2525,8 +2526,7 @@ void rttask_host_info_send(uint16_t id,uint8_t list_num){
     for(uint8_t ch=0;ch<MAX_MUSIC_CH;ch++){
         // 找对应通道
         if(timetask_now.ch_state[ch]!=0xFF && timetask_now.task_musicplay[ch].task_id==id && timetask_now.task_musicplay[ch].rttask_f){
-            
-            xtcp_debug_printf("\n\n info send ch %d\n\n",ch);
+            //xtcp_debug_printf("\n\n info send ch %d\n\n",ch);
             user_sending_len = rttask_infosend_build(list_num,ch);
             user_xtcp_send(rttask_info_list[list_num].conn,rttask_info_list[list_num].could_f);
         }

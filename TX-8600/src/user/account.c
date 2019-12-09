@@ -712,20 +712,20 @@ void tmp_ipset_recive(){
 //===============================================================================
 // 主机IP配置   BF0B
 //===============================================================================
-#if 0
+#if 1
 void sysset_ipset_recive(){
     if(xtcp_rx_buf[SYSSET_IPSET_SENDSTATE]==1){
         return;
     }
-    if(charncmp(&xtcp_rx_buf[SYSSET_IPSET_DESMAC],host_info.mac,6)==0){
+    if(charncmp((uint8_t *)&xtcp_rx_buf[SYSSET_IPSET_DESMAC],host_info.mac,6)==0){
         return;
     }
     if(xtcp_rx_buf[SYSSET_IPSET_CONFIG_F]==0){
         return;
     }
-    if(xtcp_rx_buf[SYSSET_IPSET_IP_MODE]){
-        return;
-    }
+    //if(xtcp_rx_buf[SYSSET_IPSET_IP_MODE]){
+    //    return;
+    //}
     memcpy(host_info.ipconfig.ipaddr,&xtcp_rx_buf[SYSSET_IPSET_IP],4);    
     memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[SYSSET_IPSET_GATE],4);    
     memcpy(host_info.ipconfig.netmask,&xtcp_rx_buf[SYSSET_IPSET_MASK],4);    
@@ -771,9 +771,8 @@ void backup_busy_chk(){
 // 恢复备份开始控制
 //===============================================================================
 void backup_contorl_chk(){
-    uint8_t data[64];
     if(g_sys_val.backup_busy_f){
-        user_sending_len = backup_contorl_build(2,data);
+        user_sending_len = backup_contorl_build(2);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     // 开始恢复 推送
@@ -785,11 +784,11 @@ void backup_contorl_chk(){
             g_sys_val.backup_busy_f = 1;
             g_sys_val.backup_bar = 0;
             g_sys_val.backup_conn = conn;
-            user_sending_len = backup_contorl_build(1,data);
+            user_sending_len = backup_contorl_build(1);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         }
         else{//文件错误
-            user_sending_len = backup_contorl_build(0,data);
+            user_sending_len = backup_contorl_build(0);
             user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         }
 

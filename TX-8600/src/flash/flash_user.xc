@@ -6,7 +6,7 @@
 #include "debug_print.h"
 #include "image_upgrade.h"
 #include "reboot.h"
-
+#include "file.h"
 on tile[0]: out port p_power_led = XS1_PORT_4C; 
 
 #define FL_TX_CLK (100000000/115200)
@@ -230,6 +230,7 @@ void flash_process(server image_upgrade_if i_image,streaming chanend c_sdram)
 //===============================================================================================
 // ·Ç×èÈûÏß³Ì
 //===============================================================================================
+extern f_opr_mgr_t g_fopr_mgr;
 [[combinable]]
 void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static const unsigned n_fl_manage,streaming chanend c_sdram){
     timer tmr;
@@ -330,16 +331,17 @@ void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static cons
             case if_fl_manage[unsigned a].read_dirtbl(uint8_t buff[], int btr, int &br):
             {
                 //fl_readDataPage(SDRAM_FILE_LIST_START*16,tmp_buff);
+                if(g_fopr_mgr.sdcard_status == SD_CARD_NO_FOUND)
+                    break;
                 sdram_read(c_sdram, sdram_state, SDRAM_FILE_LIST_START, (256/4), pw_buff);
                 sdram_complete(c_sdram, sdram_state);
-                
                 memcpy(buff, tmp_buff, 256);
-            
                 br = 4 + (tmp_buff, int[])[0]*sizeof(dir_info_t);
-            
                 for(i=1; i<=(br/256); i++)
                 {
                     //fl_readDataPage(SDRAM_FILE_LIST_START*16+i,tmp_buff);
+                    
+                    text_debug2("in \n");
                     sdram_read(c_sdram, sdram_state, SDRAM_FILE_LIST_START+(256/4)*i, (256/4), pw_buff);                 
                     sdram_complete(c_sdram, sdram_state);
                     memcpy(buff+i*256, tmp_buff, 256);
@@ -446,7 +448,6 @@ void user_flash_manage(server fl_manage_if if_fl_manage[n_fl_manage],static cons
                     p_uart0_tx <: 1;
                     break;
                 case 2:
-                    debug_printf("io low\n");
                     p_uart0_tx <: 0;
                     break;
             } //switch

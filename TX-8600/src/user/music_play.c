@@ -118,10 +118,9 @@ void task_music_stop(uint8_t ch){
     //xtcp_debug_printf("music stop\n");
 }
 
-
 void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
-    xtcp_debug_printf("\n\n\nmusic play \n\n");
-    
+    xtcp_debug_printf("\n music play\n\n");
+    if(g_sys_val.sd_state) return;
     timetask_now.task_musicplay[ch].play_state = 1;
     user_rttask_musname_put(p_music_info,ch);
     //获取歌曲路径名
@@ -183,7 +182,7 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
         }
         xtcp_debug_printf("%c",f_name[i]);        
     }
-    #endif
+    #endif    
     // 播放通道音乐
     user_music_play(ch,p_music_info);
     // 获得播放时间
@@ -192,7 +191,6 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
         timetask_now.task_musicplay[ch].music_tolsec = get_music_tolsec(&g_sys_val.rttask_musinfo);
         timetask_now.task_musicplay[ch].music_sec=0;
     }
-    //xtcp_debug_printf("music play out\n");
 }
 
 void rttask_music_play(uint16_t id){

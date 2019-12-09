@@ -137,6 +137,14 @@ void audio_tx(  client music_decoder_output_if if_mdo,
                                                          iptmp,udptmp,
                                                          len,ch,music_inc);
                         //sys_timer :> t3;
+                        static uint8_t tmp=0;
+                        tmp++;
+                        if(tmp>20){
+                            if(tmp>40)
+                                tmp=0;
+                            break;
+                        }
+                            
 #if NEW_SEND_LIST_MODE_ENABLE
                         for(uint8_t i=0; i<MAX_SENDCHAN_NUM; i++){ //MAX_SENDCHAN_NUM
                             if(g_t_val->audio_devlist[i].channel_num==0 || 

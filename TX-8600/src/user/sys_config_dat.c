@@ -85,23 +85,24 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              #endif
                              {RTTASK_MUSICLIST_CHKCMD,rttask_musiclist_chk_recive},
                              {RTTASK_MUSICLIST_SETCMD,rttask_musiclist_set_recive},
-                             //{SYSSET_IPSET_CMD,sysset_ipset_recive}
+                             {SYSSET_IPSET_CMD,sysset_ipset_recive},
                              {C004_OFFLINEDIV_MODE_CMD,offlinediv_mode_recive},
                              {BE0F_TEXTCOMMOND_RECIVE_CMD,div_textsend_recive},
                             };
 	
 // 多包列表发送函数
-sending_fun_lis_t sending_fun_lis[]={div_sending_decode,         //设备列表
-                                     arealist_sending_decode,    //分区列表
-                                     tasklist_sending_decode,    //定时任务列表
-                                     task_dtinfo_decode,         //定时任务详细信息列表
-                                     rttask_list_sending_decode, //即时任务列表传送
-                                     music_patch_list_send_decode,  //
-                                     music_music_list_send_decode,  //
-                                     ac_list_sending_decode,        //
-                                     divsrc_sending_decode,         //
-                                     rttask_musiclist_chk_decode,
+sending_fun_lis_t sending_fun_lis[]={{div_sending_decode},         //设备列表
+                                     {arealist_sending_decode},    //分区列表
+                                     {tasklist_sending_decode},    //定时任务列表
+                                     {task_dtinfo_decode},         //定时任务详细信息列表
+                                     {rttask_list_sending_decode}, //即时任务列表传送
+                                     {music_patch_list_send_decode},  //
+                                     {music_music_list_send_decode},  //
+                                     {ac_list_sending_decode},        //
+                                     {divsrc_sending_decode},         //
+                                     {rttask_musiclist_chk_decode},
                                     };
+
 // 多包发送状态
 list_connsend_t t_list_connsend[MAX_SEND_LIST_NUM];
     
@@ -140,10 +141,11 @@ host_info_t host_info_tmp = {
                          0x00,    //dhcp
                          0x03,    //regiser state  出厂默认试用90天
                          DIV_PROBATION_DAY,  //regiser day
-                         {//172,16,13,119,//ip
-                          192,168,168,168,//ip
-                          255,255,255,0,//netmask
-                          0,0,0,0}, //gateway 
+                         {
+                          {192,168,168,168},//ip
+                          {255,255,255,0},//netmask
+                          {0,0,0,0}//gateway 
+                         }, 
                          {0x49,0x00,0x54,0x00,0x43,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,00,00,00,00,00,00,00,00,00,00}, //BRAND
                          0x00, //MAC烧录标志
                          0x00, //初次注册状态

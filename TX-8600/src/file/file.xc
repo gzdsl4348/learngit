@@ -34,8 +34,6 @@ uint8_t file_busy_decode(){
 
 #define FILE_BUSY_DECODE  file_busy_decode()
 
-static streaming chanend * unsafe flserver_sdram;
-static s_sdram_state flserve_sdram_state;
 
 [[combinable]]
 void file_server(server file_server_if if_fs, chanend c_faction)
