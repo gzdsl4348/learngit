@@ -144,12 +144,6 @@ int main()
     //-------------------------------------
     //wifi uart
     //
-    /*uart rx part
-    input_gpio_if i_input_wifi_rx[1];
-    uart_rx_if i_wifi_rx[1];
-    /*uart tx part*/
-    output_gpio_if	i_output_wifi_tx[1];
-    uart_tx_buffered_if i_wifi_tx[1];
     streaming chan c_sdram[SDRAM_CLENT_TOTAL];
     
     aud_trainsmit_if i_aud_trainsmit;
@@ -202,16 +196,15 @@ int main()
     	 	        		  i_eth_tx_lp[ETH_TX_XTCP_DATA],	// eth tx client 1
      			        	  i_smi,		  // smi
       			         	  0);             // smi phy addr
-      			         	  
-        #if ENABLE_AUD_TRAINSMIT
-        on tile[0]:aud_trainsmit_core(c_rx_hp,i_aud_trainsmit,i_eth_tx_lp[ETH_TX_AUD_TRAINSMIT]);
-        #endif
+        //#if ENABLE_AUD_TRAINSMIT
+        //on tile[0]:aud_trainsmit_core(c_rx_hp,i_aud_trainsmit,i_eth_tx_lp[ETH_TX_AUD_TRAINSMIT]);
+        //#endif
         //--------------------------------------------------------------------------------------------------
         // user process
         //--------------------------------------------------------------------------------------------------
         // 204KB
         on tile[1]: 
-        xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage[0],if_fs,i_uart_tx[UART_USER],i_uart_rx[UART_USER],i_image,i_aud_trainsmit);
+        xtcp_uesr(i_xtcp_user[XTCP_USER],if_ethaud_cfg[0],if_fl_manage[0],if_fs,i_uart_tx[UART_USER],i_image,i_aud_trainsmit);
         // 29KB
         on tile[1]: eth_audio(i_eth_cfg[ETH_AUDIO_CFG],
                               c_tx_hp,
@@ -225,7 +218,7 @@ int main()
             mii_ethernet_rt_mac(i_eth_cfg,ETH_CFGCLENT_TOTAL,
                              i_eth_rx_lp, ETH_RX_CLENT_TOTAL,
                              i_eth_tx_lp, ETH_TX_CLENT_TOTAL,
-                             c_rx_hp, c_tx_hp,
+                             null, c_tx_hp,
                              p_rxclk, p_rxer, p_rxd, p_rxdv,
                              p_txclk, p_txen, p_txd,
                              eth_rxclk, eth_txclk,

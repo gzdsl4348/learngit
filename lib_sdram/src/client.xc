@@ -54,7 +54,7 @@ void sdram_complete(streaming chanend c_sdram_server, s_sdram_state &state/*, un
     char c;
     c_sdram_server :> c;
     state.pending_cmds--;
-    unsigned index = state.head%SDRAM_MAX_CMD_BUFFER;
+    //unsigned index = state.head%SDRAM_MAX_CMD_BUFFER;
 #if 0
     unsafe {
       buffer = (state.cmd[index]->buffer);

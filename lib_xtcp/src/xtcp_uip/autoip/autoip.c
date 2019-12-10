@@ -7,6 +7,7 @@
 #include "clock-arch.h"
 #include <print.h>
 #include <string.h>
+#include "debug_print.h" 
 
 struct arp_hdr {
   struct uip_eth_hdr ethhdr;
@@ -86,6 +87,10 @@ static const unsigned int c=1013904223;
 static struct autoip_state_t my_autoip_state;
 static struct autoip_state_t *autoip_state = &my_autoip_state;
 
+static u8_t check_conflict_flag = 0; //查IP冲突标志，非1自动IP流程，1查IP冲突流程
+static u8_t ip_conflict_flag    = 0; //IP冲突标志，0不冲突，1冲突，2查询中
+
+
 __attribute__ ((noinline))
 static void rand(struct autoip_state_t* s)
 {
@@ -135,6 +140,7 @@ static void send_probe()
   random_timer_set(&autoip_state->timer,
                    PROBE_MIN * CLOCK_SECOND,
                    PROBE_MAX * CLOCK_SECOND);
+  //debug_printf("   autopip send_probe\n");
 }
 
 static void send_announce()
@@ -145,6 +151,7 @@ static void send_announce()
 
   autoip_state->announces_sent++;
   uip_timer_set(&autoip_state->timer, ANNOUNCE_INTERVAL * CLOCK_SECOND);
+  //debug_printf("   autopip send_announce\n");
 }
 
 void uip_autoip_periodic()
@@ -191,14 +198,22 @@ void uip_autoip_periodic()
           send_announce();
         }
         else {
-          autoip_state->state = NO_ADDRESS;
-          autoip_state->probes_sent = 0;
-          autoip_state->announces_sent = 0;
-          autoip_state->num_conflicts = 0;
-          autoip_state->limit_rate =
+          if(check_conflict_flag != 1) {
+            autoip_state->state = NO_ADDRESS;
+            autoip_state->probes_sent = 0;
+            autoip_state->announces_sent = 0;
+            autoip_state->num_conflicts = 0;
+            autoip_state->limit_rate =
             autoip_state->limit_rate ||
             (autoip_state->num_conflicts > MAX_CONFLICTS);
-          uip_timer_set(&autoip_state->timer, RATE_LIMIT_INTERVAL * CLOCK_SECOND);
+            uip_timer_set(&autoip_state->timer, RATE_LIMIT_INTERVAL * CLOCK_SECOND);
+          }
+          else //查IP冲突流程
+          {
+            uip_autoip_stop();
+            ip_conflict_flag = 1; //IP冲突
+            check_conflict_flag = 0;
+          }
         }
       }
       break;
@@ -206,7 +221,16 @@ void uip_autoip_periodic()
       send_announce();
       if (autoip_state->announces_sent == ANNOUNCE_NUM) {
         autoip_state->state = CONFIGURED;
-        uip_autoip_configured(autoip_state->ipaddr);
+        if(check_conflict_flag != 1) {
+            uip_autoip_configured(autoip_state->ipaddr);
+        }
+        else //查IP冲突流程
+        {
+            uip_autoip_stop();
+            ip_conflict_flag = 0; //IP可用
+            check_conflict_flag = 0;
+        }
+        
       }
       break;
     case CONFIGURED:
@@ -235,6 +259,7 @@ void uip_autoip_arp_in()
 void uip_autoip_start()
 {
   if (autoip_state->state == DISABLED) {
+    check_conflict_flag = 0; //清零标志
     uip_autoip_init(autoip_state->seed);
     rand(autoip_state);
     autoip_state->state = NO_ADDRESS;
@@ -245,6 +270,28 @@ void uip_autoip_stop()
 {
   autoip_state->state = DISABLED;
 }
+
+//启动查IP冲突流程
+void uip_autoip_en_checkip(u16_t ipaddr[])
+{
+    check_conflict_flag = 1; //查IP冲突流程
+    ip_conflict_flag    = 2; //查询中
+    uip_autoip_init(autoip_state->seed);
+    rand(autoip_state);
+    
+    autoip_state->ipaddr[0] = ipaddr[0];
+    autoip_state->ipaddr[1] = ipaddr[1];
+    
+    autoip_state->state = WAIT_FOR_PROBE;
+    random_timer_set(&autoip_state->timer, 0, PROBE_WAIT * CLOCK_SECOND);
+}
+
+//读IP冲突标志，0不冲突，1冲突，2查询中
+u8_t uip_autoip_read_conflict_flag(void)
+{
+    return ip_conflict_flag;
+}
+
 
 #endif
 

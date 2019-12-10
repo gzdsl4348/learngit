@@ -123,7 +123,7 @@ void mes_send_decode(){
             if(mes_send_list.messend_conn[mes_send_list.send_inc].state!=0){
                 //获取备份发送数据发送
                 //memcpy(xtcp_tx_buf,mes_send_list.tx_buff[mes_send_list.rpttr],mes_send_list.len[mes_send_list.rpttr]);
-				user_messend_buff_get(mes_send_list.rpttr,xtcp_tx_buf);		
+				user_messend_buff_get(mes_send_list.rpttr,(uint8_t *)xtcp_tx_buf);		
 				user_sending_len = mes_send_list.len[mes_send_list.rpttr];
 				build_endpage_forid(user_sending_len,mes_send_list.messend_conn[mes_send_list.send_inc].could_id);
 				//
@@ -162,7 +162,7 @@ void taskview_page_messend(){
     if(mes_send_list.wrptr>=MES_STACK_NUM)
         return;
 	mes_send_list.len[mes_send_list.wrptr] = taskview_page_build(TASK_PAGESHOW_B312_CMD);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
 	mes_send_list.wrptr++;
 }
 
@@ -177,7 +177,7 @@ void mes_send_listinfo(uint8_t type,uint8_t need_send){
     //备份发送数据
     mes_send_list.len[mes_send_list.wrptr] = listinfo_upgrade_build(type);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
 	mes_send_list.wrptr++;
     
     //xtcp_debug_printf("iin\n ");
@@ -197,7 +197,7 @@ void mes_send_acinfo(uint16_t id){
     //备份发送数据
     mes_send_list.len[mes_send_list.wrptr] = acinfo_upgrade_build(id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-    user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+    user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
     mes_send_list.wrptr++;
 }
 
@@ -210,7 +210,7 @@ void mes_send_taskinfo(task_allinfo_tmp_t* task_all_info){
     fl_timertask_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
     mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
     mes_send_decode();
     #if 0
     for(uint16_t i=0;i<mes_send_list.len[mes_send_list.wrptr] ;i++){
@@ -232,7 +232,7 @@ void mes_send_taskinfo_nopage(task_allinfo_tmp_t* task_all_info){
     //fl_timertask_read(&g_tmp_union.task_allinfo_tmp,g_sys_val.task_con_id);
     mes_send_list.len[mes_send_list.wrptr] = taskinfo_upgrade_build(task_all_info,g_sys_val.task_config_s,g_sys_val.task_con_id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
     mes_send_decode();
     #if 0
     for(uint16_t i=0;i<mes_send_list.len[mes_send_list.wrptr] ;i++){
@@ -253,7 +253,7 @@ void mes_send_rttaskinfo(uint16_t id,uint8_t contorl,uint8_t page_state){
     //
     mes_send_list.len[mes_send_list.wrptr] = rttaskinfo_upgrade_build(id,contorl);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
 	mes_send_list.wrptr++;
     if(page_state){
     	taskview_page_messend();
@@ -274,7 +274,7 @@ void mes_send_suloinfo(uint16_t id,uint8_t state){
     }
     mes_send_list.len[mes_send_list.wrptr] = sulo_upgrade_build(id);
     //memcpy(mes_send_list.tx_buff[mes_send_list.wrptr] ,xtcp_tx_buf,mes_send_list.len[mes_send_list.wrptr]);
-	user_messend_buff_put(mes_send_list.wrptr,xtcp_tx_buf);
+	user_messend_buff_put(mes_send_list.wrptr,(uint8_t *)xtcp_tx_buf);
 	mes_send_list.wrptr++;
 
 	taskview_page_messend();

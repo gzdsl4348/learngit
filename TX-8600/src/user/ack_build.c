@@ -26,12 +26,12 @@ uint16_t build_endpage_decode(uint16_t len,uint16_t cmd,uint8_t id[]){
     //协议尾
     // +0 checksum
     uint16_t sum;
-    sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(len-2));
+    sum = chksum_8bit(0,(uint8_t *)&xtcp_tx_buf[POL_LEN_BASE],(len-2));
     //
     xtcp_tx_buf[len] = sum;
     xtcp_tx_buf[len+1] = sum>>8;
     // +2 end_tag
-    xtcp_tx_buf[len+2] = END_TAG;
+    xtcp_tx_buf[len+2] = END_TAG&0xFF;
     xtcp_tx_buf[len+3] = END_TAG>>8;
     //
     len+=4;
@@ -41,10 +41,11 @@ uint16_t build_endpage_decode(uint16_t len,uint16_t cmd,uint8_t id[]){
 void build_endpage_forid(uint16_t len,uint8_t id[]){
 	memcpy(&xtcp_tx_buf[POL_ID_BASE],id,6);
     uint16_t sum;
-    sum = chksum_8bit(0,&xtcp_tx_buf[POL_LEN_BASE],(len-6));
+    sum = chksum_8bit(0,(uint8_t *)&xtcp_tx_buf[POL_LEN_BASE],(len-6));
     xtcp_tx_buf[len-4] = sum;
     xtcp_tx_buf[len-3] = sum>>8;
 }
+
 //========================================================================================
 // extra info build ack 
 //========================================================================================
@@ -68,7 +69,7 @@ uint16_t extra_info_build_ack(){
     // end 
     dat_len = EXTRAINFO_LEN_END;
     //-----------------------------------------------------
-    return build_endpage_decode(dat_len,DIV_EXTRA_INFO_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(dat_len,DIV_EXTRA_INFO_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //========================================================================================
@@ -81,7 +82,7 @@ uint16_t online_request_ack_build(uint8_t online_state,uint8_t mode){
     xtcp_tx_buf[ONLINE_MASTERMODE_B] = mode;
     dat_len +=2;
     //-----------------------------------------------------
-    return build_endpage_decode(dat_len,ONLINE_REQUEST_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(dat_len,ONLINE_REQUEST_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //========================================================================================
@@ -101,27 +102,25 @@ uint16_t onebyte_ack_build(uint8_t mode,uint16_t cmd,uint8_t id[]){
 // two byte ack 
 //========================================================================================
 uint16_t twobyte_ack_build(uint8_t state1,uint8_t state2,uint16_t cmd){
-    uint16_t dat_len=POL_DAT_BASE;
     //-----------------------------------------------------
     //dat begin
     xtcp_tx_buf[POL_DAT_BASE] = state1;
     xtcp_tx_buf[POL_DAT_BASE+1] = state2;
     //-----------------------------------------------------
-    return build_endpage_decode(POL_DAT_BASE+2,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+2,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //========================================================================================
 // three byte ack 
 //========================================================================================
 uint16_t threebyte_ack_build(uint8_t state1,uint8_t state2,uint8_t state3,uint16_t cmd){
-    uint16_t dat_len=POL_DAT_BASE;
     //-----------------------------------------------------
     //dat begin
     xtcp_tx_buf[POL_DAT_BASE] = state1;
     xtcp_tx_buf[POL_DAT_BASE+1] = state2;
     xtcp_tx_buf[POL_DAT_BASE+2] = state3;
     //-----------------------------------------------------
-    return build_endpage_decode(POL_DAT_BASE+3,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+3,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 #if 0
@@ -143,7 +142,7 @@ uint16_t id_ack_build(uint16_t id,uint8_t state,uint16_t cmd){
     xtcp_tx_buf[POL_DAT_BASE] = id;
     xtcp_tx_buf[POL_DAT_BASE+1] = id>>8;
     xtcp_tx_buf[POL_DAT_BASE+2] = state;
-    return build_endpage_decode(POL_DAT_BASE+3,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+3,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //========================================================================================
@@ -155,7 +154,7 @@ uint16_t heart_ack_build(uint8_t state){
     xtcp_tx_buf[POL_DAT_BASE+2] = g_sys_val.sys_timinc>>8;
     xtcp_tx_buf[POL_DAT_BASE+3] = g_sys_val.sys_timinc>>16;
     xtcp_tx_buf[POL_DAT_BASE+4] = g_sys_val.sys_timinc>>24;
-    return build_endpage_decode(POL_DAT_BASE+5,DIV_HEART_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+5,DIV_HEART_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //========================================================================================
@@ -171,7 +170,7 @@ uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_
     uint16_t div_info_base = DIVLISTRE_INFO_B;
   
     for(uint8_t i=0; i<div_send_num; i++){
-        if(*div_list_p == null)
+        if(*div_list_p == (div_node_t *)null)
             break;
         memcpy(&xtcp_tx_buf[div_info_base],&(*div_list_p)->div_info,DIVLISTRE_AREA_B);
 
@@ -254,7 +253,7 @@ uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl,ui
     xtcp_tx_buf[POL_DAT_BASE+4] = fail_div_cnt;
     dat_len +=5;
     //-----------------------------------------------------
-    return build_endpage_decode(dat_len,AREA_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(dat_len,AREA_CONFIG_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 
 }
 //==========================================================================================
@@ -263,7 +262,7 @@ uint16_t area_config_ack_build(uint16_t area_sn,uint8_t state,uint8_t contorl,ui
 uint16_t host_resiged_ack_build(uint8_t state){
     xtcp_tx_buf[AC_RES_STATE] = state;
     memcpy(&xtcp_tx_buf[AC_RES_CODE],&xtcp_rx_buf[POL_DAT_BASE],20);
-    return build_endpage_decode(AC_RES_LENEND,ACCOUNT_REGISTER_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(AC_RES_LENEND,ACCOUNT_REGISTER_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==================================================================================================
@@ -275,7 +274,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     //dat begin
     memcpy(&xtcp_tx_buf[AC_LOGIN_NAME_B],&xtcp_rx_buf[AC_LOGIN_NAME_B],DIV_NAME_NUM);
     //加密
-    filename_decoder(&xtcp_tx_buf[AC_LOGIN_NAME_B],DIV_NAME_NUM);
+    filename_decoder((uint8_t *)&xtcp_tx_buf[AC_LOGIN_NAME_B],DIV_NAME_NUM);
     //
     memcpy(&xtcp_tx_buf[AC_LOGIN_PHONENUM_B],account_info[user_id].phone_num,DIV_NAME_NUM);
     //
@@ -360,7 +359,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
     if(log_state!=0){
         xtcp_tx_buf[AC_LOGIN_DIV_TOL_B] = 0;     
     }
-    else if(mac_buf!=null){
+    else if(mac_buf!=(uint8_t *)null){
         xtcp_tx_buf[AC_LOGIN_DIV_TOL_B] = account_info[user_id].div_tol;
         for(uint8_t i=0;i<account_info[user_id].div_tol; i++){
             memcpy(&xtcp_tx_buf[mac_date_base],mac_buf,6);
@@ -368,7 +367,7 @@ uint16_t account_login_ack_build(uint8_t log_state,uint8_t user_id,uint8_t *mac_
             mac_buf+=6;
         }
     }
-    return build_endpage_decode(mac_date_base,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(mac_date_base,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -460,7 +459,7 @@ uint16_t account_maclist_ack_build(account_all_info_t *account_all_info){
         memcpy(&xtcp_tx_buf[AC_MACLIST_MAC_B+data_base],(account_all_info->mac_list+data_base),6);
         data_base+=6;
     }
-    return build_endpage_decode(data_base+AC_MACLIST_MAC_B,ACCOUNT_DIV_LIST_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base+AC_MACLIST_MAC_B,ACCOUNT_DIV_LIST_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -472,7 +471,7 @@ uint16_t account_control_ack_build(uint8_t contorl,uint8_t id,uint8_t state){
     xtcp_tx_buf[AC_CONFIG_ACNUM_B] = id;
     xtcp_tx_buf[AC_CONFIG_ACKS_B] = state;
     //
-    return build_endpage_decode(AC_CONFIG_ENDLEN_B,ACCOUNT_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(AC_CONFIG_ENDLEN_B,ACCOUNT_CONFIG_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -499,7 +498,7 @@ uint16_t solution_list_ack_build(uint16_t cmd,uint8_t task_num_en){
         if(task_num_en){
             uint16_t tmp_num=0;
             timetask_t *timetask_p = timetask_list.all_timetask_head;
-            while(timetask_p!=null){
+            while(timetask_p!=(timetask_t *)null){
                 if(timetask_p->solu_id==solution_list.solu_info[i].id){
                     tmp_num++;
                 }
@@ -512,7 +511,7 @@ uint16_t solution_list_ack_build(uint16_t cmd,uint8_t task_num_en){
             data_base += SOLU_CK_LEN_END;
         }
     }
-    return build_endpage_decode(data_base,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -523,7 +522,7 @@ uint16_t solution_config_build(uint16_t id,uint8_t state,uint8_t config){
     xtcp_tx_buf[SOLU_CFGACK_CONFIG] = config;
     xtcp_tx_buf[SOLU_CFGACK_STATE] = state;
     //
-    return build_endpage_decode(SOLU_CFGACK_LENEND,SOLUTION_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(SOLU_CFGACK_LENEND,SOLUTION_CONFIG_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -540,7 +539,7 @@ uint16_t task_list_ack_build(uint16_t cmd,uint8_t sulo_en,uint8_t sulo_num,uint8
     uint16_t data_base = TASK_CK_DAT_BASE;
     //
     i=0;
-    while(t_list_connsend[list_num].list_info.tasklist.task_p!=null){
+    while(t_list_connsend[list_num].list_info.tasklist.task_p!=(timetask_t *)null){
         // 是否查找指定方案
         if(sulo_en && sulo_num!=t_list_connsend[list_num].list_info.tasklist.task_p->solu_id){
             t_list_connsend[list_num].list_info.tasklist.task_p = t_list_connsend[list_num].list_info.tasklist.task_p->all_next_p;
@@ -656,7 +655,7 @@ uint16_t task_config_ack_build(uint16_t id,uint8_t state){
     xtcp_tx_buf[TASKC_CFG_TASK_ID+1] = id>>8;
     xtcp_tx_buf[TASKC_CFG_STATE] = state;
     //
-    return build_endpage_decode(TASKC_CFG_ACK_LEN,TASK_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(TASKC_CFG_ACK_LEN,TASK_CONFIG_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -670,7 +669,7 @@ uint16_t todaytask_ack_build(){
     xtcp_tx_buf[POL_DAT_BASE+3] = g_sys_val.today_date.date;
     //
     //xtcp_debug_printf("chk week %d\n",xtcp_tx_buf[POL_DAT_BASE]);
-    return build_endpage_decode(POL_DAT_BASE+4,TASK_TODAYWEEK_CK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+4,TASK_TODAYWEEK_CK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -682,7 +681,7 @@ uint16_t rttask_config_ack_build(uint16_t id,uint8_t state){
     xtcp_tx_buf[RTTASK_CFGC_ID+1] = id>>8;
     xtcp_tx_buf[RTTASK_CFGC_STATE] = state;
     //
-    return build_endpage_decode(RTTASK_CFGC_LEN,RTTASK_CONFIG_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(RTTASK_CFGC_LEN,RTTASK_CONFIG_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -704,7 +703,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
     data_base = RTTASK_CK_BASE;
     //
     for(i=0;(i<MAX_RTTASK_SEND);i++){
-        if(t_list_connsend[list_num].list_info.rttasklist.rttask_p==null)
+        if(t_list_connsend[list_num].list_info.rttasklist.rttask_p==(rttask_info_t *)null)
             break;
         // 获得即时任务详细信息
         fl_rttask_read(&g_tmp_union.rttask_dtinfo,t_list_connsend[list_num].list_info.rttasklist.rttask_p->rttask_id);
@@ -738,7 +737,7 @@ uint16_t rttask_list_chk_build(uint8_t list_num){
         //-----------------------------------------------------------------
         rttask_info_t *tmp_p = rttask_lsit.run_head_p;
         xtcp_tx_buf[data_base+RTTASK_CK_STATE] = 0;
-        while(tmp_p!=null){
+        while(tmp_p!=(rttask_info_t *)null){
             if(tmp_p->rttask_id == g_tmp_union.rttask_dtinfo.rttask_id){
                 xtcp_tx_buf[data_base+RTTASK_CK_STATE] = tmp_p->run_state;
                 break;
@@ -782,7 +781,7 @@ uint16_t rttask_dtinfo_chk_build(uint16_t id){
         xtcp_tx_buf[data_base+RTTASK_DTCK_AREACONTORL+1] = g_tmp_union.rttask_dtinfo.des_info[i].zone_control>>8;
         data_base+=RTTASK_DTCK_LEN;
     }
-    return build_endpage_decode(data_base,RTTASK_DTINFO_CHECK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,RTTASK_DTINFO_CHECK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -790,7 +789,7 @@ uint16_t rttask_dtinfo_chk_build(uint16_t id){
 //==========================================================================================
 uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16_t cmd,uint8_t no_task){
     uint16_t data_base;
-    div_node_t *div_tmp_p=null;
+    div_node_t *div_tmp_p=(div_node_t *)null;
     //-----------------------------------------------------
     if(no_task){
         memset(&g_tmp_union.rttask_dtinfo,0x00,sizeof(rttask_dtinfo_t));
@@ -823,7 +822,7 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
     for(uint8_t i=0; i<g_tmp_union.rttask_dtinfo.div_tol; i++){
         //取得设备指针
         div_tmp_p = get_div_info_p(g_tmp_union.rttask_dtinfo.des_info[i].mac);
-        if(div_tmp_p==null){
+        if(div_tmp_p==(div_node_t *)null){
             xtcp_tx_buf[RTTASK_BUILD_DIVTOL]--;
             continue;
         }
@@ -844,7 +843,7 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
         data_base += RTTASK_BUILD_LEN;
     }
     //
-    return build_endpage_decode(data_base,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -852,7 +851,7 @@ uint16_t rttask_connect_build(uint8_t contorl,uint16_t ran_id,uint16_t id,uint16
 //==========================================================================================
 uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttask_div_p){
     uint16_t data_base;
-    div_node_t *div_tmp_p=null;
+    div_node_t *div_tmp_p=(div_node_t *)null;
     // 读取任务信息
     fl_rttask_read(&g_tmp_union.rttask_dtinfo,id);
     // 设备总量
@@ -863,7 +862,7 @@ uint16_t  rttask_listupdat_build(uint8_t *needsend,uint16_t id,div_node_t *rttas
     for(uint8_t i=0; i<g_tmp_union.rttask_dtinfo.div_tol; i++){
         //取得设备指针
         div_tmp_p = get_div_info_p(g_tmp_union.rttask_dtinfo.des_info[i].mac);
-        if(div_tmp_p==null){
+        if(div_tmp_p==(div_node_t *)null){
             xtcp_tx_buf[RTTASK_LISTUP_DIVTOL]--;
             continue;
         }
@@ -905,7 +904,7 @@ uint16_t rttask_creat_build(uint16_t ran_id,uint8_t state,uint16_t task_id){
     xtcp_tx_buf[RTTASKC_PLAY_TASKID] = task_id;
     xtcp_tx_buf[RTTASKC_PLAY_TASKID+1] = task_id>>8;
     //
-    return build_endpage_decode(RTTASKC_PLAY_END,RTTASK_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(RTTASKC_PLAY_END,RTTASK_CONTORL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -920,13 +919,13 @@ uint16_t div_ipmac_list_send(){
     //
     div_node_t *div_tmp_p = div_list.div_head_p;
     data_base = DIVIPMAC_DAT_BASE;    
-    while(div_tmp_p!=null){
+    while(div_tmp_p!=(div_node_t *)null){
         memcpy(&xtcp_tx_buf[data_base+DIVIPMAC_DAT_MAC],div_tmp_p->div_info.mac,6);
         memcpy(&xtcp_tx_buf[data_base+DIVIPMAC_DAT_IP],div_tmp_p->div_info.ip,4);
         div_tmp_p = div_tmp_p->next_p;
         data_base += DIVIPMAC_DTA_LEN;
     }
-    return build_endpage_decode(data_base,DIV_IPMAC_CHL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,DIV_IPMAC_CHL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -944,7 +943,7 @@ uint16_t mic_userlist_ack_build(uint8_t state,account_all_info_t *account_all_in
         memcpy(&xtcp_tx_buf[data_base+MIC_USERCHK_MAC],&account_all_info->mac_list[6*i],6);
         data_base +=MIC_USERCHK_END_LEN;
     }
-    return build_endpage_decode(data_base,MIC_USERLIST_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,MIC_USERLIST_CHK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -954,8 +953,8 @@ uint16_t mic_userlist_ack_build(uint8_t state,account_all_info_t *account_all_in
 uint16_t music_patchlist_chk_build(uint8_t list_num){
     uint16_t data_base;
     uint8_t i;
-    uint32_t *patch_tol = &g_tmp_union.buff[0];
-    dir_info_t *dir_info = &g_tmp_union.buff[4];
+    uint32_t *patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+    dir_info_t *dir_info = (dir_info_t *)&g_tmp_union.buff[4];
     //
     if(g_sys_val.sd_state){
         *patch_tol = 0;
@@ -1004,14 +1003,15 @@ uint16_t music_patchlist_chk_build(uint8_t list_num){
 uint16_t music_namelist_chk_build(uint8_t state,uint8_t list_num){
     uint16_t data_base;
     uint8_t i;
-    uint32_t *music_tol;
+    uint32_t tmp=0;
+    uint32_t *music_tol=&tmp;
     music_info_t *music_info;
     //---------------------------------------------------------------
     // 取音乐列表flash 信息
     if(state){
         user_fl_get_musiclist(t_list_connsend[list_num].list_info.musiclist.sector_index,g_tmp_union.buff);
-        music_tol = &g_tmp_union.buff[0];
-        music_info = &g_tmp_union.buff[4];
+        music_tol = (uint32_t *)&g_tmp_union.buff[0];
+        music_info = (music_info_t *)&g_tmp_union.buff[4];
         //-------------------------------------------------------------------------
         xtcp_tx_buf[MUS_LIBCHK_PACKTOL] = *music_tol/MAX_MUSICNUM_SEND;
         if(*music_tol%MAX_MUSICNUM_SEND || xtcp_tx_buf[MUS_LIBCHK_PACKTOL]==0)
@@ -1086,7 +1086,7 @@ uint16_t sdcard_sizechk_build(){
     memcpy(&xtcp_tx_buf[SDCARD_CHK_TOLMB],&tol_mb,4);
     memcpy(&xtcp_tx_buf[SDCARD_CHK_FREEMB],&free_mb,4);
     //
-    return build_endpage_decode(SDCARD_CHK_LEN,SDCARD_SIZECHK_B809_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(SDCARD_CHK_LEN,SDCARD_SIZECHK_B809_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -1137,7 +1137,7 @@ uint16_t sysonline_chk_build(uint8_t state){
     }    
     xtcp_tx_buf[SYS_ONLINE_CHK_TASKTOL_B] = tol_task;
     //
-    return build_endpage_decode(data_base,ACCOUNT_SYSONLINE_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,ACCOUNT_SYSONLINE_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -1198,7 +1198,7 @@ uint16_t rttaskinfo_upgrade_build(uint16_t id,uint16_t contorl){
     //
     // 查找任务状态
     rttask_info_t *runtmp_p = rttask_lsit.run_head_p;
-    while(runtmp_p!=null){
+    while(runtmp_p!=(rttask_info_t *)null){
         //比较任务id
         if(runtmp_p->rttask_id == id){ 
             task_state = runtmp_p->run_state;
@@ -1327,7 +1327,7 @@ uint16_t backup_contorl_build(uint8_t state){
     xtcp_tx_buf[POL_DAT_BASE] = state;
     //memcpy(&xtcp_tx_buf[POL_DAT_BASE+1],data,64);
     memset(&xtcp_tx_buf[POL_DAT_BASE+1],00,64);
-    return build_endpage_decode(POL_DAT_BASE+1+64,BACKUP_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+1+64,BACKUP_CONTORL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================
@@ -1448,14 +1448,14 @@ uint16_t taskview_page_build(uint16_t cmd){
     char c_tx_8623[]={'T',0,'X',0,'-',0,'8',0,'6',0,'2',0,'3',0};
     //----------------------------------------------------------------------
     tmp_num = 0;
-    while(rttask_info_p!=null){
+    while(rttask_info_p!=(rttask_info_t *)null){
         tmp_num++;
         rttask_info_p = rttask_info_p->all_next_p;
     }
     xtcp_tx_buf[POL_DAT_BASE] = tmp_num; //即时任务总数
     //----------------------------------------------------------------------
     tmp_num = 0;
-    while(timetask_p!=null){
+    while(timetask_p!=(timetask_t *)null){
         if(timetask_p->solu_id==0xFF){
             tmp_num++;
         }
@@ -1473,7 +1473,7 @@ uint16_t taskview_page_build(uint16_t cmd){
     xtcp_tx_buf[POL_DAT_BASE+2] = tmp_num; //方案总数
     //----------------------------------------------------------------------
     tmp_num=0;
-    while(div_info_p!=null){
+    while(div_info_p!=(div_node_t *)null){
 		#if 0
 		for(uint8_t i=0;i<14;i++){
 			xtcp_debug_printf("%x ",c_tx_8623[i]);
@@ -1485,7 +1485,7 @@ uint16_t taskview_page_build(uint16_t cmd){
 		}
 		xtcp_debug_printf("\n");
 		#endif
-        if(charncmp(c_tx_8623,div_info_p->div_info.div_type,14)){
+        if(charncmp((uint8_t *)c_tx_8623,div_info_p->div_info.div_type,14)){
             tmp_num++;
         }
         div_info_p = div_info_p->next_p;
@@ -1493,7 +1493,7 @@ uint16_t taskview_page_build(uint16_t cmd){
     xtcp_tx_buf[POL_DAT_BASE+3] = tmp_num; //报警设备总数
     //xtcp_debug_printf("firediv num %d\n",tmp_num);
     //---------------------------------------------------------------------
-    return build_endpage_decode(POL_DAT_BASE+4,cmd,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+4,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //===============================================================================
@@ -1555,7 +1555,7 @@ uint16_t dns_couldip_chk_build(){
 uint16_t music_batrechk_build(){
     memset(&xtcp_tx_buf[POL_DAT_BASE],0,4);
     for(uint8_t i=0;i<MAX_BATCONTORL_OBJ_NUM;i++){
-        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,&xtcp_rx_buf[POL_MAC_BASE],6)){
+        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,(uint8_t *)&xtcp_rx_buf[POL_MAC_BASE],6)){
             xtcp_tx_buf[POL_DAT_BASE] = g_sys_val.bat_contorlobj[i].bat_state;
             xtcp_tx_buf[POL_DAT_BASE+1] = g_sys_val.bat_contorlobj[i].succeed_num;
             xtcp_tx_buf[POL_DAT_BASE+2] = g_sys_val.bat_contorlobj[i].fail_num;
@@ -1566,7 +1566,7 @@ uint16_t music_batrechk_build(){
             }
         }
     }
-    return build_endpage_decode(POL_DAT_BASE+4,MUSIC_B807_BATRECHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(POL_DAT_BASE+4,MUSIC_B807_BATRECHK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 // 获取指定IP列表
@@ -1579,9 +1579,9 @@ uint16_t divlist_ipchk_ack_build(){
     for(uint8_t i=0;i<tol_num;i++){
         memcpy(&xtcp_tx_buf[dat_base],&xtcp_rx_buf[dat_base],6);
         //找设备
-        div_tmp_p = get_div_info_p(&xtcp_rx_buf[dat_base]);
+        div_tmp_p = get_div_info_p((uint8_t *)&xtcp_rx_buf[dat_base]);
         dat_base+=6;
-        if(div_tmp_p==null){
+        if(div_tmp_p==(div_node_t *)null){
             xtcp_tx_buf[dat_base] = 0;
             dat_base++;
             memset(&xtcp_tx_buf[dat_base],0x00,4);
@@ -1594,14 +1594,14 @@ uint16_t divlist_ipchk_ack_build(){
             dat_base +=4;
         }
     }
-    return build_endpage_decode(dat_base,DIVLIST_IPCHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(dat_base,DIVLIST_IPCHK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 uint16_t udp_trainsmit_headrt_build(){
     // MAC
     memcpy(&xtcp_tx_buf[POL_DAT_BASE],host_info.mac,6);
     memset(&xtcp_tx_buf[POL_DAT_BASE+6],0x00,64);
-	return build_endpage_decode(POL_DAT_BASE+6+64,APP_AUDTRAINSMIT_UDP_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+	return build_endpage_decode(POL_DAT_BASE+6+64,APP_AUDTRAINSMIT_UDP_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 uint16_t rttask_muslist_chk_build(uint8_t list_num){
@@ -1725,6 +1725,6 @@ uint16_t rttask_infosend_build(uint8_t list_num,uint8_t ch){
 uint16_t divtext_send_build(){
     xtcp_tx_buf[TEXTDIV_SEND_STATE] = 0;
     memcpy(&xtcp_tx_buf[TEXTDIV_SEND_MAC],&xtcp_rx_buf[TEXTDIV_REC_DIVMAC],6);
-    return build_endpage_decode(TEXTDIV_SEND_MAC_DATLEN,BE0E_DIV_TEXTCOMMOND_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(TEXTDIV_SEND_MAC_DATLEN,BE0E_DIV_TEXTCOMMOND_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 

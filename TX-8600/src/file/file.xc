@@ -130,7 +130,7 @@ void file_server(server file_server_if if_fs, chanend c_faction)
             case if_fs.get_sdcard_size(unsigned &tol_mb,unsigned &free_mb)-> int res:
                 unsafe{
                 unsigned long tol_mb_tmp,free_mb_tmp;
-                get_sdcard_size(&tol_mb_tmp,&free_mb_tmp);
+                get_sdcard_size((unsigned long *)&tol_mb_tmp,(unsigned long *)&free_mb_tmp);
                 tol_mb = tol_mb_tmp;
                 free_mb = free_mb_tmp;
                 }
@@ -483,6 +483,7 @@ extern client interface sd_host_if  * unsafe sd_hi;
 void file_process(streaming chanend c_sdram, chanend c_faction,client sd_host_if sdif)
 {
 
+    file_contorl_dat_init();
     timer tmr;
     unsigned int timeout;
     

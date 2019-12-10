@@ -28,11 +28,11 @@ void sys_dat_write(uint8_t buff[],uint16_t num,uint16_t base_adr){
 //---------------------------------------------------------------------------
 void fl_hostinfo_write(){
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
-    sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+    sys_dat_write((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
     //
     user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
-    sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+    sys_dat_write((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
 }
 //----------------------------------------------------------------------------
@@ -41,18 +41,24 @@ void fl_hostinfo_write(){
 void fl_hostinfo_read(){
     unsigned init_string;
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
-	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);  
+	sys_dat_read((uint8_t *)(&init_string),4,FLASH_ADR_INIT);  
     //第0页数据出错
     if(init_string!=FLASH_INIT_F){
         // 读取页1数据 同步页0数据
         user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
-        sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+        sys_dat_read((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
         user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
     }
     else{
         // 读取用户数据 同步页1数据
-        sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+        sys_dat_read((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
         user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
+    }
+    // 离线日期是否需要初始化
+    if(host_info.offline_f!=0x3A){
+        host_info.offline_f=0x3A;
+        host_info.offline_day=0;
+        fl_hostinfo_write();
     }
 }
 
@@ -62,10 +68,10 @@ void fl_hostinfo_read(){
 uint8_t read_hostinfo_reset_state(){
     unsigned init_string;
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
-	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
+	sys_dat_read((uint8_t *)(&init_string),4,FLASH_ADR_INIT);   
     if(init_string!=FLASH_INIT_F){
         user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
-    	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);  
+    	sys_dat_read((uint8_t *)(&init_string),4,FLASH_ADR_INIT);  
         if(init_string!=FLASH_INIT_F){
             return 0;
         }
@@ -81,18 +87,18 @@ void fl_hostinfo_init(){
     unsigned init_string;
     // 读取第0页信息
     user_fl_sector_read(SYSTEM_0_DAT_SECTOR_BASE);
-	sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);
+	sys_dat_read((uint8_t *)(&init_string),4,FLASH_ADR_INIT);
     // 第0页信息是否有问题
     if(init_string!=FLASH_INIT_F){
         // 读取第1页信息
         user_fl_sector_read(SYSTEM_1_DAT_SECTOR_BASE);
-        sys_dat_read((char*)(&init_string),4,FLASH_ADR_INIT);   
+        sys_dat_read((uint8_t *)(&init_string),4,FLASH_ADR_INIT);   
     }
     // 保存初始化信息
 	init_string = FLASH_INIT_F;
-	sys_dat_write((char*)(&init_string),4,FLASH_ADR_INIT);
+	sys_dat_write((uint8_t *)(&init_string),4,FLASH_ADR_INIT);
    //
-    sys_dat_read((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
+    sys_dat_read((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);//主机信息读取
     // 判断MAC地址是否已经烧录
     if((host_info.mac[0]==0x42)&&(host_info.mac[1]==0x4C)&&(host_info.mac[2]==0x45)){
         // 已经烧录烧录MAC 使用FLASH数据
@@ -106,7 +112,7 @@ void fl_hostinfo_init(){
     // 或得账号信息数据
     memcpy(&host_info,&host_info_tmp,sizeof(host_info_t));
     // 烧录两页数据
-	sys_dat_write((char*)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
+	sys_dat_write((uint8_t *)(&host_info),sizeof(host_info_t),FLASH_HOST_INFO);
     user_fl_sector_write(SYSTEM_0_DAT_SECTOR_BASE);
     user_fl_sector_write(SYSTEM_1_DAT_SECTOR_BASE);
 }
@@ -118,13 +124,13 @@ void fl_hostinfo_init(){
 // 读账户详细信息
 void fl_account_read(account_all_info_t *account_all_info,uint8_t id){
     user_fl_sector_read(ACCOUT_SECTOR+id);
-    sys_dat_read(account_all_info,sizeof(account_all_info_t),FLB_ACCOUNT_DAT_BASE);
+    sys_dat_read((uint8_t *)account_all_info,sizeof(account_all_info_t),FLB_ACCOUNT_DAT_BASE);
 }
 
 void fl_account_write(account_all_info_t *account_all_info,uint8_t id){
     unsigned len;
     len = sizeof(account_all_info_t);
-    sys_dat_write(account_all_info,len,FLB_ACCOUNT_DAT_BASE);
+    sys_dat_write((uint8_t *)account_all_info,len,FLB_ACCOUNT_DAT_BASE);
     user_fl_sector_write(ACCOUT_SECTOR+id);
 }
 
@@ -151,8 +157,8 @@ void fl_divlist_read(){
     uint8_t sector_num=0;
     //
     // 初始化指针
-    div_list.div_head_p=null;
-    div_list.div_end_p=null;
+    div_list.div_head_p=(div_node_t *)null;
+    div_list.div_end_p=(div_node_t *)null;
     while(divlist_inc<MAX_DIV_LIST){
         // 读新sector
         user_fl_sector_read(DIV_INFOLIST_SECTOR+sector_num);
@@ -170,7 +176,7 @@ void fl_divlist_read(){
         div_list.div_node[i].div_info.div_state = 0;
         div_list.div_node[i].div_info.div_onlineok = 0;
 
-        div_list.div_node[i].next_p = null;
+        div_list.div_node[i].next_p = (div_node_t *)null;
         if(div_list.div_node[i].div_info.id!=0xFF){
             // 防止FLASH 错乱
             if(div_list.div_node[i].div_info.id!=i){
@@ -226,14 +232,14 @@ void fl_divlist_write(){
 //-----------------------------------------------------------------------------------
 void fl_solution_write(){
     user_fl_sector_read(SOLUSION_DAT_SECTOR);
-    sys_dat_write((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST);
+    sys_dat_write((uint8_t *)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST);
     user_fl_sector_write(SOLUSION_DAT_SECTOR);
     //
 }
 
 void fl_solution_read(){
 	user_fl_sector_read(SOLUSION_DAT_SECTOR);
-	sys_dat_read((char*)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
+	sys_dat_read((uint8_t *)(&solution_list),sizeof(solution_list_t),FLASH_SOLUSION_LIST); //方案信息读取
 	//无效方案过滤
 	for(uint8_t i=0;i<MAX_TASK_SOULTION;i++){
         if(solution_list.solu_info[i].state!=0xFF && solution_list.solu_info[i].id!=i){
@@ -247,14 +253,14 @@ void fl_solution_read(){
 // 读定时任务指令
 void fl_timertask_read(task_allinfo_tmp_t     *task_allinfo_tmp,uint16_t id){
     user_fl_sector_read(TIMED_TASK_SECTOR+id);
-    sys_dat_read(task_allinfo_tmp,sizeof(task_allinfo_tmp_t),FLB_TASK_DAT_BASE);
+    sys_dat_read((uint8_t *)task_allinfo_tmp,sizeof(task_allinfo_tmp_t),FLB_TASK_DAT_BASE);
 }
 
 //--------------------------------------------------
 // 写定时任务指令
 //--------------------------------------------------
 void fl_timertask_write(task_allinfo_tmp_t *task_allinfo_tmp, uint16_t id){
-    sys_dat_write(task_allinfo_tmp,sizeof(task_allinfo_tmp_t),FLB_TASK_DAT_BASE);
+    sys_dat_write((uint8_t *)task_allinfo_tmp,sizeof(task_allinfo_tmp_t),FLB_TASK_DAT_BASE);
     user_fl_sector_write(TIMED_TASK_SECTOR+id);
 }
 //--------------------------------------------------
@@ -265,7 +271,7 @@ void fl_rttask_read(rttask_dtinfo_t     *rttask_dtinfo,uint16_t id){
         return;
     user_fl_sector_read(RT_TASK_SECTOR+id*2);
     user_fl_sector_read2sector(RT_TASK_SECTOR+id*2+1);
-    sys_dat_read(rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
+    sys_dat_read((uint8_t *)rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
 }
 //--------------------------------------------------
 // 写即时任务指令
@@ -273,7 +279,7 @@ void fl_rttask_read(rttask_dtinfo_t     *rttask_dtinfo,uint16_t id){
 void fl_rttask_write(rttask_dtinfo_t *rttask_dtinfo,uint16_t id){
     if(id>MAX_RT_TASK_NUM-1)
         return;
-    sys_dat_write(rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
+    sys_dat_write((uint8_t *)rttask_dtinfo,sizeof(rttask_dtinfo_t),FLB_RTTASK_DAT_BASE);
     user_fl_sector_write(RT_TASK_SECTOR+id*2);
     user_fl_sector_write2sector(RT_TASK_SECTOR+id*2+1);
 }

@@ -38,7 +38,6 @@ uint8_t file_contorl_init(uint8_t *psrc,uint8_t *pdst,uint8_t *pcurpct,uint8_t *
             break;
         }
     }
-
     //wstrcpy((TCHAR*)file_contorl.f_srcname, (TCHAR*)psrc);
     //wstrcpy((TCHAR*)file_contorl.f_desname, (TCHAR*)pdst);
     
@@ -496,7 +495,7 @@ uint8_t mf_open_log(char *file_newname,char *file_oldname)
     f_unlink((const TCHAR*)file_oldname);
     // 创建新日志    
     res = f_open(logfile,(const TCHAR*)file_newname,FA_WRITE|FA_READ|FA_OPEN_ALWAYS);   //打开创建文件
-    f_write(logfile,(const TCHAR*)utf_16le_type, 2, &bw);
+    f_write(logfile,(const TCHAR*)utf_16le_type, 2, (UINT *)&bw);
     memcpy(log_filename,file_newname,64);    //备份文件名  
     f_close(logfile);
     myfree(logfile);
@@ -508,14 +507,13 @@ uint8_t mf_open_log(char *file_newname,char *file_oldname)
 uint8_t mf_add_loginfo(char *file_name,unsigned len){
     FIL *logfile = 0;
     uint8_t res;
-    uint16_t br=0;
     uint16_t bw=0;
     logfile=(FIL*)mymalloc(sizeof(FIL));//申请内存
     //
     res = f_open(logfile,(const TCHAR*)log_filename,FA_WRITE|FA_READ|FA_OPEN_ALWAYS);   //打开创建文件
     //
     f_lseek(logfile,logfile->fptr+logfile->fsize);
-    res = f_write(logfile,(const TCHAR*)file_name, len, &bw);
+    res = f_write(logfile,(const TCHAR*)file_name, len, (UINT *)&bw);
     //
     f_close(logfile);
     myfree(logfile);

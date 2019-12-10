@@ -48,7 +48,7 @@
 
 /** Maximum number of events in a client queue */
 #ifndef CLIENT_QUEUE_SIZE
-#define CLIENT_QUEUE_SIZE 100
+#define CLIENT_QUEUE_SIZE 150
 #endif
 
 /** Value used by lwIP's RX buffer */
@@ -160,7 +160,11 @@ typedef enum xtcp_event_type_t {
 
   XTCP_IFDOWN,         /**<   This event occurs when the link goes down.
                               This event has no associated connection. */
-
+                              
+  XTCP_IP_CONFLICT,         //IP³åÍ»
+                            
+  XTCP_IP_CONFLICT_RECOVERY,//IP³åÍ»»Ö¸´
+                              
   XTCP_DNS_RESULT,     /**<   This event occurs when the XTCP connection has a DNS
                               result for a request. **/
   XTCP_ALREADY_HANDLED                              
@@ -369,8 +373,6 @@ typedef interface xtcp_if {
   void xtcp_ipconfig(xtcp_ipconfig_t &ipconfig_new);
 
   void xtcp_arpget(xtcp_ipaddr_t ipaddr,xtcp_mac_t &t_xtcp_mac);
-
-  void xtcp_arpclear(xtcp_ipaddr_t ipaddr);
 
   void set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]);
 

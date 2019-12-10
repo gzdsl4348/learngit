@@ -469,6 +469,7 @@ void broadcast_for_minute(){
 
 //------------------------------------------------------------------------
 //√ø15√ÎºÏ≤‚IP≥ÂÕª
+/*
 void ipconflict_for_15s(){
     if(g_sys_val.host_ipget_mode)
         return;
@@ -481,7 +482,7 @@ void ipconflict_for_15s(){
         user_sending_len = 64;
         user_xtcp_send(g_sys_val.ipchk_conn,0);
 	}
-}
+}*/
 
 //==============================================================================
 // ¡¨Ω”≥¨ ±ºÏ≤‚

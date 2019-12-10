@@ -45,7 +45,7 @@ static unsigned get_guid(void)
     if(guid++ > (0xfffffff)) {
       guid = 1;
     }
-    debug_printf("\nxtcp build id %x\n\n",guid);
+    
     //if(uip_udp_connid_is_free(guid) == 0) continue;
     break;
   }
@@ -94,8 +94,6 @@ unsafe void enqueue_event_and_notify(unsigned client_num,
 #endif
                                      )
 {
-  if(client_num!=0)
-    return;
   unsigned position = (client_heads[client_num] + client_num_events[client_num]) % CLIENT_QUEUE_SIZE;
   client_queue[client_num][position].xtcp_event = xtcp_event;
   client_queue[client_num][position].xtcp_conn = xtcp_conn;
@@ -104,8 +102,9 @@ unsafe void enqueue_event_and_notify(unsigned client_num,
 #endif
 
   client_num_events[client_num]++;
+  //text_debug2("client num %d %d\n",client_num_events[client_num],CLIENT_QUEUE_SIZE);
   xassert(client_num_events[client_num] <= CLIENT_QUEUE_SIZE);
-
+  //debug_printf("enqueue_event_and_notify xtcp_event:%d client_num_events:%d\n", xtcp_event, client_num_events[client_num]);
   /* Notify */
   i_xtcp[client_num].packet_ready();
 }
@@ -143,14 +142,66 @@ unsafe void rm_recv_events(unsigned conn_id, unsigned client_num)
     }
   }
 }
+/*
+ * 调用处:udp close
+ * 
+ * 返回值:
+ *      1 - 不需要close connection
+ *      0 - 需要close connection
+ */
+unsafe int check_recv_events_add_new_connection(unsigned conn_id, unsigned client_num)
+{
+  int position = -1;
+  for(unsigned i=0; i<client_num_events[client_num]; ++i) {
+    unsigned place_in_queue = (client_heads[client_num] + i) % CLIENT_QUEUE_SIZE;
+    client_queue_t current_queue_item = client_queue[client_num][place_in_queue];
+    
+    /* Found frist item */
+    if(current_queue_item.xtcp_event == XTCP_RECV_DATA &&
+       current_queue_item.xtcp_conn->id == conn_id) {
+       
+      position = place_in_queue;
+      
+      break;
+    }
+  }
 
+  if(position != -1) {
+      /* Move and new connection events in queue */
+      unsigned i=client_num_events[client_num]-1;
+      while(1) {        
+        unsigned place = (client_heads[client_num] + i) % CLIENT_QUEUE_SIZE;
+        unsigned next_place = (1+place) % CLIENT_QUEUE_SIZE;
+  
+        client_queue[client_num][next_place] = client_queue[client_num][place];
+
+        if(place == position) break;//20191205-修复bug
+
+        i--;
+      }
+      
+      client_queue[client_num][position].xtcp_event = XTCP_NEW_CONNECTION;
+      //client_queue[client_num][position].xtcp_conn = xtcp_conn;
+#if (XTCP_STACK == LWIP)
+      client_queue[client_num][position].pbuf = NULL;
+#endif
+
+      client_num_events[client_num]++;
+      xassert(client_num_events[client_num] <= CLIENT_QUEUE_SIZE);   
+      
+      /* Notify */
+      i_xtcp[client_num].packet_ready();    
+      return 1;
+  }
+  return 0;
+}
 unsigned get_if_state(void) 
 { 
   return ifstate;
 }
 
-xtcp_connection_t if_up_dummy = {{0}};
-xtcp_connection_t if_down_dummy = {{0}};
+xtcp_connection_t if_up_dummy = {0};
+xtcp_connection_t if_down_dummy = {0};
 
 unsafe void xtcp_if_up(void)
 {

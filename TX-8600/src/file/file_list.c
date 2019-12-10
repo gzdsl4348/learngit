@@ -16,7 +16,6 @@
 
 #define F_START_MUSIC_SECTOR    1
 
-
 extern unsigned int get_mp3_totsec(TCHAR *pname);
 extern unsigned int get_wav_totsec(TCHAR *pname);
 
@@ -477,6 +476,7 @@ static void debug_dir_list(char tag[] ,dir_tbl_t *dir_tbl)
         }
     } 
 }
+
 //清理名称字符串截止符后的字符串
 static void clean_dir_info_name(dir_tbl_t *dir_tbl)
 {
@@ -876,7 +876,7 @@ filelist_layer_2:   //二层路径处理逻辑
         }
     }
     
-    unsigned char type=mf_typetell(path);    //获得类型
+    unsigned char type=mf_typetell((TCHAR *)path);    //获得类型
     if(type==1){
         music_totsec = get_mp3_totsec((TCHAR*)path);
     }else if(type==2){

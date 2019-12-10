@@ -660,6 +660,8 @@ void offlinediv_mode_recive(){
         //≈‰÷√¿Îœﬂ»’∆⁄
         host_info.offline_day = xtcp_rx_buf[COULD_OFFLINEMODE_DAY]+(xtcp_rx_buf[COULD_OFFLINEMODE_DAY]<<8);
     } 
+    user_sending_len = onebyte_ack_build(1,C004_OFFLINEDIV_MODE_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
 //=====================================================================================================

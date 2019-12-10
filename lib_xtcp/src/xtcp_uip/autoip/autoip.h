@@ -10,4 +10,8 @@ void uip_autoip_stop();
 void uip_autoip_configured(uip_ipaddr_t ipaddr);
 void uip_autoip_periodic();
 
+void uip_autoip_en_checkip(u16_t ipaddr[]);
+u8_t uip_autoip_read_conflict_flag(void);
+
+
 #endif //_autoip_h_

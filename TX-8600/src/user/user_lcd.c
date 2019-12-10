@@ -278,7 +278,7 @@ void user_disptask_refresh(){
     // 没有运行中任务 显示即将运行任务
     timetask_t *today_t_p = timetask_list.today_timetask_head;
     for(uint8_t i=0;i<1;i++){ //只显示一个即时任务
-        if(today_t_p==null)
+        if(today_t_p==(timetask_t *)null)
             break;
         if(g_sys_val.disp_num>=MAX_DISP_TASK)
             break;
@@ -318,8 +318,6 @@ void disp_task_delay(){
 
 //现在任务      rt_state 0=打铃任务 1=定时任务          now_state 
 void user_disp_task(uint8_t state){
-    uint16_t adr_base;
-    
     user_disp_icon(DISP_TASKSTATE_ID,g_sys_val.disp_furef);
     //----------------------------------------------------------------------------------------
     // 任务名
@@ -343,7 +341,6 @@ void timer_task_disp(){
         user_disp_task(disp_inc);
         disp_inc++;
     }
-    
 }
 
 void ip_disp_decode(uint8_t data,uint8_t *base_adr){
@@ -403,7 +400,7 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     ip_disp_decode(ipconfig.gateway[3],&base_adr);
     disp_buff[base_adr] = 0x00;
     base_adr+=1;
-    //----------------------------------------------------------------\
+    //----------------------------------------------------------------
     disp_len = base_adr;
     send_buff(DISP_GATE_ID);
     //---------------------------------------------------------------
@@ -424,7 +421,7 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
     ip_disp_decode(ipconfig.netmask[3],&base_adr);
     disp_buff[base_adr] = 0x00;
     base_adr+=1;
-    //----------------------------------------------------------------\
+    //----------------------------------------------------------------
     disp_len = base_adr;
     send_buff(DISP_MASK_ID);
     //---------------------------------------------------------------
@@ -445,7 +442,7 @@ void user_disp_ip(xtcp_ipconfig_t ipconfig){
         base_adr+=3; 
     }
     disp_buff[base_adr-1]=00;
-    //----------------------------------------------------------------\
+    //----------------------------------------------------------------
     disp_len = base_adr-1;
     send_buff(DISP_MAC_ID);
 }
@@ -595,12 +592,12 @@ void wifi_open_disp(){
     
     char hilinkname[]={0x00,0x48,0x00,0x49,0x00,0x2D,0x00,0x4C,0x00,0x49,0x00,0x4E,0x00,0x4B,0x00,0x5F};//16
     memcpy(&disp_buff[DAT_DISP_BASE],hilinkname,16);
-    itoa_forutf16(host_info.mac[4],&disp_buff[DAT_DISP_BASE+16],16,2);   
-    itoa_forutf16(host_info.mac[5],&disp_buff[DAT_DISP_BASE+20],16,2);  
-    log_reverse_array(&disp_buff[DAT_DISP_BASE+16], 2);
-    log_reverse_array(&disp_buff[DAT_DISP_BASE+18], 2);
-    log_reverse_array(&disp_buff[DAT_DISP_BASE+20], 2);
-    log_reverse_array(&disp_buff[DAT_DISP_BASE+22], 2);
+    itoa_forutf16(host_info.mac[4],(char *)&disp_buff[DAT_DISP_BASE+16],16,2);   
+    itoa_forutf16(host_info.mac[5],(char *)&disp_buff[DAT_DISP_BASE+20],16,2);  
+    log_reverse_array((char *)&disp_buff[DAT_DISP_BASE+16], 2);
+    log_reverse_array((char *)&disp_buff[DAT_DISP_BASE+18], 2);
+    log_reverse_array((char *)&disp_buff[DAT_DISP_BASE+20], 2);
+    log_reverse_array((char *)&disp_buff[DAT_DISP_BASE+22], 2);
     disp_len = DAT_DISP_BASE+24;
     send_buff(DISP_IPCONFILCT_ID);
 }

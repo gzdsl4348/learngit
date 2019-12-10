@@ -199,7 +199,7 @@ void user_could_send(uint8_t pol_type){
 
 void user_arp_clear(xtcp_ipaddr_t ipaddr){
     unsafe{
-    i_user_xtcp->xtcp_arpclear(ipaddr);
+    //i_user_xtcp->xtcp_arpclear(ipaddr);
     }
 }
 

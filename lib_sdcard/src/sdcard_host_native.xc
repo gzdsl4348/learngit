@@ -476,9 +476,6 @@ static unsigned char write_datablock(int DataBlocks,
     unsigned int tDat;
     unsigned int curr_data,prev_data;
 
-    timer tim;
-    unsigned t1,t2,t3,t4;
-
     while(DataBlocks > 0) {
 
         Crc0 = Crc1 = Crc2 = Crc3 = 0;
@@ -627,9 +624,7 @@ static unsigned char write_datablock(int DataBlocks,
         
         // Wait for busy state clearing.
         i = gs_timeout_tick;
-
         
-        tim :> t3;
         do {
             p_sdclk <: 0; p_sdclk <: 1; p_sddata :> Dat;
             if(!i--)
@@ -639,10 +634,6 @@ static unsigned char write_datablock(int DataBlocks,
             }
         }while(!(Dat & 0x8));//0x1
         
-            tim :> t4;
-            if(t4-t3 >50*100000)
-                text_debug("w4 %dms\n",(t4-t3)/100000);
-
         stop_clock(cb);
         setc(p_sddata,0x0);
         setc(p_sddata,0x8);
@@ -949,9 +940,6 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
     
     //while(1);
 
-    timer tim;
-    unsigned t1,t2,t3,t4,t5,t6;
-
     while(1){
             select {
             case i[int x].sd_initialize(void)->unsigned char status:{
@@ -1006,8 +994,6 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
             break;
             /*Write Sector(s)*/
             case i[int x].sd_write(const unsigned char *buff, unsigned long sector, unsigned int count)->unsigned int result:{
-                tim :> t1;
-
                 if (Stat & ST_NOINIT) result= MD_NOTRDY;
                 if (!count) result = MD_PARERR;
                 
@@ -1029,22 +1015,14 @@ MDRESULT ioctl (sd_host_reg_t &sd_reg,
                     if(send_cmd(CMD55, sd_reg.CardRCA, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))result = MD_ERROR;
                     if(send_cmd(CMD23, count, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_ERROR;
                     
-                    tim :> t3;
                     if(MD_OK == send_cmd(CMD25, sd_reg.CCS  ? sector : 512 * sector, R1, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk))
                     {
                        result = write_datablock(count,(*buff, unsigned char[]),p_sdclk,p_sdcmd,p_sddata,sdClkblk);
                     }
                     if(MD_OK != send_cmd(CMD12, 0, R1B, Resp,p_sdclk,p_sdcmd,p_sddata,sdClkblk)) result = MD_ERROR;
                     
-                    tim :> t4;
-                    if(t4-t3 >50*100000)
-                        text_debug("sd nb write %dms\n",(t4-t3)/100000);
-                }
-                
-                tim :> t2;
-                if(t2-t1 >50*100000)
-                    text_debug("sd w %dms\n",(t2-t1)/100000);
 
+                }
                 
              }
              break;

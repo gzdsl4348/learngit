@@ -195,10 +195,12 @@ typedef struct host_info_t{
     uint8_t log_filename[MAX_LOGDATE_NUM][64];//日志名称
     uint8_t wav_mode;  // 0 关闭WAV   1 允许播放WAV
     uint8_t reset_data_f;
-    //
-    
+    //    
     date_info_t online_date_info;          // 记录日期
-    uint8_t offline_mode;           // 离线模式
+    
+    uint8_t offline_f;           // 离线模式
+    // wifi名称标志
+    uint8_t wifi_have_setname;
     //uint8_t noneed_register;  // 0 无需注册   1 需要注册
 }host_info_t;
 

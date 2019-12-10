@@ -141,7 +141,7 @@ void myfree(void* ptr)
 	MEM_LOCK();
     mem_free(offset);	//释放内存
 	MEM_UNLOCK();
-    static unsigned cnt=0;
+    //static unsigned cnt=0;
 }  
 //分配内存(外部调用)
 //size:内存大小(字节)
@@ -153,7 +153,7 @@ void *mymalloc(u32 size)
 	offset=mem_malloc(size);
 	MEM_UNLOCK();
     
-    static unsigned cnt=0;
+    //static unsigned cnt=0;
     
     if(offset==0XFFFFFFFF)return NULL;
     else return (void*)((u32)mallco_dev.membase+offset);    

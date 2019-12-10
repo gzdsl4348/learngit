@@ -110,7 +110,7 @@ typedef unsigned short uip_stats_t;
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_CONNECTIONS
-#define UIP_CONF_MAX_CONNECTIONS 20 ///////////////////////////////
+#define UIP_CONF_MAX_CONNECTIONS 10 ///////////////////////////////
 #endif
 
 /**

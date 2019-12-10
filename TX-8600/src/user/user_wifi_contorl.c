@@ -82,8 +82,8 @@ void wifi_nameset(){
     char name[]={0x61,0x74,0x2B,0x41,0x50,0x53,0x73,0x69,0x64,0x3D,0x48,0x49,0x2D,0x4C,0x49,0x4E,0x4B,0x5F}; //18
     //
     memcpy(disp_buff,name,18);
-    log_itoa(host_info.mac[4],&disp_buff[18],16,2);
-    log_itoa(host_info.mac[5],&disp_buff[20],16,2);
+    log_itoa(host_info.mac[4],(char *)&disp_buff[18],16,2);
+    log_itoa(host_info.mac[5],(char *)&disp_buff[20],16,2);
     
     disp_buff[22]=0x0D;
     disp_buff[24]=0x0A;
@@ -164,9 +164,13 @@ void wifi_contorl_mode(){
             }
             break;
         case WIFI_AT_SETNAME:
+            if(host_info.wifi_have_setname!=1){
+                wifi_nameset();
+                wifi_save();
+                host_info.wifi_have_setname=1;
+                fl_hostinfo_write();    //烧写主机信息
+            }
             g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
-            wifi_nameset();
-            wifi_save();
             break;
         case WIFI_AT_SAVE:
             g_sys_val.wifi_timer = 0;

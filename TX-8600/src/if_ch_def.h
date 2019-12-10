@@ -18,7 +18,7 @@ enum ETH_RX_CLIENT_T {
 enum ETH_TX_CLIENT_T {
 	//ETH_AUDIO_DATA=0,
 	ETH_TX_XTCP_DATA,
-	ETH_TX_AUD_TRAINSMIT,
+	//ETH_TX_AUD_TRAINSMIT,
 	ETH_TX_CLENT_TOTAL			//Total Client 2
 };
 
@@ -90,11 +90,7 @@ enum UART_CLIENT_T {
 #ifdef __GLOBAL_CLIENT_
 //
 #define UART_IF_CH_DEF \
-/*uart rx part*/\
-input_gpio_if i_port_rx[UART_CLENT_TOTAL];\
-uart_rx_if i_uart_rx[UART_CLENT_TOTAL];\
 /*uart tx part*/\
-output_gpio_if	i_port_tx[UART_CLENT_TOTAL];\
 uart_tx_buffered_if i_uart_tx[UART_CLENT_TOTAL];
 
 #endif	//__GLOBAL_CLIENT_

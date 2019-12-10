@@ -16,12 +16,11 @@
 #include "debug_print.h"
 
 extern uint8_t f_name[];
-
 //====================================================================================================
 // 音乐库 文件夹名称列表获取                MUSIC_PATCH_CHK_CMD     0xB800
 //====================================================================================================
 void music_patch_list_chk_recive(){
-    uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    uint8_t list_num = list_sending_init(MUSIC_PATCH_CHK_CMD,PATCH_LIST_SENDING,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
     //
 	if(g_sys_val.list_sending_f==0){
 		g_sys_val.list_sending_f = 1;
@@ -39,14 +38,14 @@ void music_patch_list_send_decode(uint8_t list_num){
 // 音乐库 详细音乐名称列表获取   MUSIC_LIB_CHK_CMD                 0xB801
 //====================================================================================================
 void music_music_list_chk_recive(){
-    uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING,&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
+    uint8_t list_num = list_sending_init(MUSIC_LIB_CHK_CMD,MUSICNAME_LIST_SENDING,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],xtcp_rx_buf[POL_COULD_S_BASE]);
 	//
     if(list_num==LIST_SEND_INIT)
         return;
     //获取文件夹列表
     user_fl_get_patchlist(g_tmp_union.buff);
-    uint32_t *patch_tol = &g_tmp_union.buff[0];
-    dir_info_t *dir_info = &g_tmp_union.buff[4];
+    uint32_t *patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+    dir_info_t *dir_info = (dir_info_t *)&g_tmp_union.buff[4];
     //----------------------------------------------------------------------------------
     //查找指定文件夹
     #if 0
@@ -69,7 +68,7 @@ void music_music_list_chk_recive(){
         xtcp_debug_printf("\n");
         #endif
         // 找到指定音乐文件夹
-        if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],dir_info[i].name,PATCH_NAME_NUM)==1){
+        if(charncmp((uint8_t *)&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],(uint8_t *)dir_info[i].name,PATCH_NAME_NUM)==1){
             t_list_connsend[list_num].list_info.musiclist.sector_index = dir_info[i].sector;
             t_list_connsend[list_num].list_info.musiclist.music_inc = 0;
 			t_list_connsend[list_num].list_info.musiclist.music_state = 1;
@@ -106,8 +105,8 @@ void music_patchname_config_recive(){
         goto file_contorl_end;
     //-----------------------------------------------------------------
     user_fl_get_patchlist(g_tmp_union.buff);
-    uint32_t *patch_tol = &g_tmp_union.buff[0];
-    dir_info_t *dir_info = &g_tmp_union.buff[4];
+    uint32_t *patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+    dir_info_t *dir_info = (dir_info_t *)&g_tmp_union.buff[4];
     
     // 创建文件夹
     if(xtcp_rx_buf[MUS_PTHCON_CONFIG]==0){
@@ -115,7 +114,7 @@ void music_patchname_config_recive(){
         //    xtcp_debug_printf("%d,",xtcp_rx_buf[MUS_PTHCON_SRCNAME+i]);
         //}
         //xtcp_debug_printf("\n");
-        if(user_file_mir(&xtcp_rx_buf[MUS_PTHCON_SRCNAME])==0){
+        if(user_file_mir((uint8_t *)&xtcp_rx_buf[MUS_PTHCON_SRCNAME])==0){
              xtcp_debug_printf("floder add\n");
              state =1;
         }
@@ -123,7 +122,7 @@ void music_patchname_config_recive(){
     //删除文件夹
     if(xtcp_rx_buf[MUS_PTHCON_CONFIG]==1){
         //task_music_stop_all();
-        if(user_filefolder_del(&xtcp_rx_buf[MUS_PTHCON_SRCNAME])==0)
+        if(user_filefolder_del((uint8_t *)&xtcp_rx_buf[MUS_PTHCON_SRCNAME])==0)
             state = 1;
         xtcp_debug_printf("floder del\n");
     }
@@ -131,8 +130,8 @@ void music_patchname_config_recive(){
     if(xtcp_rx_buf[MUS_PTHCON_CONFIG]==2){
         //比较文件夹
         for(uint8_t i=0;i<*patch_tol;i++){
-            if(charncmp(&xtcp_rx_buf[MUS_PTHCON_SRCNAME],dir_info[i].name,PATCH_NAME_NUM)==1){
-                if(user_file_rename(&xtcp_rx_buf[MUS_PTHCON_SRCNAME],&xtcp_rx_buf[MUS_PTHCON_DESNAME])==0){
+            if(charncmp((uint8_t *)&xtcp_rx_buf[MUS_PTHCON_SRCNAME],(uint8_t *)dir_info[i].name,PATCH_NAME_NUM)==1){
+                if(user_file_rename((uint8_t *)&xtcp_rx_buf[MUS_PTHCON_SRCNAME],(uint8_t *)&xtcp_rx_buf[MUS_PTHCON_DESNAME])==0){
                     xtcp_debug_printf("floder rename\n");
                     state = 1;
                 }
@@ -147,12 +146,12 @@ void music_patchname_config_recive(){
         g_sys_val.file_ack_cmd = MUSIC_PATCHNAME_CON_CMD;
         g_sys_val.file_contorl_couldf = xtcp_rx_buf[POL_COULD_S_BASE];
         memcpy(g_sys_val.file_contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
-        user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        user_sending_len = onebyte_ack_build(02,MUSIC_PATCHNAME_CON_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
         log_musicpatch_config();
     }
     else{
-        user_sending_len = onebyte_ack_build(state,MUSIC_PATCHNAME_CON_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        user_sending_len = onebyte_ack_build(state,MUSIC_PATCHNAME_CON_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
 }
@@ -165,7 +164,7 @@ void music_busy_chk_recive(){
     uint8_t state=0;
     if(g_sys_val.file_bat_contorl_s)
         state=1;
-    user_sending_len = onebyte_ack_build(state,MUSIC_BUSY_CHK_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+    user_sending_len = onebyte_ack_build(state,MUSIC_BUSY_CHK_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -204,15 +203,14 @@ void music_file_config_recive(){
     uint8_t state = 0;
     uint32_t *patch_tol;
     dir_info_t *dir_info;
-    uint8_t i;
     //task_music_stop_all();
     if(g_sys_val.file_bat_contorl_s)
         goto file_config_end;
 //    xtcp_debug_printf("file contorl %d\n",xtcp_rx_buf[FILECON_CONTORL_B]);
     // 取源文件路径
-    file_patch_get(&xtcp_rx_buf[FILECON_SRC_PATCHNAME],&xtcp_rx_buf[FILECON_SRC_MUSICNAME],g_sys_val.fsrc);
+    file_patch_get((uint8_t *)&xtcp_rx_buf[FILECON_SRC_PATCHNAME],(uint8_t *)&xtcp_rx_buf[FILECON_SRC_MUSICNAME],g_sys_val.fsrc);
     // 去目标文件路径
-    file_patch_get(&xtcp_rx_buf[FILECON_DES_PATCHNAME],&xtcp_rx_buf[FILECON_SRC_MUSICNAME],g_sys_val.fdes);
+    file_patch_get((uint8_t *)&xtcp_rx_buf[FILECON_DES_PATCHNAME],(uint8_t *)&xtcp_rx_buf[FILECON_SRC_MUSICNAME],g_sys_val.fdes);
 
     //-------------------------------------------------------------------------------
     #if 0
@@ -235,29 +233,29 @@ void music_file_config_recive(){
     // 移动文件
     if(xtcp_rx_buf[FILECON_CONTORL_B] == FILE_CONTORL_MOVE){
         user_fl_get_patchlist(g_tmp_union.buff);
-        patch_tol = &g_tmp_union.buff[0];
-        dir_info = &g_tmp_union.buff[4]; 
+        patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+        dir_info = (dir_info_t *)&g_tmp_union.buff[4]; 
     
         for(uint8_t i=0;i<*patch_tol;i++){
-            if(charncmp(dir_info[i].name,&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
+            if(charncmp((uint8_t *)dir_info[i].name,(uint8_t *)&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
                 if((dir_info[i].music_num + 1)>MAX_SDCARD_MUSIC_NUM){
                     state = 4;
                     goto file_config_end;
                 }
             }
         }
-        if(user_file_move(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
+        if(user_file_move((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,(uint8_t *)g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
             state = 1;
         }
     }
     // 复制文件
     else if(xtcp_rx_buf[FILECON_CONTORL_B] == FILE_CONTORL_COPY){
         user_fl_get_patchlist(g_tmp_union.buff);
-        patch_tol = &g_tmp_union.buff[0];
-        dir_info = &g_tmp_union.buff[4]; 
+        patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+        dir_info = (dir_info_t *)&g_tmp_union.buff[4]; 
     
         for(uint8_t i=0;i<*patch_tol;i++){
-            if(charncmp(dir_info[i].name,&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
+            if(charncmp((uint8_t *)dir_info[i].name,(uint8_t *)&xtcp_rx_buf[FILECON_DES_PATCHNAME],PATCH_NAME_NUM)==1){
                 if((dir_info[i].music_num + 1)>MAX_SDCARD_MUSIC_NUM){
                     state = 4;
                     xtcp_debug_printf("\n\nfull\n");
@@ -266,13 +264,13 @@ void music_file_config_recive(){
             }
         }
 
-        if(user_file_copy(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
+        if(user_file_copy((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,(uint8_t *)g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
             state = 1;
         }
     }
     // 删除文件
     else if(xtcp_rx_buf[FILECON_CONTORL_B] == FILE_CONTORL_DEL){
-        if(user_file_delete(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
+        if(user_file_delete((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM)==0){
             state = 1;
         }
     }
@@ -282,12 +280,12 @@ void music_file_config_recive(){
         g_sys_val.file_conn_tmp = conn;
         g_sys_val.file_contorl_couldf = xtcp_rx_buf[POL_COULD_S_BASE];
         g_sys_val.file_ack_cmd = MUSIC_FILE_CONTORL_CMD;
-        memcpy(g_sys_val.file_contorl_id,xtcp_rx_buf[POL_ID_BASE],6);
-        user_sending_len = onebyte_ack_build(02,MUSIC_FILE_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        memcpy(g_sys_val.file_contorl_id,&xtcp_rx_buf[POL_ID_BASE],6);
+        user_sending_len = onebyte_ack_build(02,MUSIC_FILE_CONTORL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     }
     else{
-        user_sending_len = onebyte_ack_build(state,MUSIC_FILE_CONTORL_CMD,&xtcp_rx_buf[POL_ID_BASE]);
+        user_sending_len = onebyte_ack_build(state,MUSIC_FILE_CONTORL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
         user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
     
     }
@@ -302,7 +300,7 @@ void musicfile_bar_chk_recive(){
     uint8_t state=0;
     if(user_file_progress(&file_process))
         state = 1;
-    user_sending_len = file_progress_build(state,file_process,&xtcp_rx_buf[POL_ID_BASE],
+    user_sending_len = file_progress_build(state,file_process,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE],
                                             g_sys_val.file_bat_nametmp,g_sys_val.file_bat_srcpatch);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);   
 }
@@ -314,7 +312,7 @@ void bat_contorlobj_init(){
     static uint8_t bat_obj_cnt=0;
         
     for(uint8_t i=0;i<MAX_BATCONTORL_OBJ_NUM;i++){
-        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,&xtcp_rx_buf[POL_MAC_BASE],6)){
+        if(charncmp(g_sys_val.bat_contorlobj[i].bat_id,(uint8_t *)&xtcp_rx_buf[POL_MAC_BASE],6)){
             g_sys_val.bat_contorling=i;
             goto init_bat_contorlobj;
         }
@@ -392,7 +390,7 @@ void music_bat_contorl_recive(){
     // 保存文件名称
     uint16_t data_base = MUSIC_BAT_NAME_BASE;
     for(uint8_t i=0; i<xtcp_rx_buf[MUSIC_BAT_TOL_NUM] ;i++){
-        user_file_bat_write(g_sys_val.file_bat_tolnum,&xtcp_rx_buf[data_base]);
+        user_file_bat_write(g_sys_val.file_bat_tolnum,(uint8_t *)&xtcp_rx_buf[data_base]);
         #if 0
         xtcp_debug_printf("get file:");
         for(uint8_t j=0;j<(MUSIC_NAME_NUM);j++){
@@ -413,12 +411,12 @@ void music_bat_contorl_recive(){
         user_fl_get_patchlist(g_tmp_union.buff);
         uint32_t *patch_tol;
         dir_info_t *dir_info;
-        patch_tol = &g_tmp_union.buff[0];
-        dir_info = &g_tmp_union.buff[4]; 
+        patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+        dir_info = (dir_info_t *)&g_tmp_union.buff[4]; 
         uint8_t *music_tmp = &g_tmp_union.buff[1024]; 
         
         for(uint8_t i=0;i<*patch_tol;i++){
-            if(charncmp(g_sys_val.file_bat_despatch,dir_info[i].name,PATCH_NAME_NUM)==1){
+            if(charncmp(g_sys_val.file_bat_despatch,(uint8_t *)dir_info[i].name,PATCH_NAME_NUM)==1){
                 //xtcp_debug_printf("\n\n bat music chk\n");
                 //xtcp_debug_printf("file:%d,muc:%d\n",dir_info[i].music_num,g_sys_val.file_bat_tolnum);
                 if(dir_info[i].music_num+g_sys_val.file_bat_tolnum > MAX_SDCARD_MUSIC_NUM){
@@ -545,7 +543,6 @@ void file_bat_contorl_event(uint8_t error_code){
         }
         //-----------------------------------------------------------------------------------------------------
         // 操作下一首音乐
-        uint8_t busy_state=0;
         file_state = 0;
         user_file_bat_read(g_sys_val.file_bat_musicinc,music_tmp); //
         memcpy(g_sys_val.file_bat_nametmp,music_tmp,MUSIC_NAME_NUM);
@@ -574,10 +571,10 @@ void file_bat_contorl_event(uint8_t error_code){
         // 复制
         if(g_sys_val.file_bat_contorl==0){
             user_fl_get_patchlist(g_tmp_union.buff);
-            patch_tol = &g_tmp_union.buff[0];
-            dir_info = &g_tmp_union.buff[4]; 
+            patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+            dir_info = (dir_info_t *)&g_tmp_union.buff[4]; 
             for(uint8_t i=0;i<*patch_tol;i++){
-                if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
+                if(charncmp((uint8_t *)&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
                     if(dir_info[i].music_num_full){
                         file_state = 2;
                         goto next_bat_music;
@@ -585,7 +582,7 @@ void file_bat_contorl_event(uint8_t error_code){
                 }
             }
             
-            if(user_file_copy(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
+            if(user_file_copy((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,(uint8_t *)g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
                 file_state = 3;
             }
         }
@@ -593,10 +590,10 @@ void file_bat_contorl_event(uint8_t error_code){
         else if(g_sys_val.file_bat_contorl==1){
             //
             user_fl_get_patchlist(g_tmp_union.buff);
-            patch_tol = &g_tmp_union.buff[0];
-            dir_info = &g_tmp_union.buff[4]; 
+            patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+            dir_info = (dir_info_t *)&g_tmp_union.buff[4]; 
             for(uint8_t i=0;i<*patch_tol;i++){
-                if(charncmp(&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
+                if(charncmp((uint8_t *)&xtcp_rx_buf[MUS_LIBHCK_CHKPATCH_NAME],g_sys_val.file_bat_despatch,PATCH_NAME_NUM)==1){
                     if(dir_info[i].music_num_full){
                         file_state = 2;
                         goto next_bat_music;
@@ -604,13 +601,13 @@ void file_bat_contorl_event(uint8_t error_code){
                 }
             }
             
-            if(user_file_move(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
+            if(user_file_move((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM,(uint8_t *)g_sys_val.fdes,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
                 file_state = 3;
             } 
         }
         // 删除
         else if(g_sys_val.file_bat_contorl==2){
-            if(user_file_delete(g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
+            if(user_file_delete((uint8_t *)g_sys_val.fsrc,PATCH_NAME_NUM+MUSIC_NAME_NUM)){
                 file_state = 3;
             }
         }

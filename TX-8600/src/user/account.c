@@ -583,7 +583,6 @@ void time_sync_deocde(uint8_t could_s){
     g_sys_val.today_date = g_sys_val.date_info;
     // 获取云时间备份
     host_info.online_date_info = g_sys_val.date_info; 
-    host_info.offline_mode=0;
     //
     ds1302_date_set();
     ds1302_time_set();

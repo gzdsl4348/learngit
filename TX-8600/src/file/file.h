@@ -280,6 +280,8 @@ void upload_handle(int interval_ms);
 
 uint8_t mf_unlink(uint8_t *pname);
 
+void file_contorl_dat_init();
+
 extern f_opr_mgr_t g_fopr_mgr;
 
 

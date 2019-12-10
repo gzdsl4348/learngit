@@ -625,6 +625,7 @@ void value_init_0(){
     memset(&mes_send_list,0,sizeof(mes_send_list));
     memset(&rttask_lsit,0,sizeof(rttask_lsit));
     memset(&g_sys_val,0,sizeof(g_sys_val_t));
+    memset(&rttask_info_list,0,sizeof(rttask_info_list));
 }
 
 char div_type[]={0x54,0x00,0x58,0x00,0x2D,0x00,0x38,0x00,0x36,0x00,0x30,0x00,0x30,0x00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00};
@@ -635,7 +636,7 @@ char div_type[]={0x54,0x00,0x58,0x00,0x2D,0x00,0x38,0x00,0x36,0x00,0x30,0x00,0x3
 		XTCP EVENT USER DECODE PROCESS  
 //-------------------------------------------------------------------------------*/
 void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client fl_manage_if if_fl_manage,client file_server_if if_fs,
-                  client uart_tx_buffered_if if_uart_tx,client uart_rx_if if_uart_rx,client image_upgrade_if i_image,
+                  client uart_tx_buffered_if if_uart_tx,client image_upgrade_if i_image,
                   client aud_trainsmit_if if_aud_trainsmit){
     unsafe{
     value_init_0();
@@ -985,7 +986,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						break;
 		  			case XTCP_NEW_CONNECTION:
 						xtcp_debug_printf("New connection:%x\n",conn.id);
-                        xtcp_debug_printf("New :%d,%d,%d,%d\n",conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3]);
+                        xtcp_debug_printf("New :%d,%d,%d,%d:%d\n",
+                        conn.remote_addr[0],conn.remote_addr[1],conn.remote_addr[2],conn.remote_addr[3],conn.local_port);
                         #if COULD_TCP_EN
                         if(conn.protocol==XTCP_PROTOCOL_TCP){
                             xtcp_debug_printf("TPC NEW \n");
@@ -1021,15 +1023,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                             };    
                         }
                         else{
+                            /*
+					    	xtcp_debug_printf("close \n");
                             if(g_sys_val.brocast_rec_conn.id!=0){
                                 i_xtcp.close(conn);
                             }
                             else{
                                 g_sys_val.brocast_rec_conn = conn;
                             }
+                            */
                         }
                         disp_text_conn(i_xtcp);
-                        
 						break;
 		 			case XTCP_RECV_DATA:
                         //===================================================================================
@@ -1053,28 +1057,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         else{
                             udp_xtcp_recive_decode(data_len);
                         }
-                        
+                        // 处理完接收数据 关闭广播数据连接
+                        if(conn.local_port == LISTEN_BROADCAST_LPPORT){
+                            i_xtcp.close(conn);
+                        }   
                         //===================================================================================
 						break;
 					case XTCP_RESEND_DATA:	
-						if(g_sys_val.ipchk_conn.id==conn.id){
-                            if(g_sys_val.ipchk_ipconflict_f){
-    							g_sys_val.ipchk_ipconflict_f--;
-    							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
-                            }
-						}
-                        else{
-                            //user_xtcp_send(conn);
-                            xtcp_resend_decode();
-                        }                        
+                        xtcp_resend_decode();
                         xtcp_debug_printf("resend_data:%x\n",conn.id);
                         break;
 					case XTCP_SENT_DATA:
-						// ip 冲突
-						if(g_sys_val.ipchk_conn.id==conn.id){
-							g_sys_val.ipchk_ipconflict_f = 2;
-							ip_conflict_disp(g_sys_val.ipchk_ipconflict_f);
-						}
                         //-------------------------------------------------
                         //#if LIST_TEXT_DEBUG
 						#if LIST_TEXT_DEBUG
@@ -1097,6 +1090,12 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 						if(g_sys_val.tcp_sending==0)
 	                        mes_send_decode();
 					  	break;
+                    case XTCP_IP_CONFLICT:                        
+                        ip_conflict_disp(1);
+                        break;
+                    case XTCP_IP_CONFLICT_RECOVERY:
+                        ip_conflict_disp(0);
+                        break;
 					case XTCP_TIMED_OUT:    //tcp only
     					//user_xtcp_connect_tcp(g_sys_val.could_ip);
     					//user_xtcp_close(g_sys_val.could_conn);
@@ -1140,6 +1139,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     g_sys_val.log_waitmk_f = user_file_mklog();
                 }
 				// 广播连接关闭处理
+				/*
                 if(g_sys_val.brocast_rec_conn.id!=0){
                     g_sys_val.brocast_rec_timinc++;
                     if(g_sys_val.brocast_rec_timinc>2){
@@ -1148,6 +1148,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         g_sys_val.brocast_rec_conn.id = 0;
                     }
                 }
+                */
                 //---------------------------------------
                 // 测试 打印链接
                 #if 0
@@ -1166,7 +1167,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                         dhcp_getin_clear();
                     }
                 }
-                
                 //-----------------------------------------
                 // 系统重启
                 if(g_sys_val.reboot_f){

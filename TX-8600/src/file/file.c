@@ -1,7 +1,6 @@
 #include <timer.h>
 #include <debug_print.h>
 #include "mymalloc.h"
-
 #include "kfifo.h"
 
 #include "ff.h"
@@ -23,7 +22,11 @@ extern void rename_file_scan(uint8_t *src_path,uint8_t *des_path);
 
 FATFS fatfs;
 
-file_contorl_s file_contorl={0}; 
+file_contorl_s file_contorl; 
+
+void file_contorl_dat_init(){
+    memset(&file_contorl,0x00,sizeof(file_contorl));
+}
 
 int my_fatfs_init()
 {
@@ -126,13 +129,13 @@ void fopr_handle()
 
     switch(pitem->log_event){
         case FOR_LOGMK:{
-            error = mf_open_log(p_fopr_file->fsrc,p_fopr_file->fdes);
+            error = mf_open_log((char *)p_fopr_file->fsrc,(char *)p_fopr_file->fdes);
             // 日志信息无需返回提示
             pitem->log_event = FOR_LOGIDLE;
             break; 
         }
         case FOR_LOGADD:{
-            error = mf_add_loginfo(p_fopr_file->log_info,p_fopr_file->len);
+            error = mf_add_loginfo((char *)p_fopr_file->log_info,p_fopr_file->len);
             // 日志信息无需返回提示
             pitem->log_event = FOR_LOGIDLE;
             break;  

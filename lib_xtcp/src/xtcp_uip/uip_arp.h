@@ -118,9 +118,10 @@ void uip_arp_timer(void);
 
 /** @} */
 
-xtcp_mac_t uip_arptab_get(uip_ipaddr_t ipaddr);
 
-void uip_arptab_clear(uip_ipaddr_t ipaddr);
+void uip_create_garp();
+
+xtcp_mac_t uip_arptab_get(uip_ipaddr_t ipaddr);
 
 /**
  * \addtogroup uipconffunc

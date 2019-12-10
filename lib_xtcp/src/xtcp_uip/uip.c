@@ -420,7 +420,7 @@ void uip_init(void) {
 	memset(uip_udp_listenports, 0, sizeof(uip_listenports));
 	memset(uip_conns, 0, sizeof(uip_conns));
 #if UIP_ACTIVE_OPEN
-	lastport = 10000;
+	lastport = 1024;
 #endif /* UIP_ACTIVE_OPEN */
 
 #if UIP_UDP
@@ -440,9 +440,9 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 10000;
+		lastport = 4096;
 	}
-    debug_printf("lisp %d\n",lastport);
+
 	/* Check if this port is already in use, and if so try to find another one. */
 	for(c = 0; c < UIP_CONNS; ++c) {
 		conn = &uip_conns[c];
@@ -508,7 +508,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 10000;
+		lastport = 4096;
 	}
 
 	for(c = 0; c < UIP_UDP_CONNS; ++c) {
@@ -1301,7 +1301,7 @@ void uip_process(u8_t flag) {
 
 	/* TCP input processing. */
 	tcp_input: UIP_STAT(++uip_stat.tcp.recv);
-    //debug_printf("tcp input\n");
+
 	/* Start of TCP input header processing code. */
 
 	if (uip_tcpchksum() != 0xffff) { /* Compute and check the TCP
@@ -1316,7 +1316,6 @@ void uip_process(u8_t flag) {
 		if (uip_connr->tcpstateflags != UIP_CLOSED && BUF->destport
 				== uip_connr->lport && BUF->srcport == uip_connr->rport
 				&& uip_ipaddr_cmp(BUF->srcipaddr, uip_connr->ripaddr)) {
-			//debug_printf("tcp found conn\n");
 			goto found;
 		}
 	}
@@ -1332,10 +1331,8 @@ void uip_process(u8_t flag) {
 	tmp16 = BUF->destport;
 	/* Next, check listening connections. */
 	for (c = 0; c < UIP_LISTENPORTS; ++c) {
-		if (tmp16 == uip_listenports[c]){
-            //debug_printf("tcp found listen\n");
+		if (tmp16 == uip_listenports[c])
 			goto found_listen;
-        }
 	}
 
 	/* No matching connection found, so we send a RST packet. */

@@ -119,6 +119,8 @@ static u8_t i, c;
 static u8_t arptime;
 static u8_t tmpage;
 
+extern int ip_conflict_check_flag;//
+
 #define BUF   ((struct arp_hdr *)&uip_buf[0])
 #define IPBUF ((struct ethip_hdr *)&uip_buf[0])
 /*-----------------------------------------------------------------------------------*/
@@ -234,6 +236,20 @@ uip_arp_update(u16_t *ipaddr, struct uip_eth_addr *ethaddr)
   memcpy(tabptr->ipaddr, ipaddr, 4);
   memcpy(tabptr->ethaddr.addr, ethaddr->addr, 6);
   tabptr->time = arptime;
+
+#if 0
+  debug_printf("uip_arp_update new - [%d.%d.%d.%d] %02x:%02x:%02x:%02x:%02x:%02x\n", 
+    tabptr->ipaddr[0]&0xff,
+    tabptr->ipaddr[0]>>8,
+    tabptr->ipaddr[1]&0xff,
+    tabptr->ipaddr[1]>>8,
+    tabptr->ethaddr.addr[0], 
+    tabptr->ethaddr.addr[1],
+    tabptr->ethaddr.addr[2],
+    tabptr->ethaddr.addr[3],
+    tabptr->ethaddr.addr[4],
+    tabptr->ethaddr.addr[5]);  
+#endif  
 }
 /*-----------------------------------------------------------------------------------*/
 /**
@@ -307,12 +323,46 @@ uip_arp_arpin(void)
 #if UIP_USE_AUTOIP
   uip_autoip_arp_in();
 #endif
-
+  
   switch(BUF->opcode) {
   case HTONS(ARP_REQUEST):
+#if 0
+    debug_printf("ARP_REQUEST:SRCMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->ethhdr.src.addr[0], BUF->ethhdr.src.addr[1], 
+                BUF->ethhdr.src.addr[2], BUF->ethhdr.src.addr[3], 
+                BUF->ethhdr.src.addr[4], BUF->ethhdr.src.addr[5]);    
+    debug_printf("DSTMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->ethhdr.dest.addr[0], BUF->ethhdr.dest.addr[1], 
+                BUF->ethhdr.dest.addr[2], BUF->ethhdr.dest.addr[3], 
+                BUF->ethhdr.dest.addr[4], BUF->ethhdr.dest.addr[5]); 
+    debug_printf("ARP-SRCMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->shwaddr.addr[0], BUF->shwaddr.addr[1], 
+                BUF->shwaddr.addr[2], BUF->shwaddr.addr[3], 
+                BUF->shwaddr.addr[4], BUF->shwaddr.addr[5]);
+    debug_printf("ARP-SRCADDR-%d.%d.%d.%d ", 
+                BUF->sipaddr[0]&0xff, BUF->sipaddr[0]>>8, 
+                BUF->sipaddr[1]&0xff, BUF->sipaddr[1]>>8);     
+    debug_printf("ARP-DSTMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->dhwaddr.addr[0], BUF->dhwaddr.addr[1], 
+                BUF->dhwaddr.addr[2], BUF->dhwaddr.addr[3], 
+                BUF->dhwaddr.addr[4], BUF->dhwaddr.addr[5]);        
+   
+    debug_printf("ARP-DSTADDR-%d.%d.%d.%d\n", 
+                BUF->dipaddr[0]&0xff, BUF->dipaddr[0]>>8, 
+                BUF->dipaddr[1]&0xff, BUF->dipaddr[1]>>8);      
+#endif
     /* ARP request. If it asked for our address, we send out a
        reply. */
     if(uip_ipaddr_cmp(BUF->dipaddr, uip_hostaddr)) {
+        
+      //20191205-添加ip冲突机制-只做ip冲突显示
+      //arp request包 源ip与目标ip(garp包)都是本地ip,即为冲突
+      if(uip_ipaddr_cmp(BUF->sipaddr, uip_hostaddr) && 
+         memcmp(BUF->shwaddr.addr, uip_ethaddr.addr, 6)!=0) {
+        debug_printf("uip arpin request ip conflict \n");
+        ip_conflict_check_flag++;
+      }
+      
       /* First, we register the one who made the request in our ARP
 	 table, since it is likely that we will do more communication
 	 with this host in the future. */
@@ -334,13 +384,50 @@ uip_arp_arpin(void)
       BUF->ethhdr.type = HTONS(UIP_ETHTYPE_ARP);
       uip_len = sizeof(struct arp_hdr);
     }
-    break;
-  case HTONS(ARP_REPLY):
-    /* ARP reply. We insert or update the ARP table if it was meant
-       for us. */
-    if(uip_ipaddr_cmp(BUF->dipaddr, uip_hostaddr)) {
+    //20191205-添加grap刷新arp表
+    else if(uip_ipaddr_cmp(BUF->sipaddr, BUF->dipaddr)) {
       uip_arp_update(BUF->sipaddr, &BUF->shwaddr);
     }
+    
+    break;
+  case HTONS(ARP_REPLY):
+#if 0
+    debug_printf("ARP_REPLY:SRCMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->ethhdr.src.addr[0], BUF->ethhdr.src.addr[1], 
+                BUF->ethhdr.src.addr[2], BUF->ethhdr.src.addr[3], 
+                BUF->ethhdr.src.addr[4], BUF->ethhdr.src.addr[5]);    
+    debug_printf("DSTMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->ethhdr.dest.addr[0], BUF->ethhdr.dest.addr[1], 
+                BUF->ethhdr.dest.addr[2], BUF->ethhdr.dest.addr[3], 
+                BUF->ethhdr.dest.addr[4], BUF->ethhdr.dest.addr[5]); 
+    debug_printf("ARP-SRCMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->shwaddr.addr[0], BUF->shwaddr.addr[1], 
+                BUF->shwaddr.addr[2], BUF->shwaddr.addr[3], 
+                BUF->shwaddr.addr[4], BUF->shwaddr.addr[5]);
+    debug_printf("ARP-SRCADDR-%d.%d.%d.%d ", 
+                BUF->sipaddr[0]&0xff, BUF->sipaddr[0]>>8, 
+                BUF->sipaddr[1]&0xff, BUF->sipaddr[1]>>8);     
+    debug_printf("ARP-DSTMAC-%02x:%02x:%02x:%02x:%02x:%02x ", 
+                BUF->dhwaddr.addr[0], BUF->dhwaddr.addr[1], 
+                BUF->dhwaddr.addr[2], BUF->dhwaddr.addr[3], 
+                BUF->dhwaddr.addr[4], BUF->dhwaddr.addr[5]);        
+   
+    debug_printf("ARP-DSTADDR-%d.%d.%d.%d\n", 
+                BUF->dipaddr[0]&0xff, BUF->dipaddr[0]>>8, 
+                BUF->dipaddr[1]&0xff, BUF->dipaddr[1]>>8);          
+#endif
+    /* ARP reply. We insert or update the ARP table if it was meant
+       for us. */
+    if(uip_ipaddr_cmp(BUF->dipaddr, uip_hostaddr)) {      
+      uip_arp_update(BUF->sipaddr, &BUF->shwaddr);
+    }
+    //20191205-添加ip冲突机制-只做ip冲突显示
+    //arp reply包 源ip与目标ip都是本地ip,即为冲突
+    if(uip_ipaddr_cmp(BUF->sipaddr, uip_hostaddr) && 
+       memcmp(BUF->shwaddr.addr, uip_ethaddr.addr, 6)!=0) {
+      debug_printf("uip arpin reply ip conflict \n");
+      ip_conflict_check_flag++;
+    }    
     break;
   }
 
@@ -469,6 +556,35 @@ static_route:
   return 1;
 }
 /*-----------------------------------------------------------------------------------*/
+//garp协议函数 执行该函数后需要立刻调用xtcp_tx_buffer();函数
+//注意:BUF是uip协议栈的唯一发送缓存
+void uip_create_garp()
+{
+    //MAC层目标MAC地址
+    memset(BUF->ethhdr.dest.addr, 0xff, 6);
+    //MAC层源MAC地址
+    memcpy(BUF->ethhdr.src.addr, uip_ethaddr.addr, 6);//本地地址
+    
+    //ARP层目标MAC地址
+    memset(BUF->dhwaddr.addr, 0x00, 6);    
+    //ARP层源MAC地址
+    memcpy(BUF->shwaddr.addr, uip_ethaddr.addr, 6);//本地地址
+
+    //ARP层目标IP地址
+    uip_ipaddr_copy(BUF->dipaddr, uip_hostaddr);//本地地址
+    //ARP层源IP地址
+    uip_ipaddr_copy(BUF->sipaddr, uip_hostaddr);//本地地址
+    
+    BUF->opcode = HTONS(ARP_REQUEST); /* ARP request. */
+    BUF->hwtype = HTONS(ARP_HWTYPE_ETH);
+    BUF->protocol = HTONS(UIP_ETHTYPE_IP);
+    BUF->hwlen = 6;
+    BUF->protolen = 4;
+
+    BUF->ethhdr.type = HTONS(UIP_ETHTYPE_ARP);
+    
+    uip_len = sizeof(struct arp_hdr);
+}
 
 xtcp_mac_t uip_arptab_get(uip_ipaddr_t ipaddr){
 	xtcp_mac_t t_xtcp_mac;
@@ -483,18 +599,6 @@ xtcp_mac_t uip_arptab_get(uip_ipaddr_t ipaddr){
 		memcpy(t_xtcp_mac.addr,arp_table[i].ethaddr.addr,6);
 	return t_xtcp_mac;
 }
-
-void uip_arptab_clear(uip_ipaddr_t ipaddr){
-	xtcp_mac_t t_xtcp_mac;
-    for(i = 0; i < UIP_ARPTAB_SIZE; ++i) {
-      	if(uip_ipaddr_cmp(ipaddr, arp_table[i].ipaddr)) {
-    		memset(arp_table[i].ethaddr.addr,0xFF,6);
-            memset(arp_table[i].ipaddr,0x00,4);
-	    	break;
-      	}
-    }
-}
-
 
 
 /** @} */

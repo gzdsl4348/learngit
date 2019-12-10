@@ -176,7 +176,7 @@ void xtcp_debug_printf(char * fmt, ...)
   _write(FD_STDOUT, g_user_debug_buf, p - g_user_debug_buf);
   va_end(args);
   if(g_sys_val.eth_debug_f){
-      user_xtcp_debugudpsend(g_user_debug_buf,p - g_user_debug_buf);
+      user_xtcp_debugudpsend((uint8_t *)g_user_debug_buf,p - g_user_debug_buf);
   }
   return;
 }

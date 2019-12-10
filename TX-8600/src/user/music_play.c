@@ -30,7 +30,7 @@ void task_music_send(uint8_t ch,taskmac_info_t *p_taskmac_info,uint8_t div_tol,u
                                                 p_taskmac_info[i].mac[5]);
         */
         div_tmp_p = get_div_info_p(p_taskmac_info[i].mac);
-        if(div_tmp_p==null){
+        if(div_tmp_p==(div_node_t *)null){
             //i++;
             continue;
         }
@@ -124,7 +124,7 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
     timetask_now.task_musicplay[ch].play_state = 1;
     user_rttask_musname_put(p_music_info,ch);
     //获取歌曲路径名
-    uint8_t i,j,ch_tmp;
+    uint8_t j,ch_tmp;
     uint8_t task_id_right=0;
     // 判断是否有空位显示任务
     for(uint8_t i=0;i<MAX_DISP_TASK;i++){
@@ -213,18 +213,18 @@ void rttask_music_totimer(uint16_t id,uint16_t music_sec){
 uint16_t get_music_tolsec(task_music_info_t *p_music_info){
     uint16_t music_sec=0;
     user_fl_get_patchlist(g_tmp_union.buff);
-    uint32_t *patch_tol = &g_tmp_union.buff[0];
-    dir_info_t *dir_info = &g_tmp_union.buff[4];
+    uint32_t *patch_tol = (uint32_t *)&g_tmp_union.buff[0];
+    dir_info_t *dir_info = (dir_info_t *)&g_tmp_union.buff[4];
 
     for(uint16_t i=0;i<*patch_tol;i++){
         // 比较文件夹
-        if(charncmp(p_music_info->music_path,dir_info[i].name,PATCH_NAME_NUM)==1){
+        if(charncmp(p_music_info->music_path,(uint8_t *)dir_info[i].name,PATCH_NAME_NUM)==1){
             user_fl_get_musiclist(dir_info[i].sector,g_tmp_union.buff);
-            uint32_t *music_tol = &g_tmp_union.buff[0];
-            music_info_t *music_info = &g_tmp_union.buff[4];
+            uint32_t *music_tol = (uint32_t *)&g_tmp_union.buff[0];
+            music_info_t *music_info = (music_info_t *)&g_tmp_union.buff[4];
             // 比较文件夹
             for(uint16_t j=0;j<*music_tol;j++){
-                if(charncmp(p_music_info->music_name,music_info[j].name,MUSIC_NAME_NUM)==1){
+                if(charncmp(p_music_info->music_name,(uint8_t *)music_info[j].name,MUSIC_NAME_NUM)==1){
                     //xtcp_debug_printf("get music sec %d\n",music_info[j].totsec);
                     return music_info[j].totsec;
                 }

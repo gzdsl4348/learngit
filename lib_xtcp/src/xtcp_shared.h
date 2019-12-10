@@ -32,7 +32,7 @@ unsafe void enqueue_event_and_notify(unsigned client_num,
                                      );
 
 unsafe void rm_recv_events(unsigned conn_id, unsigned client_num);
-
+unsafe int check_recv_events_add_new_connection(unsigned conn_id, unsigned client_num);
 unsafe void xtcp_if_up(void);
 unsafe void xtcp_if_down(void);
 

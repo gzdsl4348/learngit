@@ -363,11 +363,11 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
     memset(p_dev, 0, sizeof(music_decoderdev_t));
     p_dev->music_inc = tmp;
     
-    uint8_t type=mf_typetell(f_name);    //获得类型
+    uint8_t type=mf_typetell((TCHAR *)f_name);    //获得类型
       //
     if(type == 1)//mp3文件
     {
-      p_dev->totsec = get_mp3_totsec(f_name);
+      p_dev->totsec = get_mp3_totsec((TCHAR *)f_name);
     }
 
     res = f_open(&p_dev->file, (const TCHAR*)f_name, FA_READ);
@@ -376,7 +376,7 @@ int music_decode_start(unsigned char ch, unsigned char f_name[], unsigned int f_
         return res;
     }
     // MP3 文件头判断 WAV文件头判断
-    unsigned char music_type = mf_typetell((const TCHAR*)f_name);
+    unsigned char music_type = mf_typetell((TCHAR*)f_name);
     // MP3 文件
     if(music_type==1){
         res = f_read(&p_dev->file, tag, 10, &br);
@@ -829,7 +829,7 @@ void music_decoder(STREAMING_CHANEND(c_sdram))
                 p_dev->mp3_frame_full = 1;
                 // 出同步锁
                 swlock_release(&g_mp3_lock[ch]);
-                static uint8_t tmp=0;
+                //static uint8_t tmp=0;
 
             }
             //------------------------------------------------------------------------------------------------------------

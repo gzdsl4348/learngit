@@ -69,6 +69,10 @@ static uint8_t nnn_autoip_flag = 0; //1: autoip，0：other
 
 static uint8_t nnn_task_sta_flag = 0; //1: busy， 0：idle
 
+static int ip_conflict_status = 0;
+int ip_conflict_check_flag = 0;
+
+
 uint8_t n_uip_read_task_status(void)
 {
 	return nnn_task_sta_flag;
@@ -190,7 +194,7 @@ uip_linkup(void)
 	#endif
 	#if UIP_USE_DHCP
         xtcp_ipaddr_t   ipaddr_tmp = {0,0,0,0};
-        uip_sethostaddr(ipaddr_tmp);
+        uip_sethostaddr(ipaddr_tmp);        
   		dhcpc_start();
 	#endif
 	} //else uip_static_ip
@@ -324,6 +328,8 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
   timer tmr;
   unsigned timeout;
   unsigned arp_timer=0;
+  unsigned garp_timer=0;
+  unsigned ip_comflict_timer=0;
   unsigned autoip_timer=0;
   char mac_address[6];
   //----------------------------------------------------------------------------------------
@@ -378,6 +384,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
         uip_udp_listen(HTONS(port_number));
         register_listener(udp_listeners, i, port_number, NUM_UDP_LISTENERS);
       }
+      debug_printf("i_xtcp.listen port:%d protocol:%d\n", port_number, protocol);
       break;
 
     case i_xtcp[unsigned i].unlisten(unsigned port_number):
@@ -402,26 +409,34 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 		  //xtcp_uip_init(&ipconfig, mac_address); 
 		  uip_linkup();
 		}
-	  }	
-      if(head.xtcp_event == XTCP_RECV_DATA) {
+	  }
+      else if(head.xtcp_event == XTCP_IFUP){
+        //20191205
+        //添加garp协议, 上线发送, 通知局域网的ip设备更新arp表, 或检测ip冲突        
+        uip_create_garp();
+        xtcp_tx_buffer();
+	  }
+      else if(head.xtcp_event == XTCP_RECV_DATA) {
         memcpy(data, rx_buffer, head.xtcp_conn->packet_length);
         buffer_full = 0;
         bytecount = head.xtcp_conn->packet_length;
       }
 
       length = bytecount;
-
       renotify(i);
       break;
 
     case i_xtcp[unsigned i].close(const xtcp_connection_t &conn):
+      //text_debug2("close xtcp\n");
       set_uip_state(conn);
       if(check_conn_correct(conn)) {
         debug_printf("check_conn_correct error in line:%d\n", __LINE__);
         break;
       }
       if (uip_udpconnection()) {
-        uip_udp_conn->lport = 0;
+        if(check_recv_events_add_new_connection(conn.id, conn.client_num)==0)
+            uip_udp_conn->lport = 0;
+        
         enqueue_event_and_notify(conn.client_num, XTCP_CLOSED, &(uip_udp_conn->xtcp_conn));
       } else {
         uip_close();
@@ -432,16 +447,18 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       res = 0;
       set_uip_state(conn);
       if(check_conn_correct(conn)) {
-        debug_printf("%d %d\n",uip_udp_conn->rport,uip_udp_conn->lport);
         debug_printf("check_conn_correct error in line:%d\n", __LINE__);
         break;
       }
 
       if (uip_udpconnection()) {
-        uip_udp_conn->lport = 0;
+        if(check_recv_events_add_new_connection(conn.id, conn.client_num)==0)
+            uip_udp_conn->lport = 0;
+        else
+            debug_printf("check_recv_events_add_new_connection res 1\n");
       } else {
         res = 1;
-      }        
+      }
       break;
     case i_xtcp[unsigned i].abort(const xtcp_connection_t &conn):
       set_uip_state(conn);
@@ -709,13 +726,6 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
 		t_xtcp_mac = uip_arptab_get(ip_addr);
 		break;
 
-    case i_xtcp[unsigned i].xtcp_arpclear(xtcp_ipaddr_t ipaddr):
-        uip_ipaddr_t ip_addr;
-        ip_addr[0] = (ipaddr[1]<<8)|ipaddr[0];
-        ip_addr[1] = (ipaddr[3]<<8)|ipaddr[2];
-        uip_arptab_clear(ip_addr);
-        break;
-
     case i_xtcp[unsigned i].set_static_route(uint8_t dst_ip[], uint8_t dst_mask[], uint8_t dst_mac[]):
         memcpy(g_static_route.dst_ip, dst_ip, 4);
         memcpy(g_static_route.dst_mask, dst_mask, 4);
@@ -731,7 +741,7 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
         nnn_task_sta_flag = status; 
         break;
         
-    case tmr when timerafter(timeout) :> timeout: //10hz
+    case tmr when timerafter(timeout) :> timeout:
       timeout += 10000000;
       /* Check for the link state */
       if (!isnull(i_smi)) {
@@ -755,6 +765,76 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
       if (++arp_timer == 100) {
         arp_timer=0;
         uip_arp_timer();
+      }
+
+      //20191205-garp与ip冲突
+      static xtcp_connection_t if_ip_conflict_dummy = {0};
+      static int last_check_flag = 0;//最新ip冲突检测标志
+      static int seng_garp_flag = 0;//garp包发送标志位
+      
+      if(get_if_state()) {
+        
+        //添加garp协议, 60秒周期发送, 通知局域网的ip设备更新arp表, 或上线器件的ip冲突检测
+        if(ip_conflict_check_flag==0 && ++garp_timer == 600) {
+          garp_timer = 0;
+          
+          seng_garp_flag = 1;
+        }
+        
+        
+        if(!ip_conflict_status && ip_conflict_check_flag) {
+          //通知应用层-ip冲突
+          debug_printf("xtcp ip conflict\n");
+          
+          for(int i=0; i<n_xtcp; i++)
+            enqueue_event_and_notify(0, XTCP_IP_CONFLICT, &if_ip_conflict_dummy);
+          ip_conflict_status = 1;
+        }
+
+        //添加ip冲突检测-10秒周期检测
+        if(ip_conflict_check_flag!=0 && ++ip_comflict_timer == 100) {
+          
+          if(ip_conflict_check_flag == last_check_flag) {
+            //ip冲突恢复
+            ip_conflict_check_flag = 0;
+            last_check_flag = 0;
+          
+            if(ip_conflict_status) {
+              //通知应用层-ip冲突恢复
+              debug_printf("xtcp ip conflict recovery\n");
+              
+              for(int i=0; i<n_xtcp; i++)
+                enqueue_event_and_notify(0, XTCP_IP_CONFLICT_RECOVERY, &if_ip_conflict_dummy);
+            }
+            ip_conflict_status = 0;
+          } else {
+            //ip冲突
+            last_check_flag = ip_conflict_check_flag;
+          }
+          
+          ip_comflict_timer = 0;
+          
+          seng_garp_flag = 1;
+        }
+      } else {
+        if(ip_conflict_status) {
+          //通知应用层-ip冲突恢复
+          
+          for(int i=0; i<n_xtcp; i++)
+            enqueue_event_and_notify(0, XTCP_IP_CONFLICT_RECOVERY, &if_ip_conflict_dummy);
+        }
+        garp_timer = 0;
+        ip_comflict_timer = 0;
+        ip_conflict_check_flag = 0;
+        ip_conflict_status = 0;
+      }
+      //防止uip_buf/uip_buf32有数据
+      if(seng_garp_flag && uip_len == 0)
+      {
+        seng_garp_flag = 0;
+        
+        uip_create_garp();
+        xtcp_tx_buffer();
       }
 
 #if UIP_USE_AUTOIP
@@ -806,7 +886,8 @@ xtcpd_appcall(void)
   // New connection
   if (uip_connected()) {
     int client_num;
-
+    
+    //text_debug2("have new connect \n");
     if (uip_udpconnection()) {
       client_num = get_listener_linknum(udp_listeners,
                                         NUM_UDP_LISTENERS,
@@ -830,23 +911,6 @@ xtcpd_appcall(void)
                                      HTONS(uip_conn->rport),
                                      uip_conn);
     }
-    uint8_t tol=0;
-    for(uint8_t i=0;i<UIP_CONNS;i++){
-        if(uip_conns[i].tcpstateflags != UIP_CLOSED){
-            tol++;
-            debug_printf("have conn %d\n",i);
-        }
-    }
-    debug_printf("\n tcp tol :%d\n",tol);
-
-    tol=0;
-    for(uint8_t i=0;i<UIP_UDP_CONNS;i++){
-        if(uip_udp_conns[i].lport != 0){
-            tol++;
-        }
-    }
-    debug_printf("\n udp tol :%d\n",tol);
-    
     enqueue_event_and_notify(client_num, XTCP_NEW_CONNECTION, xtcp_conn);
   }
 
@@ -855,6 +919,7 @@ xtcpd_appcall(void)
     buffer_full = 1;
     xtcp_conn->packet_length = uip_len;
     memcpy(rx_buffer, uip_appdata, uip_len);
+    uip_ipaddr_copy(xtcp_conn->target_addr, UDPBUF->destipaddr);//add 更新连接的目标IP数据
     enqueue_event_and_notify(xtcp_conn->client_num, XTCP_RECV_DATA, xtcp_conn);
   }
 

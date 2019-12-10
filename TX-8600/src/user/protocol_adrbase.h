@@ -184,8 +184,6 @@
 
 #define ETH_WAV_OPEN_CMD        0xC003
 
-#define ETH_NONEDD_RESIGE_CMD   0xC004
-
 // —∞∫Ù÷∏¡Ó
 #define APP_AUDTRAINSMIT_UDP_CMD        0xBE09
 #define BE0E_AUDTRAINSMIT_DIVLIST_CMD   0xBE0B

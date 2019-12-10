@@ -42,6 +42,7 @@
 #include "uip_timer.h"
 #include "pt.h"
 #include "autoip.h"
+#include "debug_print.h" 
 
 #define STATE_INITIAL         0
 #define STATE_SENDING         1
@@ -209,6 +210,22 @@ send_request(void)
   uip_send(uip_appdata, end - (u8_t *)uip_appdata);
 }
 /*---------------------------------------------------------------------------*/
+static void
+send_decline(void) //发送拒绝包
+{
+  u8_t *end;
+  struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
+
+  create_msg(m);
+
+  end = add_msg_type(&m->options[4], DHCPDECLINE);
+  end = add_server_id(end);
+  end = add_req_ipaddr(end);
+  end = add_end(end);
+
+  uip_send(uip_appdata, end - (u8_t *)uip_appdata);
+}
+/*---------------------------------------------------------------------------*/
 static u8_t
 parse_options(u8_t *optptr, int len)
 {
@@ -297,8 +314,8 @@ static int msg_for_me(void)
 }
 
 
-static uint8_t nnn_auotip_lock = 0;
-static uint32_t nnn_total_delay = 0;
+static uint8_t nnn_auotip_lock = 0;  //仅标志为0时，使能自动IP, 非零时跳过
+static uint32_t nnn_total_delay = 0; //延迟计数
 
 void n_clear_autoip_lock(void)
 {
@@ -386,7 +403,7 @@ PT_THREAD(handle_dhcp(void))
                 parse_msg();
                 s.state = STATE_CONFIG_RECEIVED;
 				nnn_total_delay = 0;
-                goto bound;
+                goto chk_conflict; //bound;
               }
               else if (msg == DHCPNAK)
               {
@@ -402,6 +419,35 @@ PT_THREAD(handle_dhcp(void))
         else goto init;
 
     } while (s.state != STATE_CONFIG_RECEIVED);
+
+  chk_conflict: //校验IP是否可用流程
+    s.ticks = CLOCK_SECOND*15; //一个CLOCK_SECOND一秒
+    uip_timer_set(&s.timer, s.ticks);
+    uip_autoip_en_checkip(s.ipaddr); //启动ARP流程
+    debug_printf("   DHCP ARP CHECK: Enter\n");
+    do
+    {
+        PT_YIELD(&s.pt);
+        if(uip_autoip_read_conflict_flag()==0) //IP可用
+        {   
+            debug_printf("   DHCP ARP CHECK: IP OK\n");
+            goto  bound;
+        }
+        else if(uip_autoip_read_conflict_flag()==1) //IP冲突
+        {
+            debug_printf("   DHCP ARP CHECK: IP conflict!\n");
+            send_decline();
+            break;
+        }
+    } while (!uip_timer_expired(&s.timer));
+        
+    s.ticks = 2*CLOCK_SECOND; //延迟2秒
+    uip_timer_set(&s.timer, s.ticks);
+    do
+    {
+        PT_YIELD(&s.pt);
+    } while (!uip_timer_expired(&s.timer));
+    goto  init; 
 
   bound:
   	if( (n_uip_read_task_status()==1) && (nnn_auotip_lock!=0) )
