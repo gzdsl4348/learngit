@@ -190,13 +190,15 @@ typedef struct g_sys_val_t{
     #define WIFI_DHCPEN_MODE  02
     //
     uint8_t wifi_contorl_state;
-    #define WIFI_WAIT_POWERON   01
-    #define WIFI_AT_ENTER       02
-    #define WIFI_AT_COM_DHCP    03
-    #define WIFI_LANIP_SET      04
-    #define WIFI_AT_SAVE        05
-    #define WIFI_AT_SETNAME     06
-    #define WIFI_AT_APPLY       07
+    #define WIFI_WAIT_POWERON   0x01
+    #define WIFI_AT_ENTER       0x02
+    #define WIFI_AT_COM_DHCP    0x03
+    #define WIFI_LANIP_SET      0x04
+    #define WIFI_AT_SAVE        0x05
+    #define WIFI_AT_SETNAME     0x06
+    #define WIFI_AT_APPLY       0x07
+    #define WIFI_AT_DHCPRTS     0x08
+    #define WIFI_AT_DHCPRTS_H   0x09
     //
     uint8_t wifi_io_tmp;
     #define D_IO_WIFI_POWER     01
@@ -289,6 +291,7 @@ typedef struct g_sys_val_t{
     uint8_t could_heart_timcnt;
     //
     uint8_t sys_dhcp_state_tmp;
+    uint8_t sys_dhcp_needreset;
 
     //  ’∑¢∂—’ª
     xtcp_fifo_t tx_buff_fifo;

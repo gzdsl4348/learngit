@@ -740,6 +740,10 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 	tftptime :> time_tftp;
     //
     create_todaytask_list(g_sys_val.time_info); //生成当天任务列表
+    // 切换显示页面
+#if ENGLISH_VERSION
+    lcd_change_pageid();
+#endif
     delay_milliseconds(100);
     // 显示日期
     user_disp_data();
@@ -763,6 +767,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
 
+    //host_info.offline_day=180;
     #if 0
     g_sys_val.could_ip[0] = 47;
     g_sys_val.could_ip[1] = 106;
@@ -774,7 +779,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
     #endif
-
 
 #if 0
     g_sys_val.could_ip[0] = 47;
@@ -788,8 +792,6 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[3] = 114;
 #endif
 
-
-    
     #if 0
     g_sys_val.could_ip[0] = 172;
     g_sys_val.could_ip[1] = 16;
@@ -1135,7 +1137,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
 		    	second_process();
                 // 建立日志失败，继续建立
                 if(g_sys_val.log_waitmk_f){
-                    //debug_printf("delay mk log\n");
+                    xtcp_debug_printf("delay mk log\n");
                     g_sys_val.log_waitmk_f = user_file_mklog();
                 }
 				// 广播连接关闭处理
@@ -1309,6 +1311,7 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
                     // 开启wifi模块
                     wifi_open();
                     wifi_open_disp();
+                    g_sys_val.sys_dhcp_needreset=0;
                     //xtcp_debug_printf("key wifi on\n");
                 }
             }

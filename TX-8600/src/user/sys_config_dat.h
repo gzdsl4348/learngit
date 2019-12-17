@@ -10,10 +10,10 @@ extern "C" {
 #endif
 
 #define VERSION_H    (0x01)
-#define VERSION_L    (0x29)
+#define VERSION_L    (0x30)
 
 #define VERSION_TEN_H    (01)
-#define VERSION_TEN_L    (29)
+#define VERSION_TEN_L    (30)
 
 #define COULD_TCP_EN     1
 #define DNS_IP     ("yunbo.itc-pa.cn")
@@ -33,6 +33,8 @@ extern "C" {
 #define ENABLE_AUD_TRAINSMIT        0
 
 #define DIV_PROBATION_DAY       90 //出厂试用期
+
+#define ENGLISH_VERSION         0
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

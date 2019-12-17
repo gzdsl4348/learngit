@@ -36,7 +36,7 @@ uint16_t extra_info_build_ack();
 uint16_t div_list_resend_build(uint16_t cmd,div_node_t **div_list_p,uint8_t div_send_num8,uint8_t list_num);
 
 // ip mac 列表发送
-uint16_t div_ipmac_list_send();
+uint16_t div_ipmac_list_send(uint16_t cmd);
 
 // 分区列表组包
 uint16_t area_list_send_build(uint16_t cmd,uint8_t list_num);

@@ -115,7 +115,7 @@ void wifi_contorl_mode(){
     switch(g_sys_val.wifi_contorl_state){
         case WIFI_WAIT_POWERON:
             wait_12sec++;
-            if(wait_12sec>24){ // 等10秒wifi开启
+            if(wait_12sec>24){ // 等12秒wifi开启
                 wait_12sec=0;
                 // 进入AT模式
                 g_sys_val.wifi_contorl_state = WIFI_AT_ENTER;
@@ -142,12 +142,16 @@ void wifi_contorl_mode(){
             else{
                 // 配置DHCP
                 dhcp_en();
-                g_sys_val.sys_dhcp_state_tmp=1;  
+                g_sys_val.sys_dhcp_state_tmp=1;
+                if(g_sys_val.sys_dhcp_needreset==0){
+                    g_sys_val.sys_dhcp_needreset=1;
+                }else{
+                    g_sys_val.sys_dhcp_needreset=0;
+                }
                 //xtcp_debug_printf("dhcp en\n");
             }
             // 进入配置wifi模式
             g_sys_val.wifi_contorl_state = WIFI_LANIP_SET;
-            wifi_save();
             break;
         case WIFI_LANIP_SET:
             {
@@ -160,6 +164,7 @@ void wifi_contorl_mode(){
                 ip_tmp[3]++;
             }   
             user_wifi_ipset(ip_tmp);
+            wifi_save();
             g_sys_val.wifi_contorl_state = WIFI_AT_SAVE;               
             }
             break;
@@ -173,24 +178,38 @@ void wifi_contorl_mode(){
             g_sys_val.wifi_contorl_state = WIFI_AT_COM_DHCP;
             break;
         case WIFI_AT_SAVE:
-            g_sys_val.wifi_timer = 0;
             wifi_save();
+            /*
             if(host_info.sys_dhcp_state != g_sys_val.sys_dhcp_state_tmp){
                 host_info.sys_dhcp_state = g_sys_val.sys_dhcp_state_tmp;
-                g_sys_val.wifi_contorl_state = WIFI_AT_APPLY;
                 // flash info   
                 fl_hostinfo_write();    //烧写主机信息
             }
             else{
                 g_sys_val.wifi_contorl_state=0;
-            }
+            }*/
+            g_sys_val.wifi_contorl_state = WIFI_AT_APPLY;
             //xtcp_debug_printf("wifi save\n");
             break;
-        case WIFI_AT_APPLY:
-            g_sys_val.wifi_timer = 0;
-            wifi_apply();
+        case WIFI_AT_APPLY:    
             //xtcp_debug_printf("wifi apply\n");
-            g_sys_val.wifi_contorl_state = 0;
+            wifi_apply();
+            if(g_sys_val.sys_dhcp_needreset){       
+                g_sys_val.wifi_contorl_state = WIFI_AT_DHCPRTS;
+            }
+            else{
+                g_sys_val.wifi_contorl_state = 0;
+            }
+            break;
+        case WIFI_AT_DHCPRTS:        
+            //xtcp_debug_printf("wifi rts\n");
+            wifi_ioset(0);       
+            user_lan_uart0_tx(&g_sys_val.wifi_io_tmp,0,2);
+            g_sys_val.wifi_contorl_state = WIFI_AT_DHCPRTS_H;
+            break;
+        case WIFI_AT_DHCPRTS_H:
+            //xtcp_debug_printf("wifi on\n");
+            wifi_open();
             break;
     }
 }

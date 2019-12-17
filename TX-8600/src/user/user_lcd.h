@@ -16,6 +16,8 @@
 
 void user_disp_time();
 
+void lcd_change_pageid();
+
 void user_disp_data();
 
 void user_disp_ip(xtcp_ipconfig_t ipconfig);

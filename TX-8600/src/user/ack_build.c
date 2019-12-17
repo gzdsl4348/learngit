@@ -910,7 +910,7 @@ uint16_t rttask_creat_build(uint16_t ran_id,uint8_t state,uint16_t task_id){
 //==========================================================================================
 // 设备 IP MAC 列表 查询回复
 //==========================================================================================
-uint16_t div_ipmac_list_send(){
+uint16_t div_ipmac_list_send(uint16_t cmd){
     uint16_t data_base;
     //-----------------------------------------------------
     xtcp_tx_buf[DIVIPMAC_TOTALPACK_B] = 1;
@@ -922,10 +922,15 @@ uint16_t div_ipmac_list_send(){
     while(div_tmp_p!=(div_node_t *)null){
         memcpy(&xtcp_tx_buf[data_base+DIVIPMAC_DAT_MAC],div_tmp_p->div_info.mac,6);
         memcpy(&xtcp_tx_buf[data_base+DIVIPMAC_DAT_IP],div_tmp_p->div_info.ip,4);
+        if(cmd == DIV_IPMAC_CHL_CMD){
+            data_base += DIVIPMAC_DTA_LEN;
+        }else{
+            xtcp_tx_buf[data_base+DIVIPMAC_DAT_STATE] = div_tmp_p->div_info.div_state;
+            data_base += DIVIPMAC_DAT_STATE_LEN;
+        }        
         div_tmp_p = div_tmp_p->next_p;
-        data_base += DIVIPMAC_DTA_LEN;
     }
-    return build_endpage_decode(data_base,DIV_IPMAC_CHL_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
+    return build_endpage_decode(data_base,cmd,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
 }
 
 //==========================================================================================

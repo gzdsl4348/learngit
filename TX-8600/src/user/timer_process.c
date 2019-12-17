@@ -22,6 +22,7 @@
 //------------------------------------------------------------------------------
 void timer_process(){
     static uint8_t get_f=3;
+    static uint8_t need_mklog=1;
     g_sys_val.time_info.second++;
     
     if(g_sys_val.time_info.second>(60-1)){
@@ -38,6 +39,7 @@ void timer_process(){
             }
             if(g_sys_val.time_info.hour>(24-1)){
                 get_f=0;
+                need_mklog=0;
                 g_sys_val.time_info.hour=0;
                 delay_milliseconds(1);
                 // 同步ds1302时间
@@ -81,7 +83,10 @@ void timer_process(){
             // 更新注册信息
             register_could_chk();
             //
-            g_sys_val.log_waitmk_f = user_file_mklog();
+            if(need_mklog==0){
+                need_mklog=1;
+                g_sys_val.log_waitmk_f = user_file_mklog();
+            }
         }
     }
 }

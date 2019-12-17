@@ -38,7 +38,8 @@ rec_fun_lis_t rec_fun_lis[]={{DIV_HEART_CMD,div_heart_recive},
                              {RTTASK_BUILD_CMD,rttask_build_recive},
                              {TASK_TASK_FORSOLU_B311_CMD,tasklist_forsolu_chk_recive},
                              {TASK_SOLUFORAPP_B310_CMD,solulist_chk_forapp_recive},
-                             {DIV_IPMAC_CHL_CMD,div_ip_mac_check_recive},
+                             {DIV_IPMAC_CHL_CMD,div_ip_mac_check_recive},                             
+                             {DIV_IPMACS_CHL_CMD,div_ip_mac_state_check_recive},
                              {MIC_USERLIST_CHK_CMD,mic_userlist_chk_recive},
                              {HOST_SEARCH_CMD,user_host_search_recive},
                              {MUSIC_PATCH_CHK_CMD,music_patch_list_chk_recive},
@@ -173,6 +174,6 @@ rttask_lsit_t rttask_lsit;
 // 即时任务启动连接建立状态
 rttask_build_state_t rttask_build_state[MAX_RTTASK_CONTORL_NUM];
 
-rttask_info_list_t rttask_info_list[MAX_SEND_RTTASKINFO_NUM]={0};
+rttask_info_list_t rttask_info_list[MAX_SEND_RTTASKINFO_NUM];
 
 //================================================================================

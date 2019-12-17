@@ -86,6 +86,7 @@
 
 // 报警采集
 #define DIV_IPMAC_CHL_CMD       0xB709
+#define DIV_IPMACS_CHL_CMD      0xB70A
 
 // 寻呼话筒
 #define MIC_USERLIST_CHK_CMD    0xB502
@@ -669,8 +670,10 @@
 #define DIVIPMAC_DAT_BASE                  (DIVIPMAC_TOTALDIV_B+1)
 #define DIVIPMAC_DAT_MAC                   (0)  //6
 #define DIVIPMAC_DAT_IP                    (DIVIPMAC_DAT_MAC+6)  //4
+#define DIVIPMAC_DAT_STATE                 (DIVIPMAC_DAT_IP+4)  //1
 
-#define DIVIPMAC_DTA_LEN                   (DIVIPMAC_DAT_IP+4)
+#define DIVIPMAC_DTA_LEN                   (DIVIPMAC_DAT_IP+4) //
+#define DIVIPMAC_DAT_STATE_LEN             (DIVIPMAC_DAT_STATE+1)  //4
 
 //====================================================================================================
 // 分区列表获取 地址

@@ -41,6 +41,7 @@ void div_heart_overtime_close();
 // 设备IP MAC获取
 void div_ip_mac_check_recive();
 
+void div_ip_mac_state_check_recive();
 //-----------------------------------------------------
 // 搜索设备信息获取 BF08
 void research_lan_revice();

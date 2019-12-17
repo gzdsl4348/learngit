@@ -520,10 +520,16 @@ void div_heart_overtime_close(){
 }
 
 //=====================================================================================================
-// 设备 IP MAC列表查询
+// 设备 IP MAC列表查询 B709
 //=====================================================================================================
 void div_ip_mac_check_recive(){
-    user_sending_len = div_ipmac_list_send();
+    user_sending_len = div_ipmac_list_send(DIV_IPMAC_CHL_CMD);
+    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+}
+
+// 带状态 B70A
+void div_ip_mac_state_check_recive(){ 
+    user_sending_len = div_ipmac_list_send(DIV_IPMACS_CHL_CMD);
     user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
 }
 
@@ -635,10 +641,13 @@ void divresearch_hostset_recive(){
         //                                          xtcp_rx_buf[addr_base+3],xtcp_rx_buf[addr_base+4],xtcp_rx_buf[addr_base+5]);
         // 同步主机
         user_sending_len = sync_hostip_build((uint8_t *)&xtcp_rx_buf[addr_base],(uint8_t *)&xtcp_rx_buf[SYSSET_HOSTIP_HOSTIP_B]);
-        user_xtcp_send(g_sys_val.broadcast_conn,0);    
+        //user_xtcp_send(g_sys_val.broadcast_conn,0);   
+        user_xtcp_sendudp(g_sys_val.broadcast_conn,0);
         // 同步动态IP
         user_sending_len = sync_ipinfo_build((uint8_t *)&xtcp_rx_buf[addr_base]);
-        user_xtcp_send(g_sys_val.broadcast_conn,0);   
+        user_xtcp_sendudp(g_sys_val.broadcast_conn,0);
+        //user_xtcp_send(g_sys_val.broadcast_conn,0);   
+        //delay_milliseconds(5);
         addr_base  += 6;
     }
     user_sending_len = onebyte_ack_build(1,SYSSET_DIV_HOSTSET_CMD,(uint8_t *)&xtcp_rx_buf[POL_ID_BASE]);
@@ -684,7 +693,5 @@ void div_textsend_recive(){
     user_xtcp_send(conn_tmp->conn,0);   
 
 }
-
-
 
 

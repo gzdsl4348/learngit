@@ -226,6 +226,13 @@ void user_xtcp_send(xtcp_connection_t conn,uint8_t colud_f){
 	}
 }
 
+void user_xtcp_sendudp(xtcp_connection_t conn,uint8_t colud_f){
+    unsafe{
+    if(conn.id != g_sys_val.could_conn.id)
+        i_user_xtcp->send_udp(conn,&all_tx_buf[CLH_HEADEND_BASE],user_sending_len);
+    }
+}
+
 void user_xtcp_unlisten(unsigned port_number){
 	unsafe{
 		i_user_xtcp->unlisten(port_number);
@@ -256,9 +263,7 @@ void user_xtcp_close(xtcp_connection_t conn){
 
 void user_udpconn_close(xtcp_connection_t conn){
     unsafe{
-        unsafe{
-            i_user_xtcp->close_udp(conn);
-        }
+        i_user_xtcp->close_udp(conn);
     }
 }
 
@@ -523,6 +528,7 @@ uint8_t user_file_mklog(){
         host_info.log_daycnt++;
         if(res==0)
             fl_hostinfo_write();    //烧写主机信息
+        xtcp_debug_printf("\n\ndata make log\n\n");
         return res;
     }
 }
