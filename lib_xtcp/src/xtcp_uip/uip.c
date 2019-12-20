@@ -420,7 +420,7 @@ void uip_init(void) {
 	memset(uip_udp_listenports, 0, sizeof(uip_listenports));
 	memset(uip_conns, 0, sizeof(uip_conns));
 #if UIP_ACTIVE_OPEN
-	lastport = 1024;
+	lastport = 10000;
 #endif /* UIP_ACTIVE_OPEN */
 
 #if UIP_UDP
@@ -440,7 +440,7 @@ uip_connect(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 4096;
+		lastport = 10000;
 	}
 
 	/* Check if this port is already in use, and if so try to find another one. */
@@ -508,7 +508,7 @@ uip_udp_new(uip_ipaddr_t *ripaddr, u16_t rport)
 	++lastport;
 
 	if(lastport >= 32000) {
-		lastport = 4096;
+		lastport = 10000;
 	}
 
 	for(c = 0; c < UIP_UDP_CONNS; ++c) {

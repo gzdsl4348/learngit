@@ -1077,6 +1077,9 @@ void task_dtinfo_config_recive(){
             g_sys_val.task_dtinfo_setdiv_f = 1;
             data_base = TASK_DTCFG_MAC_BASE;
             //获得设备总数
+            if(xtcp_rx_buf[TASK_DTCFG_MACTOL]>MAX_SENDCHAN_NUM){ //最大发送100台设备，防越界
+                xtcp_rx_buf[TASK_DTCFG_MACTOL]=MAX_SENDCHAN_NUM;
+            }
             g_sys_val.tmp_union.task_allinfo_tmp.task_coninfo.div_tolnum = xtcp_rx_buf[TASK_DTCFG_MACTOL];
             //xtcp_debug_printf("div tol %d\n",xtcp_rx_buf[TASK_DTCFG_MACTOL]);
             for(uint8_t i=0;i<xtcp_rx_buf[TASK_DTCFG_MACTOL] ;i++){
@@ -1782,16 +1785,17 @@ void rttask_config_recive(){
     // 设置优先级
     g_tmp_union.rttask_dtinfo.prio = xtcp_rx_buf[RTTASK_CFG_TASKPRIO];
     // 配置发送终端
-    if(xtcp_rx_buf[RTTASK_CFG_DIVTOL] < MAX_DIV_LIST){
-        g_tmp_union.rttask_dtinfo.div_tol = xtcp_rx_buf[RTTASK_CFG_DIVTOL];
-        uint16_t data_base = RTTASK_CFG_DIV_BASE;
-        for(uint8_t i=0; i<xtcp_rx_buf[RTTASK_CFG_DIVTOL]; i++){
-            g_tmp_union.rttask_dtinfo.des_info[i].zone_control = (xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL+1]<<8)|xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL];
-            //xtcp_debug_printf("rt t area %x\n",tmp_union.rttask_dtinfo.des_info[i].zone_control);
-            memcpy(g_tmp_union.rttask_dtinfo.des_info[i].mac,&xtcp_rx_buf[data_base+RTTASK_CFG_MAC],6);
-            data_base += RTTASK_CFG_LEN;
-        }
-    }    
+    if(xtcp_rx_buf[RTTASK_CFG_DIVTOL] > MAX_SENDCHAN_NUM){
+        xtcp_rx_buf[RTTASK_CFG_DIVTOL] = MAX_SENDCHAN_NUM;
+    }
+    g_tmp_union.rttask_dtinfo.div_tol = xtcp_rx_buf[RTTASK_CFG_DIVTOL];
+    uint16_t data_base = RTTASK_CFG_DIV_BASE;
+    for(uint8_t i=0; i<xtcp_rx_buf[RTTASK_CFG_DIVTOL]; i++){
+        g_tmp_union.rttask_dtinfo.des_info[i].zone_control = (xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL+1]<<8)|xtcp_rx_buf[data_base+RTTASK_CFG_AREACONTORL];
+        //xtcp_debug_printf("rt t area %x\n",tmp_union.rttask_dtinfo.des_info[i].zone_control);
+        memcpy(g_tmp_union.rttask_dtinfo.des_info[i].mac,&xtcp_rx_buf[data_base+RTTASK_CFG_MAC],6);
+        data_base += RTTASK_CFG_LEN;
+    }
     // 保存信息
     fl_rttask_write(&g_tmp_union.rttask_dtinfo,id);
     //----------------------------------------------------------------------------------------------------------------------------

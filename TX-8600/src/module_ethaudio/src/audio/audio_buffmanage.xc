@@ -144,7 +144,7 @@ void audio_buffmanage_process(client ethernet_cfg_if i_eth_cfg,
                 int audio_devlist_free_index = -1;
                 
                 if(ch >= NUM_MEDIA_INPUTS) break;
-                if(t_audio_txlist->num_info>=MAX_SENDCHAN_NUM) break;
+                if(t_audio_txlist->num_info>MAX_SENDCHAN_NUM) break;
                 
                 //tmr :> t1;
                 //eth_audio_dev_t dev;

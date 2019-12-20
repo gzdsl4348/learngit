@@ -914,8 +914,11 @@ uint16_t div_ipmac_list_send(uint16_t cmd){
     uint16_t data_base;
     //-----------------------------------------------------
     xtcp_tx_buf[DIVIPMAC_TOTALPACK_B] = 1;
-    xtcp_tx_buf[DIVIPMAC_CURRENTPACK_B] = 0;
+    xtcp_tx_buf[DIVIPMAC_CURRENTPACK_B] = 0;    
     xtcp_tx_buf[DIVIPMAC_TOTALDIV_B] = div_list.div_tol;
+    if(div_list.div_tol>140){
+        xtcp_tx_buf[DIVIPMAC_TOTALDIV_B]=140;
+    }
     //
     div_node_t *div_tmp_p = div_list.div_head_p;
     data_base = DIVIPMAC_DAT_BASE;    

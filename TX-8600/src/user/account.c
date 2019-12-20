@@ -253,6 +253,10 @@ void account_config_recive(){
         //
         memcpy(account_info[id].phone_num,&xtcp_rx_buf[A_CONFIG_PHONE_NUM_B],DIV_NAME_NUM);
         memcpy(account_info[id].sn,&xtcp_rx_buf[A_CONFIG_AC_SN_B],SYS_PASSWORD_NUM);
+        // 最大系统数量150 防越界
+        if(xtcp_rx_buf[A_CONFIG_AC_DIVTOL_B]>MAX_DIV_LIST){
+            xtcp_rx_buf[A_CONFIG_AC_DIVTOL_B]=MAX_DIV_LIST;
+        }
         account_info[id].div_tol = xtcp_rx_buf[A_CONFIG_AC_DIVTOL_B];
         g_tmp_union.account_all_info.account_info = account_info[id];
         // 配mac列表信息
