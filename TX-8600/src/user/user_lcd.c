@@ -77,7 +77,11 @@ void send_buff(uint8_t id){
     disp_buff[1] = 0xB1;
     disp_buff[2] = 0x10;
     disp_buff[3] = 0x00;
+#if ENGLISH_VERSION
+    disp_buff[4] = 0x01;
+#else
     disp_buff[4] = 0x00;
+#endif
     disp_buff[5] = 0x00;
     disp_buff[6] = id;
     disp_buff[disp_len] = 0x00;

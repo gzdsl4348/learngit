@@ -13,6 +13,7 @@
 #include "conn_process.h"
 #include "sys_log.h"
 #include "user_log.h"
+#include "random.h"
 
 extern uint8_t f_name[];
 
@@ -118,18 +119,35 @@ void task_music_stop_all(){
 
 //-------------------------------------------------------------------------------------------
 // 曲目事件切换
-uint8_t random_music_tab[MAX_RTMUSIC_NUM] = {17,8,3,0,16,12,19,15,4,18,7,13,2,6,1,10,5,9,11,14,25,49,46,33,32,21,48,47,29,43,30,22,23,31,37,
-                                             26,34,44,24,45,39,42,36,38,20,35,41,28,40,27};
+//unsigned random_seed = random_create_generator_from_hw_seed();
+
+uint8_t random_music_tab[2][MAX_RTMUSIC_NUM] ={ 
+                                            {17,8,16,12,19,15,4,18,7,13,
+                                             6,1,10,5,3,2,0,9,11,14,
+                                             25,49,46,33,32,21,48,47,29,43,
+                                             30,22,23,31,37,26,34,44,24,45,
+                                             39,42,36,38,20,35,41,28,40,27},
+                                             {3,2,4,6,17,8,0,12,18,13,
+                                              16,7,15,1,10,5,9,14,19,11,
+                                              37,26,25,49,46,21,48,47,29,43,
+                                              28,40,27,30,22,23,31,34,44,24,
+                                              45,33,32,39,42,36,38,20,35,41}
+                                            };
+                                              
+
 uint8_t random_inc[MAX_MUSIC_CH] = {0};
+uint8_t random_tab[MAX_MUSIC_CH] = {0};
 
 uint8_t random_play_inc(uint8_t ch,uint8_t mustol){
     for(uint8_t i=0;i<mustol;i++){
         random_inc[ch]++;
-        if(random_inc[ch]>=mustol )
-            random_inc[ch] =0;
-        if(random_music_tab[random_inc[ch]] < timetask_now.task_musicplay[ch].music_tol){
-            timetask_now.task_musicplay[ch].music_inc = random_music_tab[random_inc[ch]];
-            return random_music_tab[random_inc[ch]];
+        if(random_inc[ch]>=mustol ){
+            random_inc[ch] = 0;
+            random_tab[ch] ^=1;
+        }
+        if(random_music_tab[random_tab[ch]][random_inc[ch]] < timetask_now.task_musicplay[ch].music_tol){
+            timetask_now.task_musicplay[ch].music_inc = random_music_tab[random_tab[ch]][random_inc[ch]];
+            return random_music_tab[random_tab[ch]][random_inc[ch]];
         } 
     }
     return 0;
@@ -201,7 +219,7 @@ void task_musicevent_change(uint8_t ch,char event,char data,uint8_t set_musinc_f
                 music_inc[ch] = random_play_inc(ch,MAX_RTMUSIC_NUM);
             }
             else{
-                music_inc[ch] = random_play_inc(ch,MAX_MUSIC_CH);
+                music_inc[ch] = random_play_inc(ch,MAX_MUSIC_NUM);
             }
             break;
         // 单曲播放
@@ -298,7 +316,10 @@ void task_music_config_play(uint8_t ch,uint16_t id,uint8_t rttask_f,uint8_t set_
     uint8_t tmp_inc;
     tmp_inc = timetask_now.task_musicplay[ch].music_inc;
     if(timetask_now.task_musicplay[ch].play_mode == RANDOM_PLAY_M){
-        random_inc[ch] = g_sys_val.time_info.second%20;
+        //unsigned seed=(g_sys_val.time_info.second+g_sys_val.time_info.minute+g_sys_val.time_info.hour+
+        //               g_sys_val.date_info.year+g_sys_val.date_info.month+g_sys_val.date_info.date)%20;
+        //random_inc[ch] =random_inc[ch]+seed;
+                        
         tmp_inc = random_play_inc(ch,MAX_MUSIC_CH);
     }
     // 初始化现在任务状态2

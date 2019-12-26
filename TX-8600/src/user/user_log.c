@@ -111,9 +111,9 @@ void log_rttask_timeover(){
 
 // ¼´Ê±ÈÎÎñ±à¼­
 void log_rttask_config(){
-    g_sys_val.log_info_p = log_info_chang("rttask config\r config:%d 0=add 1=del 2=config\r name:%l duratime:%d-second prio:%d 00=normal 10=impoartant 20=emerngecy\r source div mac:%x-%x-%x-%x-%x-%x,divtol:%d\r\r\n",    
+    g_sys_val.log_info_p = log_info_chang("rttask config\r config:%d 0=add 1=del 2=config\r name:%l duratime:%x-second prio:%x 00=normal 10=impoartant 20=emerngecy\r source div mac:%x-%x-%x-%x-%x-%x,divtol:%d\r\r\n",    
                                     xtcp_rx_buf[RTTASK_CFG_CONTORL],
-                                    g_tmp_union.rttask_dtinfo.name,g_tmp_union.rttask_dtinfo.dura_time,
+                                    g_tmp_union.rttask_dtinfo.name,g_tmp_union.rttask_dtinfo.dura_time,g_tmp_union.rttask_dtinfo.prio,
                                     g_tmp_union.rttask_dtinfo.src_mas[0],g_tmp_union.rttask_dtinfo.src_mas[1],g_tmp_union.rttask_dtinfo.src_mas[2],
                                     g_tmp_union.rttask_dtinfo.src_mas[3],g_tmp_union.rttask_dtinfo.src_mas[4],g_tmp_union.rttask_dtinfo.src_mas[5],g_tmp_union.rttask_dtinfo.div_tol);
     user_loginfo_add((uint8_t *)&xtcp_rx_buf[POL_ID_BASE],conn.remote_addr); 

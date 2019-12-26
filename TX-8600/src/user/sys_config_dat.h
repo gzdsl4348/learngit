@@ -34,7 +34,7 @@ extern "C" {
 
 #define DIV_PROBATION_DAY       90 //出厂试用期
 
-#define ENGLISH_VERSION         0
+#define ENGLISH_VERSION         0 //英文版
 
 //-----------------------------------------------------
 #define INIT_VAL -1	// None ID

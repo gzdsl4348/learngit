@@ -525,9 +525,10 @@ uint8_t user_file_mklog(){
         // 保存日志名
         memcpy(host_info.log_filename[host_info.log_daycnt],g_sys_val.log_info_p->buff,64);
         //
-        host_info.log_daycnt++;
-        if(res==0)
+        if(res==0){    
+            host_info.log_daycnt++;
             fl_hostinfo_write();    //烧写主机信息
+        }
         xtcp_debug_printf("\n\ndata make log\n\n");
         return res;
     }

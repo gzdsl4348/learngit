@@ -523,14 +523,28 @@ void div_heart_overtime_close(){
 // 设备 IP MAC列表查询 B709
 //=====================================================================================================
 void div_ip_mac_check_recive(){
-    user_sending_len = div_ipmac_list_send(DIV_IPMAC_CHL_CMD);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    div_node_t *div_tmp_p = div_list.div_head_p;
+    uint8_t pack_inc=0;
+    user_sending_len = div_ipmac_list_send(DIV_IPMAC_CHL_CMD,pack_inc,&div_tmp_p);
+    user_xtcp_sendudp(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    if(div_tmp_p!=(div_node_t *)null){
+        pack_inc=1;
+        user_sending_len = div_ipmac_list_send(DIV_IPMAC_CHL_CMD,pack_inc,&div_tmp_p);
+        user_xtcp_sendudp(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    }
 }
 
 // 带状态 B70A
 void div_ip_mac_state_check_recive(){ 
-    user_sending_len = div_ipmac_list_send(DIV_IPMACS_CHL_CMD);
-    user_xtcp_send(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    div_node_t *div_tmp_p = div_list.div_head_p;
+    uint8_t pack_inc=0;
+    user_sending_len = div_ipmac_list_send(DIV_IPMACS_CHL_CMD,pack_inc,&div_tmp_p);
+    user_xtcp_sendudp(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    if(div_tmp_p!=(div_node_t *)null){
+        pack_inc=1;
+        user_sending_len = div_ipmac_list_send(DIV_IPMACS_CHL_CMD,pack_inc,&div_tmp_p);
+        user_xtcp_sendudp(conn,xtcp_rx_buf[POL_COULD_S_BASE]);
+    }
 }
 
 //=====================================================================================================
