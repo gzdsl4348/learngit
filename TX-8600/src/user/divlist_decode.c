@@ -229,14 +229,14 @@ void div_info_set_recive()
                 if((int)conn_tmp==null){
                     if(user_xtcp_connect_udp(8805,node_tmp->div_info.ip,&g_tmp_union.conn_tmp)==0){
                         user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
-                        user_xtcp_send(g_tmp_union.conn_tmp,0);
-                        user_xtcp_close(g_tmp_union.conn_tmp);
+                        user_xtcp_sendudp(g_tmp_union.conn_tmp,0);
+                        user_udpconn_close(g_tmp_union.conn_tmp);
                     }
                 }
                 else{
                     g_tmp_union.conn_tmp = conn_tmp->conn;
                     user_sending_len = sync_hostip_build(node_tmp->div_info.mac,host_info.ipconfig.ipaddr);
-                    user_xtcp_send(g_tmp_union.conn_tmp,0);
+                    user_xtcp_sendudp(g_tmp_union.conn_tmp,0);
                 }
                 node_tmp = node_tmp->next_p;
             }

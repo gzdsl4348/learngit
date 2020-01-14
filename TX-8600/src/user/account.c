@@ -732,7 +732,9 @@ void sysset_ipset_recive(){
     memcpy(host_info.ipconfig.ipaddr,&xtcp_rx_buf[SYSSET_IPSET_IP],4);    
     memcpy(host_info.ipconfig.gateway,&xtcp_rx_buf[SYSSET_IPSET_GATE],4);    
     memcpy(host_info.ipconfig.netmask,&xtcp_rx_buf[SYSSET_IPSET_MASK],4);    
-    user_xtcp_ipconfig(host_info.ipconfig);    
+    user_xtcp_ipconfig(host_info.ipconfig);        
+    fl_hostinfo_write();    //烧写主机信息    
+    g_sys_val.reboot_f = 1;
 }
 #endif
 

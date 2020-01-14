@@ -81,20 +81,23 @@ extern host_info_t host_info;
 
 //=======================================================================================
 
-//-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------  
 void mac_writeflash(uint8_t macadr[6]){
     unsafe{
-    char name[]={0x91,0x4E,0xAD,0X64,0xAE,0x5F,0x8B,0x57,0x3B,0x4E,0x3A,0x67,0x2D,0x00};
+    #if ENGLISH_VERSION
+    char name[]={0x43,0x00,0x6F,0x00,0x6E,0x00,0x74,0x00,0x72,0x00,0x6F,0x00,0x6C,0x00,0x6C,0x00,0x65,0x00,0x72,0x00,0x2D,0x00};
+    #else
+    char name[]={0xAE,0x5F,0x8B,0x57,0x3B,0x4E,0x3A,0x67,0x2D,0x00};
+    #endif 
     int init_string = 0;
     memcpy(host_info.mac,macadr,6);
     // 第一次烧写MAC复位设备名称
     if(host_info.mac_write_f!=0xAB){
         memset(host_info.name,0x00,DIV_NAME_NUM);
-        memcpy(host_info.name,name,12);
+        memcpy(host_info.name,name,sizeof(name));
         //
-        itoa_forutf16(host_info.mac[4],&host_info.name[11],16,2);
-        host_info.name[14]=0x2D;
-        itoa_forutf16(host_info.mac[5],&host_info.name[15],16,2);
+        itoa_forutf16(host_info.mac[4],host_info.name+sizeof(name),16,2);
+        itoa_forutf16(host_info.mac[5],host_info.name+sizeof(name)+4,16,2);
     }
     host_info.mac_write_f = 0xAB;
 
@@ -757,6 +760,17 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     //audio_moudle_set();
     //task_music_config_play(0,01);
     // 云服务连接
+    #if UKRAINE_VERSION
+    g_sys_val.could_ip[0] = 86;
+    g_sys_val.could_ip[1] = 111;
+    g_sys_val.could_ip[2] = 95;
+    g_sys_val.could_ip[3] = 131;
+	// DNS 地址
+    g_sys_val.dns_ip[0] = 8;
+    g_sys_val.dns_ip[1] = 8;
+    g_sys_val.dns_ip[2] = 8;
+    g_sys_val.dns_ip[3] = 8;
+    #else
     g_sys_val.could_ip[0] = 39;
     g_sys_val.could_ip[1] = 98;
     g_sys_val.could_ip[2] = 189;
@@ -766,7 +780,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     g_sys_val.dns_ip[1] = 114;
     g_sys_val.dns_ip[2] = 114;
     g_sys_val.dns_ip[3] = 114;
-
+    #endif
+    
     //host_info.offline_day=180;
     #if 0
     g_sys_val.could_ip[0] = 47;
@@ -781,8 +796,8 @@ void xtcp_uesr(client xtcp_if i_xtcp,client ethaud_cfg_if if_ethaud_cfg,client f
     #endif
 
 #if 0
-    g_sys_val.could_ip[0] = 47;
-    g_sys_val.could_ip[1] = 106;
+    g_sys_val.could_ip[0] = 39;
+    g_sys_val.could_ip[1] = 98;
     g_sys_val.could_ip[2] = 223;
     g_sys_val.could_ip[3] = 218;
 

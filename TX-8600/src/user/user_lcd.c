@@ -105,7 +105,11 @@ void user_disp_icon(uint8_t id,uint8_t dat){
     disp_buff[1] = 0xB1;
     disp_buff[2] = 0x23;
     disp_buff[3] = 0x00;
+#if ENGLISH_VERSION
+    disp_buff[4] = 0x01;
+#else
     disp_buff[4] = 0x00;
+#endif
     disp_buff[5] = 0x00;
     disp_buff[6] = id;
     disp_buff[7] = dat;

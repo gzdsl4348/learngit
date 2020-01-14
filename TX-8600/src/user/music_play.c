@@ -152,7 +152,11 @@ void task_music_play(uint8_t ch,uint8_t num,task_music_info_t *p_music_info){
     */
     //
     if(task_id_right){     
+        #if ENGLISH_VERSION
+        uint8_t playing_char[]={0x00,0x50,0x00,0x6C,0x00,0x61,0x00,0x79,0x00,0x3A};
+        #else
         uint8_t playing_char[]={0x6B,0x63,0x57,0x28,0x64,0xAD,0x65,0x3E,0x00,0x3A};
+        #endif
         memcpy(g_sys_val.disinfo2buf[ch_tmp],playing_char,10);
         uint8_t data_base=10;
         for(j=0; j<(MUSIC_NAME_NUM/2);j++){

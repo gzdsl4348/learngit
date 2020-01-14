@@ -44,6 +44,9 @@ void could_heart_send_timer(){
                 user_xtcp_close(g_sys_val.could_conn);
                 //user_xtcp_unlisten(g_sys_val.colud_port);
                 g_sys_val.colud_connect_f=0;
+                g_sys_val.tcp_sending = 0;
+                g_sys_val.tx_buff_fifo.in_index=0;
+                g_sys_val.tx_buff_fifo.out_index=0;
                 // 日志更新
                 log_could_offline();
             }
@@ -80,9 +83,10 @@ void dns_domain_recive_decode(){
 }
 
 void dns_couldip_chk_send(){
-    //xtcp_debug_printf("send dns\n");
+    xtcp_debug_printf("\nsend dns\n");
     user_sending_len = dns_couldip_chk_build();
     #if 0
+     xtcp_debug_printf("dns send\n");
     for(uint8_t i=0;i<user_sending_len;i++){
         xtcp_debug_printf("%2x ",xtcp_tx_buf[i]);
     }

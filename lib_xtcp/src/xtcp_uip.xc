@@ -791,8 +791,8 @@ void xtcp_uip(server xtcp_if i_xtcp[n_xtcp],
           ip_conflict_status = 1;
         }
 
-        //Ìí¼Óip³åÍ»¼ì²â-10ÃëÖÜÆÚ¼ì²â
-        if(ip_conflict_check_flag!=0 && ++ip_comflict_timer == 100) {
+        //Ìí¼Óip³åÍ»¼ì²â-5ÃëÖÜÆÚ¼ì²â
+        if(ip_conflict_check_flag!=0 && ++ip_comflict_timer == 50) {
           
           if(ip_conflict_check_flag == last_check_flag) {
             //ip³åÍ»»Ö¸´

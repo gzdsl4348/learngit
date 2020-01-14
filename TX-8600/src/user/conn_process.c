@@ -593,8 +593,10 @@ uint8_t xtcp_check_fifobuff(xtcp_fifo_t *kf){
 
 void xtcp_fifobuff_throw(xtcp_fifo_t *kf){
     unsigned len = MIN(1, kf->in_index-kf->out_index);
+    
     //unsigned l = MIN(len, kf->size - (kf->out_index & (kf->size - 1)));
     kf->out_index+=len;
+    debug_printf("throw size %d\n",kf->in_index-kf->out_index);
 }
 
 void xtcp_bufftimeout_check_10hz(){
@@ -630,11 +632,13 @@ void xtcp_resend_decode(){
     g_sys_val.tcp_resend_cnt++;
     g_sys_val.tcp_sending = 0;
     g_sys_val.tx_fifo_timout=0;
-    if(g_sys_val.tcp_resend_cnt>3){
+    //xtcp_debug_printf("fz %d\n",g_sys_val.tx_buff_fifo.in_index-g_sys_val.tx_buff_fifo.out_index);
+    if(g_sys_val.tcp_resend_cnt>=2){
         g_sys_val.tcp_resend_cnt =0;
         xtcp_fifobuff_throw(&g_sys_val.tx_buff_fifo);
     }
     if(xtcp_check_fifobuff(&g_sys_val.tx_buff_fifo)){
+        //xtcp_debug_printf("resend fifo\n");
         user_xtcp_fifo_send();
     }   
 }
